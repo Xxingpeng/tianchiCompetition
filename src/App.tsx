@@ -7,8 +7,8 @@ import type { Catalog, StructureRecord } from "./types";
 import "./styles.css";
 
 // Three.js 有 600 多 KB，只有真正看 3D 时才需要，所以按需加载，首屏 JS 保持在 200 多 KB。
-const MeshViewer = lazy(() =>
-  import("./components/MeshViewer").then((module) => ({ default: module.MeshViewer })),
+const HeartModel = lazy(() =>
+  import("./components/HeartModel").then((module) => ({ default: module.HeartModel })),
 );
 
 type State =
@@ -45,7 +45,9 @@ export function App() {
       </a>
       <header className="site-header">
         <h1>解剖智绘</h1>
-        <p className="tagline">搜索解剖结构名，同页查看说明、三视图示意切面与轻量 3D 形态。</p>
+        <p className="tagline">
+          搜索解剖结构名，同页查看说明与三视图示意切面，并在整颗心脏 3D 里点选该结构。
+        </p>
       </header>
 
       <main id="main">
@@ -100,52 +102,65 @@ function Browser({ catalog }: { catalog: Catalog }) {
   }, [catalog]);
 
   return (
-    <>
-      <StructurePicker
-        structures={structures}
-        selected={selected}
-        onSelect={(structure) => setSelectedId(structure.id)}
-      />
+    <div className="layout">
+      <div className="side">
+        <StructurePicker
+          structures={structures}
+          selected={selected}
+          onSelect={(structure) => setSelectedId(structure.id)}
+        />
 
-      <section aria-labelledby="catalog-heading" className="catalog">
-        <h2 id="catalog-heading">已收录 {structures.length} 个结构</h2>
-        <ul className="structure-list">
-          {structures.map((s) => (
-            <li key={s.id}>
-              <StructureButton structure={s} active={s.id === selectedId} onPick={setSelectedId} />
-            </li>
-          ))}
-        </ul>
-        {catalog.excluded.length > 0 && (
-          <p className="excluded">
-            未纳入：{catalog.excluded.map((e) => `${e.id}（${e.reason}）`).join("；")}
-          </p>
-        )}
-      </section>
-
-      {selected ? (
-        <section className="detail-grid" aria-labelledby="detail-heading">
-          {/* 详情区先出 h2 再进 h3，否则标题层级会从 h1 直接跳到 h3。 */}
-          <h2 id="detail-heading" className="detail-title">
-            结构详情
-          </h2>
-          <InfoCard structure={selected} />
-          <TriView structure={selected} />
-          <Suspense
-            fallback={
-              <section className="mesh-viewer">
-                <h3>三维形态</h3>
-                <p role="status">正在准备 3D 视图…</p>
-              </section>
-            }
-          >
-            <MeshViewer key={selected.id} structure={selected} />
-          </Suspense>
+        <section aria-labelledby="catalog-heading" className="catalog">
+          <h2 id="catalog-heading">已收录 {structures.length} 个结构</h2>
+          <ul className="structure-list">
+            {structures.map((s) => (
+              <li key={s.id}>
+                <StructureButton
+                  structure={s}
+                  active={s.id === selectedId}
+                  onPick={setSelectedId}
+                />
+              </li>
+            ))}
+          </ul>
+          {catalog.excluded.length > 0 && (
+            <p className="excluded">
+              未纳入：{catalog.excluded.map((e) => `${e.id}（${e.reason}）`).join("；")}
+            </p>
+          )}
         </section>
-      ) : (
-        <p role="status">当前没有可选结构，请先在上方搜索或从列表中选择。</p>
-      )}
-    </>
+      </div>
+
+      <div className="stage">
+        <Suspense
+          fallback={
+            <section className="heart-viewer">
+              <h2>心脏整体形态</h2>
+              <p role="status">正在准备 3D 视图…</p>
+            </section>
+          }
+        >
+          <HeartModel
+            structures={structures}
+            selectedId={selectedId}
+            onSelect={(structure) => setSelectedId(structure.id)}
+          />
+        </Suspense>
+
+        {selected ? (
+          <section className="detail-grid" aria-labelledby="detail-heading">
+            {/* 详情区先出 h2 再进 h3，否则标题层级会从 h1 直接跳到 h3。 */}
+            <h2 id="detail-heading" className="detail-title">
+              结构详情
+            </h2>
+            <InfoCard structure={selected} />
+            <TriView structure={selected} />
+          </section>
+        ) : (
+          <p role="status">当前没有可选结构，请先在上方搜索或从列表中选择。</p>
+        )}
+      </div>
+    </div>
   );
 }
 

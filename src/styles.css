@@ -79,6 +79,27 @@ main {
   padding: 1.25rem 0;
 }
 
+/* 左列放检索与结构列表，右列放整颗心脏与详情；窄屏退回单列。 */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(13rem, 20rem) minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem 1.5rem;
+}
+
+.side,
+.stage {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+@media (max-width: 48rem) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .structure-list {
   list-style: none;
   margin: 0;
@@ -134,9 +155,9 @@ main {
 
 .picker-hint,
 .picker-current,
-.mesh-help,
+.heart-help,
 .slice-note,
-.mesh-status {
+.heart-status {
   color: var(--ink-muted);
   font-size: 0.85rem;
   margin: 0;
@@ -190,7 +211,7 @@ main {
 
 .info-card,
 .tri-view,
-.mesh-viewer,
+.heart-viewer,
 .catalog {
   border: 1px solid var(--line);
   border-radius: 0.6rem;
@@ -231,7 +252,7 @@ main {
 }
 
 .tri-view h3,
-.mesh-viewer h3 {
+.heart-viewer h2 {
   margin: 0 0 0.5rem;
   font-size: 1.05rem;
 }
@@ -287,37 +308,40 @@ main {
   color: var(--ink-muted);
 }
 
-.mesh-host {
+.heart-host {
   display: grid;
   place-items: center;
   background: #101418;
   border-radius: 0.4rem;
-  min-height: 12rem;
+  min-height: 18rem;
 }
 
-.mesh-host canvas {
+.heart-host canvas {
   display: block;
   max-width: 100%;
 }
 
-.mesh-buttons {
+.heart-help {
+  margin-bottom: 0.6rem;
+}
+
+.heart-status {
+  margin-top: 0.4rem;
+}
+
+.heart-buttons {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.6rem;
 }
 
-.mesh-buttons button {
+.heart-buttons button {
   padding: 0.35rem 0.7rem;
   border: 1px solid var(--line);
   border-radius: 0.4rem;
   background: var(--bg-soft);
   font: inherit;
   cursor: pointer;
-}
-
-.catalog {
-  /* 目录列表现在排在详情区之前，用下边距与详情区隔开。 */
-  margin-bottom: 1.25rem;
 }
 
 .catalog h2 {
