@@ -1,17 +1,19 @@
 # NOTICE · 资产来源、生成方式与许可判定
 
 > 本文件是作品的合规留痕。任何进入公开演示页面的第三方内容，都必须在此列出来源与许可依据。
-> 状态：**骨架（2026-11-24）**。资产实际下载与生成完成后，逐项补齐并把版本号、文件名、生成命令写全。
+> 状态：**已生成首版（2026-11-24）**。当前 `public/assets/` 为**程序化兜底几何**产物；BP3D OBJ 到手后按 §4 同一条命令重跑，届时 §1 的来源列改为 BodyParts3D 派生。
 
 ## 1. 演示资产总览
 
-| 资产 | 路径 | 来源 | 许可 | 状态 |
+| 资产 | 路径 | 当前来源 | 许可 | 状态 |
 |---|---|---|---|---|
-| 结构目录 | `public/assets/structures.json` | 本项目 `tools/asset_pipeline` 生成 | 本项目原创 | 待生成 |
-| 三视图示意底图 | `public/assets/slices/*_base.webp` | 由统一体素模板渲染 | 本项目原创（不含真实影像像素） | 待生成 |
-| 高亮 overlay | `public/assets/slices/*_overlay.webp` | 由统一体素渲染 | 本项目原创 | 待生成 |
-| 3D 网格 | `public/assets/meshes/*.glb` | BodyParts3D OBJ 派生（除左心耳） | 见 §2 | 待生成 |
-| 左心耳网格 | `public/assets/meshes/left_auricle.glb` | 本项目自制几何 | 本项目原创 | 待制作 |
+| 结构目录 | `public/assets/structures.json` | 本项目 `tools/asset_pipeline` 生成（9 结构） | 本项目原创 | 已生成，`provenance_mode = procedural_fallback` |
+| 三视图示意底图 | `public/assets/slices/*_base.png`（27 张） | 由统一体素模板渲染 | 本项目原创（不含真实影像像素） | 已生成 |
+| 高亮 overlay | `public/assets/slices/*_overlay.png`（27 张） | 由同一份体素渲染 | 本项目原创 | 已生成 |
+| 3D 网格 | `public/assets/meshes/*.glb`（9 个，合计 979 KiB） | 当前为本项目程序化几何；BP3D OBJ 到位后改为 BodyParts3D 派生 | 见 §2 | 已生成 |
+| 左心耳网格 | `public/assets/meshes/lxa.glb` | 本项目自制几何（BP3D 未收录该部件） | 本项目原创 | 已生成 |
+
+体积实测（构建期校验门禁）：切面 236 KiB + GLB 979 KiB + JSON 16 KiB ≈ **1.25 MB**；单个 GLB 最大 `myo.glb` 451.9 KiB（阈值 2 MB），全部网格合计阈值 8 MB。
 
 ## 2. BodyParts3D（主要三维几何来源）
 
@@ -37,7 +39,20 @@
 
 ```bash
 # 所有 Python 执行都在 conda env `tianchi`（Python 3.11.18），不碰研究环境 FMA
-conda run -n tianchi python -m tools.asset_pipeline.build --out public/assets
+# 命令一律用该环境的可执行文件；`conda run` 会重编码 stdout，中文报告在控制台变乱码
+PY=/d/Anaconda_envs/envs/tianchi/python.exe
+RUFF=/d/Anaconda_envs/envs/tianchi/Scripts/ruff.exe
+
+# 正式路线：assets_raw/bodyparts3d/ 里放好筛选后的 BP3D OBJ，并把文件名写进 assets_raw/bp3d_manifest.json
+PYTHONIOENCODING=utf-8 "$PY" -m tools.asset_pipeline.build --out public/assets
+
+# 当前产物所用的兜底路线（OBJ 未到手时显式指定，避免误以为已用上 BP3D）
+PYTHONIOENCODING=utf-8 "$PY" -m tools.asset_pipeline.build --source procedural \
+    --grid 96 --spacing 1.6 --out public/assets
+
+# 检查
+PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈值写在 pyproject.toml）
+"$RUFF" check tools/ && "$RUFF" format --check tools/
 ```
 
 依赖锁定见 `requirements-asset.txt`（numpy 2.4.6 / scipy 1.17.1 / scikit-image 0.26.0 / pillow 13.0.0）与 `requirements-dev.txt`（pytest 9.2.0 / pytest-cov 7.1.0 / ruff 0.17.6）。**不使用 trimesh**：OBJ 解析、体素化、`marching_cubes`、GLB 写出均为本项目自实现的纯 numpy 代码，无外部二进制依赖。

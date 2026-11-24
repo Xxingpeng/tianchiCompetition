@@ -8,18 +8,25 @@
 
 ## 当前状态 (最后更新: 2026-11-24 · by Qoder)
 
-- **阶段**:`初始化` —— 六步交付流程**第①步（建仓 + 配 CI 前置）进行中,尚未提交**
+- **阶段**:`开发` —— 六步交付流程**第③步（本地实现 + 自测）**,M2 资产管线已全绿,**尚未提交/推送**
 - **上一步完成**:
   - 项目书就地修订完成并备份（见里程碑）。
-  - `gh repo clone Xxingpeng/tianchiCompetition` → `F:\天池赛\tianchiCompetition`（空仓库,`main` 无提交）。
-  - `standards-template` 11 个文件复制为 `tianchiCompetition/standards/`。
-  - `standards/00-project-context.md`、`01-requirements.md`、本文件已填写;`.gitignore` 与根 `README.md`、`NOTICE.md` 骨架已落地。
-- **下一步 (TODO 第一条)**:**等人类确认本次本地改动** → 在 `main` 做最小引导提交并推送 → 开 `feature/1-init-web-app`。
+  - `gh repo clone Xxingpeng/tianchiCompetition` → `F:\天池赛\tianchiCompetition`;`main` 已有引导提交 `7493745`。
+  - 开发分支 `feature/1-anatomy-sketch-demo` 已切出。
+  - **M2 Python 示意资产管线完成**:`tools/asset_pipeline/`（geom / voxel / bp3d / fallback / surface / glb / render / catalog / build 九个模块）+ `tests/` 7 个测试文件。
+    - 门禁实测:`ruff check tools/` 通过、`ruff format --check tools/` 通过、`pytest` **82 passed / 覆盖率 98.3%**（阈值 80%）。
+    - 配置落在根 `pyproject.toml`（ruff line-length 100、中文全角标点豁免、pytest `pythonpath`+覆盖率阈值）,本地无需再设 `PYTHONPATH`。
+  - **M3 资产首版已生成**（程序化兜底路线,`--source procedural --grid 96 --spacing 1.6`）:
+    - `public/assets/structures.json` 9 个结构、54 张切面 PNG。
+    - 体积:切面 236 KiB + GLB 979.0 KiB + JSON 16 KiB ≈ **1.25 MB**;单个 GLB 最大 `myo.glb` 451.9 KiB（阈值 2 MB）。
+    - `provenance_mode = procedural_fallback`,页面文案如实标注"未使用第三方解剖网格",不冒充 BP3D 派生。
+- **下一步 (TODO 第一条)**:**M1 前端工程骨架**（Vite + React + TS + Three.js、ESLint/Prettier/vitest、`.github/workflows/ci.yml` 仅 CI）→ 再做 M4 单页功能。
 - **阻塞项**:
-  1. **需人类动作**:确认 `.gitignore` 与 `standards/` 内容,批准首次提交/推送（AI 不擅自 push）。
+  1. **需人类动作**:批准把当前工作树提交并推送到 `feature/1-anatomy-sketch-demo`（AI 不擅自 push）。
   2. **需人类动作**:天池报名 + 组队 + 实名认证 + 阿里云大学生认证（截止前必须完成,否则无法评奖）。
-  3. **待核实**:BP3D 许可表述冲突（`openanatomy.jp` 记 CC-BY-SA 2.1 JP vs DBCLS 记 CC BY 4.0）——发布前必须复核。
-  4. **待核实**:FMA 许可无法确认（官网不可达、Bitbucket 下载 402）——已用"只用术语名、不转载 ID/关系"规避。
+  3. **需人类动作**:下载 BP3D Release 4.0 的 OBJ 包放入 `assets_raw/bodyparts3d/`,并把 `assets_raw/bp3d_manifest.json` 的文件名核对后改 `verified: true`——否则正式几何无法启用。
+  4. **待核实**:BP3D 许可表述冲突（`openanatomy.jp` 记 CC-BY-SA 2.1 JP vs DBCLS 记 CC BY 4.0）——发布前必须复核。
+  5. **待核实**:FMA 许可无法确认（官网不可达、Bitbucket 下载 402）——已用"只用术语名、不转载 ID/关系"规避。
 
 ---
 
@@ -37,16 +44,16 @@
 - [ ] 下载 BP3D Release 4.0 OBJ 包,把候选结构文件放进 `assets_raw/bodyparts3d/` 并记录版本
 - [ ] 复核 `openanatomy.jp` 与 DBCLS 的许可表述,定稿署名文本与派生许可
 - [x] 新建 conda env **`tianchi`**（Python 3.11.18），锁定 `requirements-asset.txt` / `requirements-dev.txt`；**决定不用 trimesh**，几何与 GLB 全部纯 numpy 自实现
-- [ ] 定稿 9 个候选结构（含"左心耳自制"）与每个结构的 BP3D 文件名对照表
-- [ ] 先在 1–2 个结构上跑通"OBJ → 统一体素 → 三视图 → GLB",验证坐标系对齐
+- [x] 定稿 9 个候选结构（含"左心耳自制"）；BP3D 文件名对照表已建为 `assets_raw/bp3d_manifest.json`,**文件名一栏待人工核对后填**
+- [x] 跑通"几何 → 统一体素 → 三视图 → GLB → structures.json → 构建期校验"全链（当前用程序化兜底几何;BP3D OBJ 到手后同一条链路直接换源）
 - [ ] 完善 `NOTICE.md`:逐资产写来源、生成命令、许可判定
 
 ### P0 · 工程
 
-- [ ] 从 `main` 开 `feature/1-init-web-app`:Vite + React + TS + Three.js 骨架
+- [ ] 从 `main` 开 `feature/1-anatomy-sketch-demo`:Vite + React + TS + Three.js 骨架（分支已开,工程待建）
 - [ ] 写 `.github/workflows/ci.yml`（**只有 CI,无 SSH/CD**）
-- [ ] 实现 `structures.json` schema 与构建期一致性校验（五项缺一即失败）
-- [ ] `tools/asset_pipeline/` 骨架 + pytest 用例
+- [x] 实现 `structures.json` schema 与构建期一致性校验（五项缺一即失败,见 `catalog.validate_catalog`）
+- [x] `tools/asset_pipeline/` 骨架 + pytest 用例（82 passed / 覆盖率 98.3%）
 
 ### P1 · 功能
 
@@ -85,6 +92,12 @@
 - **FMA 无法核实**:`fma.org` 不可达、OCLC 镜像下载返回 402。解决:公开页只展示解剖术语文本,不转载 FMA ID 与关系表;项目书附录 B 仅作内部记录。
 - **天池资格项易漏**:实名认证与阿里云大学生认证是**评奖前置条件**,与作品质量无关。解决:列入 P0 TODO 第一条人工项。
 - **`git push` 偶发网络抖动 / Windows GBK 控制台**:`05` §7 已记;脚本输出保持纯 ASCII,必要时 `PYTHONIOENCODING=utf-8`。
+- **`conda run -n tianchi python -m ...` 会把中文报告重编码成乱码**（即使已设 `PYTHONIOENCODING=utf-8`,conda 的 stdout 捕获仍按 GBK 转一遍）。脚本本身没问题:直接调用 `D:\Anaconda_envs\envs\tianchi\python.exe` 时输出正常。解决:文档与本地自检一律写"用环境内 `python.exe` / `Scripts\ruff.exe`",与 `00` §4 一致。
+- **中文全角标点会让 ruff 红灯成灾**:RUF001/002/003 把注释与报错信息里的 `，；：（）` 判为"易混淆字符",一次报出 379 条。解决:`pyproject.toml` 里 `ignore = ["RUF001","RUF002","RUF003"]` 并注明原因,而不是删中文。
+- **兜底几何参数写成 6 元组**:`(*_LA, dx, dy, dz)` 想表达"中心 + 偏移",实际拼出 6 个分量;`capsule` 当场广播报错,而 `ellipsoid` 只读前三个分量,于是**偏移静默失效**、图看起来正常但位置错。解决:`fallback._as3()` 在构造期硬校验分量数,统一用 `_pt(base, dx, dy, dz)` 写相对坐标;验证:`test_as3_rejects_wrong_component_count`。
+- **体素化三根轴的边界归属必须同一套规则**:投射轴用半开区间,扫描线填充上界若用 `floor`,整数对齐的盒子会多算一格（4×3×3=36 而不是 27）。解决:上界改 `ceil - 1`;验证:`test_voxelize_is_axis_invariant_for_a_box` 对三根轴逐一比对解析解。
+- **开口 OBJ 不能直接体素化**:奇偶填充会把两块面片之间围成实体,产出一张"看着正常但完全错误"的解剖图（4 个面片就填出 1000 体素）。解决:`geom.boundary_edges()` 在 `bp3d.load_meshes` 入口拦下,先去重顶点再查封闭性;验证:`test_load_meshes_rejects_open_obj`、`test_load_meshes_accepts_obj_with_duplicated_vertices`。
+- **资产清单路径与写盘路径是两个坐标系**:`structures.json` 存站点相对路径 `assets/...`,磁盘上文件在 `public/assets/...`。曾按 `out / rel` 写盘,产出 `public/assets/assets/meshes/*.glb`。解决:写盘用 `out/meshes`,校验用 `root = out.parent`;验证:`test_procedural_build_passes_its_own_validation`、`test_missing_assets_are_reported`。
 - **待确认:git 身份邮箱**:当前提交内嵌 `898328775@qq.com`,仓库公开后可见。是否换成 GitHub noreply 邮箱由本人决定,AI 不改全局 git 配置。
 
 ---
@@ -96,6 +109,8 @@
 - [x] 2026-11-24 读完 `开发规范standards/standards-template` 全部 11 个文件,并把六步流程与确认门纳入本项目 TODO 结构。
 - [x] 2026-11-24 克隆空仓库 `tianchiCompetition`,复制 `standards/`（11 项）。
 - [x] 2026-11-24 填好 `standards/00`（含对 `05`/`03` 的两处已确认偏离）、`standards/01`（US-1~US-9 带 Given/When/Then 验收）、`standards/PROGRESS.md`;落 `.gitignore`、根 `README.md`、`NOTICE.md` 骨架。
+- [x] 2026-11-24 **M2 · 资产管线**:`tools/asset_pipeline/` 九个模块（`geom`/`voxel`/`bp3d`/`fallback`/`surface`/`glb`/`render`/`catalog`/`build`）+ 7 个测试文件 82 用例,覆盖率 98.3%。三视图与 GLB 共用一份标注体素;切面取结构最密层;开口 OBJ、坐标错位、超预算冲突全部在构建期硬失败。
+- [x] 2026-11-24 **M3 首版 · 资产产出**:程序化兜底路线生成 `public/assets/`（9 结构 × 3 视图 × 底图+overlay = 54 PNG、9 GLB、`structures.json`）,合计 ≈1.25 MB,单文件最大 451.9 KiB,构建期自校验通过,`provenance_mode` 如实标为 `procedural_fallback`。
 - [ ] 首次引导提交（**等待人工确认**）
 
 > 反臃肿:里程碑超过 15 条时,把更早内容合并成一行摘要,保持本文件可快速阅读。
