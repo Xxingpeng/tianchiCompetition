@@ -1,8 +1,6 @@
-"""资产管线运行与检查依赖（conda env `tianchi`）。
-
-    python -m pip install -r requirements-dev.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-"""
-
+# 资产管线检查依赖（conda env `tianchi`, Python 3.11.18）
+# 安装：python -m pip install -r requirements-dev.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+# 说明：覆盖率阈值写在 pyproject.toml，命令行不重复，避免两处漂移。
 pytest==9.2.0
 pytest-cov==7.1.0
 ruff==0.17.6
