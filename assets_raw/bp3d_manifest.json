@@ -1,0 +1,21 @@
+{
+  "_说明": [
+    "把页面结构 id 对应到 assets_raw/bodyparts3d/ 下的 BP3D OBJ 文件名。",
+    "obj 先留空：原始包到手后按实际文件名填写，并把 verified 改成 true。",
+    "留空或文件不存在时，build 会把该结构列入 excluded 如实报告，不会静默用兜底几何顶替。",
+    "cast_axis 可选 0/1/2，对应投射方向 左右/前后/上下；沿该轴极薄的部件可换轴补体素。"
+  ],
+  "obj_dir": "bodyparts3d",
+  "license_notice": "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International",
+  "structures": [
+    {"id": "myo", "obj": "", "verified": false, "cast_axis": 2, "_note": "心肌/左心室壁"},
+    {"id": "la", "obj": "", "verified": false, "cast_axis": 0, "_note": "左心房"},
+    {"id": "lv", "obj": "", "verified": false, "cast_axis": 0, "_note": "左心室"},
+    {"id": "ra", "obj": "", "verified": false, "cast_axis": 0, "_note": "右心房"},
+    {"id": "rv", "obj": "", "verified": false, "cast_axis": 1, "_note": "右心室（新月形，建议试 cast_axis=1）"},
+    {"id": "aorta", "obj": "", "verified": false, "cast_axis": 2, "_note": "升主动脉"},
+    {"id": "pa", "obj": "", "verified": false, "cast_axis": 2, "_note": "肺动脉干"},
+    {"id": "pv", "obj": "", "verified": false, "cast_axis": 0, "_note": "肺静脉，BP3D 可能没有独立部件"},
+    {"id": "lxa", "obj": "", "verified": false, "cast_axis": 0, "_note": "左心耳，BP3D 未收录，预期长期走程序化兜底"}
+  ]
+}

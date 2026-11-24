@@ -40,6 +40,7 @@ secrets/
 # ---------- 原始第三方解剖资产（约 3.6 GB 解压产物，只留在本地） ----------
 assets_raw/**
 !assets_raw/README.md
+!assets_raw/bp3d_manifest.json
 
 # ---------- 医疗影像与模型权重（隐私 + 体积，绝不入库） ----------
 *.nii
