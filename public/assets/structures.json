@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "provenance_mode": "procedural_fallback",
+  "provenance_mode": "bp3d",
   "grid": {
     "shape": [
       96,
@@ -26,7 +26,7 @@
   },
   "notices": [
     "示意结构模型，非真实病例影像，亦非分割模型推理结果；仅用于解剖学习展示，不含诊断或治疗建议。",
-    "几何为本项目程序化兜底模型，未使用第三方解剖网格；不用于诊断。"
+    "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International"
   ],
   "structures": [
     {
@@ -49,31 +49,31 @@
           "view_name": "轴位",
           "base": "assets/slices/lv_axial_base.png",
           "overlay": "assets/slices/lv_axial_overlay.png",
-          "slice_index": 22,
-          "slice_voxels": 52
+          "slice_index": 30,
+          "slice_voxels": 1225
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/lv_coronal_base.png",
           "overlay": "assets/slices/lv_coronal_overlay.png",
-          "slice_index": 56,
-          "slice_voxels": 14
+          "slice_index": 52,
+          "slice_voxels": 1271
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/lv_sagittal_base.png",
           "overlay": "assets/slices/lv_sagittal_overlay.png",
-          "slice_index": 53,
-          "slice_voxels": 11
+          "slice_index": 69,
+          "slice_voxels": 1274
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "BP3D / lv_FJ2422.obj",
       "stats": {
-        "voxels": 67,
+        "voxels": 35662,
         "centroid_slice_index": [
-          22,
-          56,
-          53
+          30,
+          52,
+          69
         ]
       }
     },
@@ -97,31 +97,31 @@
           "view_name": "轴位",
           "base": "assets/slices/myo_axial_base.png",
           "overlay": "assets/slices/myo_axial_overlay.png",
-          "slice_index": 36,
-          "slice_voxels": 476
+          "slice_index": 13,
+          "slice_voxels": 1386
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/myo_coronal_base.png",
           "overlay": "assets/slices/myo_coronal_overlay.png",
-          "slice_index": 47,
-          "slice_voxels": 791
+          "slice_index": 41,
+          "slice_voxels": 1381
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/myo_sagittal_base.png",
           "overlay": "assets/slices/myo_sagittal_overlay.png",
-          "slice_index": 42,
-          "slice_voxels": 605
+          "slice_index": 63,
+          "slice_voxels": 1448
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "BP3D / myo_FJ2428.obj",
       "stats": {
-        "voxels": 17665,
+        "voxels": 60361,
         "centroid_slice_index": [
-          36,
-          47,
-          42
+          13,
+          41,
+          63
         ]
       }
     },
@@ -145,31 +145,31 @@
           "view_name": "轴位",
           "base": "assets/slices/rv_axial_base.png",
           "overlay": "assets/slices/rv_axial_overlay.png",
-          "slice_index": 41,
-          "slice_voxels": 193
+          "slice_index": 30,
+          "slice_voxels": 1189
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/rv_coronal_base.png",
           "overlay": "assets/slices/rv_coronal_overlay.png",
-          "slice_index": 39,
-          "slice_voxels": 471
+          "slice_index": 27,
+          "slice_voxels": 1755
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/rv_sagittal_base.png",
           "overlay": "assets/slices/rv_sagittal_overlay.png",
-          "slice_index": 39,
-          "slice_voxels": 445
+          "slice_index": 44,
+          "slice_voxels": 1386
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "BP3D / rv_FJ2423.obj",
       "stats": {
-        "voxels": 4635,
+        "voxels": 44080,
         "centroid_slice_index": [
-          41,
-          39,
-          39
+          30,
+          27,
+          44
         ]
       }
     },
@@ -193,31 +193,31 @@
           "view_name": "轴位",
           "base": "assets/slices/la_axial_base.png",
           "overlay": "assets/slices/la_axial_overlay.png",
-          "slice_index": 63,
-          "slice_voxels": 178
+          "slice_index": 46,
+          "slice_voxels": 686
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/la_coronal_base.png",
           "overlay": "assets/slices/la_coronal_overlay.png",
-          "slice_index": 63,
-          "slice_voxels": 133
+          "slice_index": 74,
+          "slice_voxels": 1191
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/la_sagittal_base.png",
           "overlay": "assets/slices/la_sagittal_overlay.png",
-          "slice_index": 57,
-          "slice_voxels": 116
+          "slice_index": 40,
+          "slice_voxels": 734
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "BP3D / la_FJ2425.obj",
       "stats": {
-        "voxels": 1402,
+        "voxels": 19583,
         "centroid_slice_index": [
-          63,
-          63,
-          57
+          46,
+          74,
+          40
         ]
       }
     },
@@ -241,31 +241,31 @@
           "view_name": "轴位",
           "base": "assets/slices/ra_axial_base.png",
           "overlay": "assets/slices/ra_axial_overlay.png",
-          "slice_index": 59,
-          "slice_voxels": 237
+          "slice_index": 53,
+          "slice_voxels": 767
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/ra_coronal_base.png",
           "overlay": "assets/slices/ra_coronal_overlay.png",
-          "slice_index": 55,
-          "slice_voxels": 230
+          "slice_index": 58,
+          "slice_voxels": 1441
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/ra_sagittal_base.png",
           "overlay": "assets/slices/ra_sagittal_overlay.png",
-          "slice_index": 36,
-          "slice_voxels": 223
+          "slice_index": 19,
+          "slice_voxels": 1808
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "BP3D / ra_FJ2424.obj",
       "stats": {
-        "voxels": 2636,
+        "voxels": 31909,
         "centroid_slice_index": [
-          59,
-          55,
-          36
+          53,
+          58,
+          19
         ]
       }
     },
@@ -289,31 +289,31 @@
           "view_name": "轴位",
           "base": "assets/slices/aorta_axial_base.png",
           "overlay": "assets/slices/aorta_axial_overlay.png",
-          "slice_index": 83,
-          "slice_voxels": 152
+          "slice_index": 59,
+          "slice_voxels": 285
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/aorta_coronal_base.png",
           "overlay": "assets/slices/aorta_coronal_overlay.png",
-          "slice_index": 47,
-          "slice_voxels": 271
+          "slice_index": 50,
+          "slice_voxels": 575
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/aorta_sagittal_base.png",
           "overlay": "assets/slices/aorta_sagittal_overlay.png",
-          "slice_index": 52,
-          "slice_voxels": 380
+          "slice_index": 41,
+          "slice_voxels": 540
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "BP3D / aorta_FJ3413.obj",
       "stats": {
-        "voxels": 3789,
+        "voxels": 8061,
         "centroid_slice_index": [
-          83,
-          47,
-          52
+          59,
+          50,
+          41
         ]
       }
     },
@@ -337,31 +337,31 @@
           "view_name": "轴位",
           "base": "assets/slices/pa_axial_base.png",
           "overlay": "assets/slices/pa_axial_overlay.png",
-          "slice_index": 78,
-          "slice_voxels": 150
+          "slice_index": 74,
+          "slice_voxels": 421
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/pa_coronal_base.png",
           "overlay": "assets/slices/pa_coronal_overlay.png",
-          "slice_index": 46,
-          "slice_voxels": 240
+          "slice_index": 43,
+          "slice_voxels": 338
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/pa_sagittal_base.png",
           "overlay": "assets/slices/pa_sagittal_overlay.png",
-          "slice_index": 42,
-          "slice_voxels": 264
+          "slice_index": 55,
+          "slice_voxels": 490
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "BP3D / pa_FJ2966.obj",
       "stats": {
-        "voxels": 2558,
+        "voxels": 7218,
         "centroid_slice_index": [
-          78,
-          46,
-          42
+          74,
+          43,
+          55
         ]
       }
     },
@@ -385,30 +385,30 @@
           "base": "assets/slices/pv_axial_base.png",
           "overlay": "assets/slices/pv_axial_overlay.png",
           "slice_index": 67,
-          "slice_voxels": 111
+          "slice_voxels": 16
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/pv_coronal_base.png",
           "overlay": "assets/slices/pv_coronal_overlay.png",
-          "slice_index": 69,
-          "slice_voxels": 106
+          "slice_index": 60,
+          "slice_voxels": 81
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/pv_sagittal_base.png",
           "overlay": "assets/slices/pv_sagittal_overlay.png",
-          "slice_index": 64,
-          "slice_voxels": 44
+          "slice_index": 9,
+          "slice_voxels": 58
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "BP3D / pv_FJ3031.obj",
       "stats": {
-        "voxels": 702,
+        "voxels": 313,
         "centroid_slice_index": [
           67,
-          69,
-          64
+          60,
+          9
         ]
       }
     },
@@ -432,31 +432,31 @@
           "view_name": "轴位",
           "base": "assets/slices/lxa_axial_base.png",
           "overlay": "assets/slices/lxa_axial_overlay.png",
-          "slice_index": 64,
-          "slice_voxels": 100
+          "slice_index": 75,
+          "slice_voxels": 174
         },
         "coronal": {
           "view_name": "冠状位",
           "base": "assets/slices/lxa_coronal_base.png",
           "overlay": "assets/slices/lxa_coronal_overlay.png",
-          "slice_index": 53,
-          "slice_voxels": 128
+          "slice_index": 75,
+          "slice_voxels": 176
         },
         "sagittal": {
           "view_name": "矢状位",
           "base": "assets/slices/lxa_sagittal_base.png",
           "overlay": "assets/slices/lxa_sagittal_overlay.png",
-          "slice_index": 69,
-          "slice_voxels": 124
+          "slice_index": 41,
+          "slice_voxels": 146
         }
       },
-      "provenance": "procedural_fallback",
+      "provenance": "自制几何（BP3D 未收录 lxa），按 BP3D la 体素包围盒贴附",
       "stats": {
-        "voxels": 1074,
+        "voxels": 1616,
         "centroid_slice_index": [
-          64,
-          53,
-          69
+          75,
+          75,
+          41
         ]
       }
     }
