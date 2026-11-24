@@ -8,7 +8,7 @@
 
 ## 当前状态 (最后更新: 2026-11-24 · by Qoder)
 
-- **阶段**:`开发` —— 六步交付流程**第③步（本地实现 + 自测）**,M1/M2/M3 均已完成并推送,下一步 M4 前端单页功能
+- **阶段**:`开发` —— 六步交付流程**第③步（本地实现 + 自测）**,M1/M2/M3/M4 均已完成（M4 待推送）,下一步 M5 本地 CI 自检 + 开 PR
 - **上一步完成**:
   - **M1 前端工程骨架**（Vite 8 + React 19 + TS 6 + Vitest 5,Three.js 依赖已就位待 M4 使用）:
     - 门禁实测:`npm ci` → `prettier --check .` → `eslint .` → `tsc --noEmit` → `vitest run`（**16 passed / 3 files**）→ `vite build`（JS 224.12 KiB,gzip 70.92 KiB,远低于首屏 3 MB 闸）全绿。
@@ -27,7 +27,16 @@
     - `provenance_mode = bp3d`;9 结构全部落地（8 个 BP3D + 1 个自制左心耳）,`excluded` 为空。
     - 体积:切面 64.8 KiB + GLB 3925.9 KiB + JSON 13.2 KiB ≈ **3.91 MB**;单文件最大 `myo.glb` 1816.4 KiB（阈值 2 MB,已用 91%,再加密体素会先撞这条线）。
     - 视觉抽查通过:心室壁包住心腔、升主动脉轴位为圆断面、冠/矢状位为竖条带;自制左心耳与左心房之间留有一格空隙（规则"绝不覆盖 BP3D 体素",宁可小）。
-- **下一步 (TODO 第一条)**:**M4 前端单页功能**（US-2 检索 → US-3 信息卡 → US-4 三视图 → US-5 GLB 3D → US-7 提示与署名 → US-8 可访问性/响应式）。
+  - **M4 前端单页功能与可访问性**（US-2/3/4/5/7/8）:
+    - 组件:`src/data/search.ts`（精确/前缀/包含三档排名、结果上限 8 条）、`StructurePicker`（`role=combobox` + `aria-activedescendant`,方向键/回车/Esc 全程可用）、`InfoCard`、`TriView`（高亮开关 + 纯文字图例）、`MeshViewer`（GLTFLoader + OrbitControls,无 WebGL 只降级这一块）、`App`（`React.lazy` + `Suspense` 把 Three.js 拆成懒加载 chunk）。
+    - 门禁实测:`prettier --check` / `eslint .` / `tsc --noEmit` 全绿,`vitest run` **36 passed / 7 files**,`vite build` 入口 232.32 kB（gzip 73.73）+ 懒加载 `MeshViewer` 639.88 kB（gzip 159.69）,首屏远低于 3 MB 闸。
+    - 浏览器实测（dev server 5173 + 真实 `public/assets`）:输入别名 `LV` → 2 条候选且"左心室 经别名「LV」命中"排首;选中后三视图 URL 换 `lv_*`、来源与 GLB 同步;`左心耳` 显示"自制几何（BP3D 未收录 lxa）…"、体素数 1,616;`股四头肌` → "未收录"空态且页面不崩;单字符 `e` → 7 条候选、无溢出提示误报;高亮开关联动图层与图例文字;63 个资产 URL（9 GLB + 54 PNG）全部 200 且非空,合计 4.09 MB。
+    - 3D 交互证据:拖拽后 canvas 像素哈希变化,"放大"改变画面、"复位视角"回到与初始**同一帧**（哈希相等）;canvas 绘制缓冲 600×600（dpr 1.25）、36% 像素被着色、平均色 (118,65,23) 与心肌色 `#d33d51` 的光照结果一致 → 网格确实渲染而非空白。
+    - axe-core 在交互末态（已检索、已切结构、已开关高亮、已操作 3D）**0 违规**。
+    - 修掉的缺陷:宽屏下 3D 画布被拉满整栏（1280 CSS px,把 480 的缓冲拉伸到发糊）→ 给 canvas 加 `max-width: 480px` + `height: auto`,窄屏仍自适应（380px 容器实测 303×303）。
+    - US-2 AC4:`excluded` 非空时页面输出"未纳入：id（原因）"并 `console.warn`（当前 BP3D 产物 `excluded` 为空,由 `smoke.test.tsx` 用例覆盖）。
+    - **未做的验证**:整页截图（内置浏览器面板未打开时 `take_screenshot` 直接报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`）;US-8 AC1 的窄屏检查是把 `#root` 约束到 380px **内容宽**做的,不是真实视口模拟——布局为纯流式,媒体查询只用于 `prefers-reduced-motion`。
+- **下一步 (TODO 第一条)**:**M5 本地 CI 自检 + 开 PR**（确认门 4:本地跑 CI 的两个 job 全集;确认门 5:`gh pr create` 到 `main`,AI 不合并）。
 - **阻塞项**:
   1. **需人类动作**:M4 完成后批准提交/推送,并由 AI 开 PR（确认门 5）——AI 不 push、不合并。
   2. **需人类动作**:天池报名 + 组队 + 实名认证 + 阿里云大学生认证（截止前必须完成,否则无法评奖）。
@@ -64,7 +73,7 @@
 
 ### P1 · 功能
 
-- [ ] US-2 检索 → US-3 信息卡 → US-4 三视图 → US-5 3D 网格 → US-8 体验打磨
+- [x] US-2 检索 → US-3 信息卡 → US-4 三视图 → US-5 3D 网格 → US-8 体验打磨（2026-11-24,M4 完成:本地门禁 + 浏览器实测全绿,待推送）
 - [ ] US-9 发布到 Qoder Sites,回填公开 URL
 
 ### P2 · 收尾
@@ -115,6 +124,8 @@
 - **资产清单路径与写盘路径是两个坐标系**:`structures.json` 存站点相对路径 `assets/...`,磁盘上文件在 `public/assets/...`。曾按 `out / rel` 写盘,产出 `public/assets/assets/meshes/*.glb`。解决:写盘用 `out/meshes`,校验用 `root = out.parent`;验证:`test_procedural_build_passes_its_own_validation`、`test_missing_assets_are_reported`。
 - **jsdom 30+ 在 Node 22.14 上让 vitest 起不了 worker**:`npx vitest run` 报 3 个 `[vitest-pool]: Failed to start forks worker`,真正原因是 `node_modules/undici/lib/interceptor/decompress.js` 里 `createZstdDecompress.bind(...)` —— 本机 Node 22.14.0 没有 `zlib.createZstdDecompress`,而 jsdom 30/31 的 `engines` 下限是 `^22.22.2`。npm 事先给过 EBADENGINE 警告但照样装上了。解决:**把 jsdom 钉在 `^29.1.1`**（`engines: ^22.13.0`,带的 undici 7.30.2 不走 zstd 分支）,并把 `package.json` 的 `engines.node` 提到 `>=22.13.0`;不改用户本机 Node、不用 `--force`/`--legacy-peer-deps`。CI 用 `node-version: "22"`（≥22.22）同样吃这个版本,本地与 CI 一致。
 - **远端 `main` 不见了,默认分支被顶到 feature 分支**:`git ls-remote --heads origin` 只有 `feature/1-anatomy-sketch-demo`,`gh api .../branches/main/protection` 返回 404,仓库 `default_branch` 已是 feature 分支,本地 `main` 显示 `[origin/main: gone]`。影响:GitHub Flow 的 PR 目标缺失,`main` 分支保护也无从谈起。解决（2026-11-24 已按人工批准执行）:`git push origin main`（内容早已随 feature 分支公开,不新增对象）+ `gh repo edit --default-branch main`,现在 `ls-remote` 两条分支都在、`default_branch = main`。**仍未做**:`main` 分支保护（要求 PR + CI 通过）——需人工在 GitHub 设置里开,或用 `gh api` 代开。
+- **宽屏会把 3D 画布拉满整栏**:`renderer.setSize(480, 480, false)` 只定绘制缓冲,CSS 再写 `width: 100%` 就让 canvas 在 1280px 栏里长到 1280×1280——把 480 的缓冲拉伸到发糊,还把整页撑成一屏图。实测方式:把 `#root` 依次约束到 380/1280 读 canvas 的 CSS 盒。解决:`style.maxWidth = "480px"` + `height: auto`（canvas 属性本身是正方形,`auto` 会保住比例）,窄屏照常缩小、宽屏封顶。
+- **内置浏览器的 `press_key`/`click` 按 uid 打不中时会静默无副作用**:重渲染后旧 uid 失效,回车选择、Esc 关闭、点结构按钮都出现"工具报成功、页面没反应"。这不是应用缺陷——同一批交互用 `evaluate_script` 派发（`element.click()` / PointerEvent）全部生效,且 vitest 已覆盖键盘路径。影响:验证结论必须以 DOM 探针或像素哈希为准,不能拿工具的"Successfully"当证据。
 - **待确认:git 身份邮箱**:当前提交内嵌 `898328775@qq.com`,仓库公开后可见。是否换成 GitHub noreply 邮箱由本人决定,AI 不改全局 git 配置。
 
 ---
@@ -134,5 +145,6 @@
 - [x] 2026-11-24 **M1 · 前端工程骨架 + CI**:Vite 8 + React 19 + TS 6 + Vitest 5 + ESLint 10 flat config + Prettier 3。`src/types.ts` 与 `src/data/catalog.ts` 把 `structures.json` 的 schema 变成运行期硬校验（schema 版本、9 个 label 唯一、`#rrggbb`、三视图路径、体积>0、声明必须含"示意"）,一次收集全部问题;`App.tsx` 有 loading/error/ready 三态、skip-link、`role="status"`/`role="alert"`。门禁:`npm ci` → prettier → eslint → tsc → **vitest 16 passed** → `vite build`（JS 224.12 KiB / gzip 70.92 KiB）。浏览器实测真实目录:9 结构 + 逐条来源 + BP3D 署名与用途声明可见,控制台无报错。
 - [x] M1 骨架的工作树提交并推送（人工批准 → `2858ff8` 前端骨架 / `b72443c` CI / 本条 docs 提交）
 - [x] 远端 `main` 与默认分支修复（人工批准 → `git push origin main` + `gh repo edit --default-branch main`）
+- [x] 2026-11-24 **M4 · 前端单页功能与可访问性**:检索（中/英/别名,三档排名 + 上限 8）、信息卡、三视图 + 可关高亮图层、GLB 3D（拖拽/滚轮/按钮缩放、无 WebGL 局部降级）、来源与许可提示、`h2` 分节 + combobox 键盘语义。门禁:prettier/eslint/tsc/`vitest 36 passed`/`vite build`（首屏 232.32 kB + 懒加载 639.88 kB）全绿;浏览器实测 63 个资产全部可取、3D 交互有像素证据、axe 0 违规。附带修掉宽屏画布被拉满整栏的缺陷（`max-width: 480px`）。
 
 > 反臃肿:里程碑超过 15 条时,把更早内容合并成一行摘要,保持本文件可快速阅读。
