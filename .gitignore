@@ -9,6 +9,10 @@ coverage/
 .eslintcache
 .stylelintcache
 
+# ---------- Qoder Sites 本机绑定记录 ----------
+# 发布草稿描述符含 siteRef 不透明引用，与本机/账号绑定、换机不可复用，不入库
+*.qoder.site
+
 # ---------- Python ----------
 __pycache__/
 *.py[cod]
