@@ -64,10 +64,15 @@ export function HeartModel({ structures, selectedId, onSelect }: Props) {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.6));
-    const key = new THREE.DirectionalLight(0xffffff, 1.2);
-    key.position.set(1, 1, 1);
+    // three 的物理光照把出射算成 albedo*irradiance/π：受光面要贴回色卡本色，辐照得凑到 2.5 上下。
+    // 发白不是灯太亮，是半透明层叠多了混色（见 applyOpacities 与 DIMMED_OPACITY）。
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x3a424a, 1.6));
+    const key = new THREE.DirectionalLight(0xffffff, 1.4);
+    key.position.set(0.6, 0.8, 1);
     scene.add(key);
+    const fill = new THREE.DirectionalLight(0xffffff, 0.3);
+    fill.position.set(-0.8, -0.3, -0.6);
+    scene.add(fill);
 
     const root = new THREE.Group();
     scene.add(root);
@@ -82,9 +87,13 @@ export function HeartModel({ structures, selectedId, onSelect }: Props) {
     function applyOpacities(id: string | null): void {
       for (const [structureId, list] of materials) {
         for (const material of list) {
-          material.opacity = partOpacity(id, structureId);
+          const opacity = partOpacity(id, structureId);
+          // 选中件要走不透明通道：留在半透明队列里会被自己和背后的部件混色,颜色发灰。
+          material.transparent = opacity < 1;
+          material.opacity = opacity;
           // 半透明层再写深度会把后面的部件整个挡掉。
-          material.depthWrite = material.opacity > 0.9;
+          material.depthWrite = opacity > 0.9;
+          material.needsUpdate = true;
         }
       }
       renderer.render(scene, camera);
@@ -175,8 +184,9 @@ export function HeartModel({ structures, selectedId, onSelect }: Props) {
           // 每个结构一份材质：色块、切面高亮和 3D 部件必须是同一个颜色。
           const material = new THREE.MeshStandardMaterial({
             color: structure.color,
-            roughness: 0.6,
-            metalness: 0.05,
+            // 高金属度 + 低粗糙度会在整个面上铺一层白色高光,把中饱和的色卡冲淡成马卡龙色。
+            roughness: 0.85,
+            metalness: 0,
             side: THREE.DoubleSide,
             transparent: true,
           });
