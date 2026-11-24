@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+package-lock.json
+
+# 由 tools/asset_pipeline 生成，格式随构建变化；不参与前端格式化
+public/assets/
+
+# 原始包与清单：manifest 的排版是人工核对表的一部分
+assets_raw/
+
+# Python 侧由 ruff format 负责，两套格式化器不能同时管一份文件
+tools/
+
+# 中文文档由人工排版：prettier 会重排表格与列表，制造与内容无关的大 diff
+*.md
+standards/

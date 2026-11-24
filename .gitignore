@@ -4,6 +4,7 @@ dist/
 dist-ssr/
 build/
 .vite/
+coverage/
 *.tsbuildinfo
 .eslintcache
 .stylelintcache
