@@ -8,7 +8,7 @@
 
 ## 当前状态 (最后更新: 2026-11-24 · by Qoder)
 
-- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 与追加的 M4b（整颗心脏 3D + 两栏）全部提交完成,`pull/1` 待人工 merge,下一步 M6 发布到 Qoder Sites
+- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 与追加的 M4b（整颗心脏 3D + 两栏）全部提交完成,`pull/1` 待人工 merge,下一步 M6 发布到 Qoder Sites。**M4c（3D 配色校正）已完成本地门禁与像素验证,停在确认门 3 等批准提交**
 - **上一步完成**:
   - **M1 前端工程骨架**（Vite 8 + React 19 + TS 6 + Vitest 5,Three.js 依赖已就位待 M4 使用）:
     - 门禁实测:`npm ci` → `prettier --check .` → `eslint .` → `tsc --noEmit` → `vitest run`（**16 passed / 3 files**）→ `vite build`（JS 224.12 KiB,gzip 70.92 KiB,远低于首屏 3 MB 闸）全绿。
@@ -47,7 +47,14 @@
     - 浏览器实测（`vite preview` 4173 + 真实 `public/assets`,控制台**零消息**）:9 个 GLB 合成成功,状态行"已高亮 心肌,其余部件半透明。";canvas 绘制缓冲 800×800（dpr 1.25）而 CSS 盒 323×323 随栏宽收缩,**未被拉伸**;`toDataURL` 像素统计 22% 有光、颜色簇出现 ≥8 个色系（红橙/青/紫…）→ 画面上确实是多个不同色的部件同场景,不是一整块。
     - 交互证据:悬停四个取样点分别报"肺动脉干（Pulmonary trunk）""左心房（Left atrium）";点选后 `.info-card h3` 与列表 `aria-pressed` 同步成"左心房"（三维—色块—信息卡三者同一结构）;按下-抬起位移超阈值不触发选中;连续两次"放大"改变像素哈希,随后"复位视角"回到**同一帧**（`288af2e6` 相等）。
     - 修掉的两处工具反馈:`react-hooks/refs` 报渲染期写 ref → `onSelectRef` 挪进 `useEffect`;`noUncheckedIndexedAccess` 报 `scenes[index]` 可能 undefined → 加载任务直接返回 `{ structure, part }`,顺带把 `selectedId` 从加载 effect 里摘干净（透明度只由 `[selectedId, status]` effect 应用,否则每次选中都要重载 9 个 GLB）。
-    - **未做的验证**:①≥1280px 真实视口的整页观感——内置浏览器面板固定 415px,`take_screenshot` 仍报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`,宽屏只验到编译后 CSS 里的 `.layout` 规则与 `@media (width <= 48rem)` 存在,以及列宽算术（728 内容宽 = 320 + 24 + 384）不溢出;②OrbitControls 的**拖拽旋转**无法用合成 PointerEvent 证明（`setPointerCapture` 对不存在的 `pointerId` 抛错,画面哈希纹丝不动）,缩放/复位走的是按钮路径、已有像素证据,旋转仍由真人手测覆盖。
+  - **M4c 整颗心脏配色校正（未提交,停在确认门 3 等批准）**（2026-11-24,用户看截图后反馈"颜色太浅了影响观感",并选择"A：保留层次"= 非选中部件仍半透明）:
+    - 定位:发白**不是灯太亮**,是两处混色——① 8 个 `DoubleSide` 半透明壳层层相叠（0.3 不透明度下能叠到三四层）,② `metalness 0.05 + roughness 0.6` 在整个表面铺一层白色高光。选中件还留在半透明队列里,会被自己和背后的部件混成灰。
+    - 改动 4 处（`HeartModel.tsx` + `data/heart.ts`,页面结构与布局未动）:灯光改半球 1.6 + 主光 1.4（方向 0.6/0.8/1）+ 补光 0.3;材质 `metalness 0 / roughness 0.85`;`applyOpacities` 里 `transparent = opacity < 1` 且置 `needsUpdate`,让选中件走不透明通道;`DIMMED_OPACITY` 0.3 → **0.18**。
+    - 量化验证（同一探针,选中心肌,canvas 缓冲 800²,按色卡距离分类）:与心肌色卡 `rgb(181,101,29)` 距离 ≤40 的像素 **0 → 21,644**,受光面亮度/色卡亮度 **1.05**（等于色卡本色,不再发白也不再发暗）。
+    - 反例记录:中途把灯光压到 0.35/0.7/0.15,受光面只剩色卡的 **0.61** 倍——颜色发暗,又调回 1.6/1.4/0.3。判据必须落到像素比值,不能靠"看着差不多"。
+    - **法线平滑被证伪并撤销**:用户批准"加"之后实测是**空操作**——`mergeVertices` 对 83,496 个顶点合并掉 **0 个**（耗时 188.4 ms）,GLB 本来就是**带平均法线索引**几何（myo `posCount 38,674 / idxCount 232,692`,36% 顶点法线等于其面法线）,`computeVertexNormals` 再算一遍结果相同;浏览器端纹理指标前后**逐字节一致**（meanGrad 3.75 / meanLum 92 / px 9,475）。台阶感来自 96³ 体素的真实几何,抬高 `--grid` 会先撞单文件 2 MB 闸（myo 已 1,816.4 KiB / 91%）,故撤销该改动、只保留配色修复。
+    - 门禁:`npm run check` 全绿（**39 passed**）,`vite build` 首屏 232.49 kB（gzip 73.80）+ 懒加载 `HeartModel` **642.99 kB**（撤销平滑后回到未增体积,比平滑版本小 1.3 kB）。
+    - **未做的验证（M4b 提出,M4c 复核仍未解除）**:①≥1280px 真实视口的整页观感——内置浏览器面板固定 415px,`take_screenshot` 仍报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`,宽屏只验到编译后 CSS 里的 `.layout` 规则与 `@media (width <= 48rem)` 存在,以及列宽算术（728 内容宽 = 320 + 24 + 384）不溢出;②OrbitControls 的**拖拽旋转**无法用合成 PointerEvent 证明（`setPointerCapture` 对不存在的 `pointerId` 抛错,画面哈希纹丝不动）,缩放/复位走的是按钮路径、已有像素证据,旋转仍由真人手测覆盖。
 
 - **下一步 (TODO 第一条)**:**M6 发布**——US-9 用 Qoder Sites 发布 `dist/` 产物并回填公开 URL（发布是对外动作,需人工批准）;同时等人工 merge `pull/1` 与开启 `main` 分支保护。M4b 已按确认门 3 批准拆成四个提交推送,`.gitignore` 那条放行（忽略 `*.qoder.site` 本机绑定描述符,含站点不透明引用、换机不可复用）已单独走 `chore(repo)`。
 - **阻塞项**:
@@ -116,6 +123,7 @@
 | 2026-11-24 | 前端测试环境 jsdom 钉 **`^29.1.1`**,`engines.node` 抬到 **`>=22.13.0`** | jsdom 30+ 的 `engines` 下限 22.22.2 与本机 Node 22.14 冲突,崩在 undici 的 zstd 分支上;钉住次新大版本比升级用户工具链或用 `--force` 更可控,且本地与 CI 用同一份 lockfile |
 | 2026-11-24 | 3D 区域从"单结构网格面板"改为**同一场景合成整颗心脏**（9 个部件 GLB）,并移除 `MeshViewer` | `surface.py` 写出的顶点是世界毫米,9 个部件放一起自动成型、零配准,且与切面同源;学习者要的是毗邻关系,单结构孤立旋转看不到;只保留一个场景也避免每次切结构重载网格 |
 | 2026-11-24 | 页面改为**左检索/列表 + 右整颗心脏与详情**两栏,`max-width: 48rem` 退回单栏 | 用户反馈"结构列表太长把页面拉长";两栏让 3D 与详情同屏对照,窄屏退回流式不破版 |
+| 2026-11-24 | 3D"颜色太浅"按**混色**修:选中件走不透明通道、非选中 0.3 → **0.18**、`metalness 0 / roughness 0.85`、灯 1.6/1.4/0.3;同时**放弃表面法线平滑** | 用户选定"A：保留层次"（非选中仍半透明）。实测发白来自双面半透明壳叠加与高光,不是过曝;色卡距离像素 0 → 21,644、受光面亮度比 1.05 为证。平滑经顶点/法线测量确认是空操作（合并 0 顶点、GLB 本就带平均法线),留着只增 188 ms 首帧与 1.3 kB |
 
 ---
 
@@ -149,6 +157,10 @@
 - **把 `selectedId` 放进 GLB 加载 effect 的依赖 = 每次选中重载 9 个网格**:透明度只是材质属性,却会让整个 `Promise.all(GLTFLoader)` 重跑。解决:加载 effect 依赖只有 `[structures, supported]`,`selectedId` 走另一个 `useEffect([selectedId, status])` 调 `applyOpacities`;`react-hooks/exhaustive-deps` 之所以不报警,是因为加载 effect 里已经不再读 `selectedId`——**别为了"顺手初始化透明度"把它加回去**,`status` 翻到 `ready` 本身就会触发那个 effect。
 - **回调 ref 在渲染期赋值会被 `react-hooks/refs` 拦住**:`onSelectRef.current = onSelect` 写在函数体里 ESLint 直接报 error。解决:放进 `useEffect(() => { onSelectRef.current = onSelect }, [onSelect])`;这个 ref 的存在本身是为了让加载 effect 不把 `onSelect`（每次渲染都是新函数）吃进依赖。
 - **`noUncheckedIndexedAccess` 下 `scenes[index]` 判不出成对关系**:`structures.forEach((s, i) => scenes[i].…)` 类型上是 `Group | undefined`,两处报错。解决:让每个加载任务直接 resolve `{ structure, part }`,配关系写进类型而不是靠下标,顺带省掉一次越界可能。
+- **3D 颜色"发白"先查混色,别急着调灯**:`MeshStandardMaterial` 受 three 的物理光照,出射 ≈ albedo × irradiance / π,所以灯要凑到辐照 2.5 上下受光面才贴得回色卡本色——但整颗心脏发白的主因不是过曝,而是 8 个 `DoubleSide` 半透明壳叠了三四层互相糊色,加上 `metalness>0 + roughness<1` 铺一层白色高光。解决:选中件 `transparent = opacity < 1` 走不透明通道（配合 `needsUpdate = true`）、非选中降到 0.18、`metalness 0 / roughness 0.85`、灯 1.6/1.4/0.3。**判据**用像素不看眼:选中心肌后与色卡 `rgb(181,101,29)` 距离 ≤40 的像素从 0 涨到 21,644,受光面亮度比 1.05;中途把灯压到 0.35/0.7/0.15 反而只剩 0.61（发暗）,又调回来了。
+- **GLB 已经是"带平均法线的索引网格",再做法线平滑是空操作**:`mergeVertices` 对 83,496 个顶点合并掉 **0 个**（还花 188.4 ms）,myo 是 `posCount 38,674 / idxCount 232,692` 的索引几何、36% 顶点法线等于其面法线（说明法线本就平均过）,`computeVertexNormals()` 重算结果一致;浏览器端纹理指标前后逐字节相同。台阶感来自 96³ 体素的真实几何,想靠加密网格消除会先撞单文件 2 MB 闸（myo 已 1,816.4 KiB / 91%）。结论:**这类"看着有棱"的问题先量法线和顶点数,再决定改不改渲染层**。
+- **读 WebGL 画布像素必须在同一次任务里 `drawImage`**:renderer 没开 `preserveDrawingBuffer`,帧一提交缓冲区就没了,`await` 之后再抓只剩空白。可用做法:同步点一下"放大"（`apiRef.dolly` 里带 `renderer.render`）,紧接着 `ctx.drawImage(canvas,0,0)`——M4c 的色卡距离统计就是这么测的。
+- **隐藏页里 `setTimeout` 被节流到约 1 秒一次**:内置浏览器面板 `visibilityState=hidden`,需要几百次采样的"扫悬停"探针必然撞 15 s 工具上限。解决:探针改成少量 `await`（每结构一次）或直接读像素分类,别写密集轮询循环。
 - **待确认:git 身份邮箱**:当前提交内嵌 `898328775@qq.com`,仓库公开后可见。是否换成 GitHub noreply 邮箱由本人决定,AI 不改全局 git 配置。
 
 ---
