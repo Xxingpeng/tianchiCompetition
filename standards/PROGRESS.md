@@ -8,7 +8,7 @@
 
 ## 当前状态 (最后更新: 2026-11-24 · by Qoder)
 
-- **阶段**:`开发` —— 六步交付流程**第③步（本地实现 + 自测）**,M1/M2/M3/M4 均已完成（M4 待推送）,下一步 M5 本地 CI 自检 + 开 PR
+- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 全部完成,`pull/1` 已开且 CI 全绿,下一步 M6 发布到 Qoder Sites
 - **上一步完成**:
   - **M1 前端工程骨架**（Vite 8 + React 19 + TS 6 + Vitest 5,Three.js 依赖已就位待 M4 使用）:
     - 门禁实测:`npm ci` → `prettier --check .` → `eslint .` → `tsc --noEmit` → `vitest run`（**16 passed / 3 files**）→ `vite build`（JS 224.12 KiB,gzip 70.92 KiB,远低于首屏 3 MB 闸）全绿。
@@ -36,9 +36,14 @@
     - 修掉的缺陷:宽屏下 3D 画布被拉满整栏（1280 CSS px,把 480 的缓冲拉伸到发糊）→ 给 canvas 加 `max-width: 480px` + `height: auto`,窄屏仍自适应（380px 容器实测 303×303）。
     - US-2 AC4:`excluded` 非空时页面输出"未纳入：id（原因）"并 `console.warn`（当前 BP3D 产物 `excluded` 为空,由 `smoke.test.tsx` 用例覆盖）。
     - **未做的验证**:整页截图（内置浏览器面板未打开时 `take_screenshot` 直接报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`）;US-8 AC1 的窄屏检查是把 `#root` 约束到 380px **内容宽**做的,不是真实视口模拟——布局为纯流式,媒体查询只用于 `prefers-reduced-motion`。
-- **下一步 (TODO 第一条)**:**M5 本地 CI 自检 + 开 PR**（确认门 4:本地跑 CI 的两个 job 全集;确认门 5:`gh pr create` 到 `main`,AI 不合并）。
+  - **M5 本地 CI 自检 + PR**:
+    - 门禁全集本地跑通:前端六道闸（`vitest` 36 passed、`vite build` 首屏 232.32 kB）+ 资产 `ruff format --check` / `ruff check` / `pytest --cov`（98.48%）。
+    - Actions 首跑（US-1 AC2）:`pull_request` run `45397236128` 与 `push` run `45397174177` 的两个 job 全 success,`gh pr checks 1` 四项 pass——按 job 的 `conclusion` 逐条核对,不看 run 表面状态。
+    - **[pull/1](https://github.com/Xxingpeng/tianchiCompetition/pull/1)** `feature/1-anatomy-sketch-demo` → `main`:OPEN、`MERGEABLE`、非 draft,正文按"改了什么/为什么/如何验证/风险与边界/未做"五段写全。**AI 不合并**,等人工审核。
+    - 顺手做了发布前的产物自检:`dist/` 经 `vite preview` 起服务,`index`/`structures.json`/GLB/PNG 全 200,生产包实测切结构（肺动脉干→`pa_*`）与英文检索（`pulmonary` → 2 条候选）都正常、控制台零消息、axe 0 违规。**这是 M6 发布物可以直接给 Qoder Sites 的证据**。
+- **下一步 (TODO 第一条)**:**M6 发布**——US-9 用 Qoder Sites 发布 `dist/` 产物并回填公开 URL（发布是对外动作,需人工批准）;同时等人工 merge `pull/1` 与开启 `main` 分支保护。
 - **阻塞项**:
-  1. **需人类动作**:M4 完成后批准提交/推送,并由 AI 开 PR（确认门 5）——AI 不 push、不合并。
+  1. **需人类动作**:审核并 merge `pull/1`（AI 不合并）;merge 后开启 `main` 分支保护（要求 PR + CI 通过）。US-9 的 Qoder Sites 发布同样需人工批准。
   2. **需人类动作**:天池报名 + 组队 + 实名认证 + 阿里云大学生认证（截止前必须完成,否则无法评奖）。
   3. ~~BP3D 原始包待下载~~ ✅ 已完成（2026-11-24）。
   4. ~~BP3D 许可表述冲突~~ ✅ 已按权利主体存档定稿为 CC BY 4.0。
@@ -67,7 +72,7 @@
 ### P0 · 工程
 
 - [x] 从 `main` 开 `feature/1-anatomy-sketch-demo`:Vite + React + TS + Three.js 骨架（2026-11-24,M1 完成,`npm ci` 后门禁全绿）
-- [x] 写 `.github/workflows/ci.yml`（**只有 CI,无 SSH/CD**;`web` + `asset-pipeline` 两个 job,Actions 首跑待 M5 提 PR）
+- [x] 写 `.github/workflows/ci.yml`（**只有 CI,无 SSH/CD**;`web` + `asset-pipeline` 两个 job,Actions 首跑已于 2026-11-24 在 pull/1 验证通过）
 - [x] 实现 `structures.json` schema 与构建期一致性校验（五项缺一即失败,见 `catalog.validate_catalog`）
 - [x] `tools/asset_pipeline/` 骨架 + pytest 用例（91 passed / 覆盖率 98.5%）
 
@@ -148,5 +153,6 @@
 - [x] 远端 `main` 与默认分支修复（人工批准 → `git push origin main` + `gh repo edit --default-branch main`）
 - [x] 2026-11-24 **M4 · 前端单页功能与可访问性**:检索（中/英/别名,三档排名 + 上限 8）、信息卡、三视图 + 可关高亮图层、GLB 3D（拖拽/滚轮/按钮缩放、无 WebGL 局部降级）、来源与许可提示、`h2` 分节 + combobox 键盘语义。门禁:prettier/eslint/tsc/`vitest 36 passed`/`vite build`（首屏 232.32 kB + 懒加载 639.88 kB）全绿;浏览器实测 63 个资产全部可取、3D 交互有像素证据、axe 0 违规。附带修掉宽屏画布被拉满整栏的缺陷（`max-width: 480px`）。
 - [x] 2026-11-24 **M4 提交并推送**（人工批准）:`dd672d7` feat(web) / `82fcbcc` test(web) / `ab3b7b4` docs(standards);`git ls-files` 抽查 134 个跟踪文件,无影像/权重/压缩包/证件,最大对象 `myo.glb` 1.86 MB。
+- [x] 2026-11-24 **M5 · CI 自检与 PR**（人工批准）:`306f2db` 推送后开 **pull/1** → `main`;Actions `pull_request` 与 `push` 两条 run 的两个 job 全 success、`gh pr checks` 四项 pass,US-1 AC2 落地。发布前另用 `vite preview` 验过 `dist/` 产物:四类路由 200、生产包交互正常、控制台零消息、axe 0 违规。合并留给人工。
 
 > 反臃肿:里程碑超过 15 条时,把更早内容合并成一行摘要,保持本文件可快速阅读。
