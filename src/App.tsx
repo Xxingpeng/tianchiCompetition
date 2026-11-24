@@ -107,6 +107,22 @@ function Browser({ catalog }: { catalog: Catalog }) {
         onSelect={(structure) => setSelectedId(structure.id)}
       />
 
+      <section aria-labelledby="catalog-heading" className="catalog">
+        <h2 id="catalog-heading">已收录 {structures.length} 个结构</h2>
+        <ul className="structure-list">
+          {structures.map((s) => (
+            <li key={s.id}>
+              <StructureButton structure={s} active={s.id === selectedId} onPick={setSelectedId} />
+            </li>
+          ))}
+        </ul>
+        {catalog.excluded.length > 0 && (
+          <p className="excluded">
+            未纳入：{catalog.excluded.map((e) => `${e.id}（${e.reason}）`).join("；")}
+          </p>
+        )}
+      </section>
+
       {selected ? (
         <section className="detail-grid" aria-labelledby="detail-heading">
           {/* 详情区先出 h2 再进 h3，否则标题层级会从 h1 直接跳到 h3。 */}
@@ -129,22 +145,6 @@ function Browser({ catalog }: { catalog: Catalog }) {
       ) : (
         <p role="status">当前没有可选结构，请先在上方搜索或从列表中选择。</p>
       )}
-
-      <section aria-labelledby="catalog-heading" className="catalog">
-        <h2 id="catalog-heading">已收录 {structures.length} 个结构</h2>
-        <ul className="structure-list">
-          {structures.map((s) => (
-            <li key={s.id}>
-              <StructureButton structure={s} active={s.id === selectedId} onPick={setSelectedId} />
-            </li>
-          ))}
-        </ul>
-        {catalog.excluded.length > 0 && (
-          <p className="excluded">
-            未纳入：{catalog.excluded.map((e) => `${e.id}（${e.reason}）`).join("；")}
-          </p>
-        )}
-      </section>
     </>
   );
 }

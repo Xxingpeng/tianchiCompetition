@@ -315,6 +315,11 @@ main {
   cursor: pointer;
 }
 
+.catalog {
+  /* 目录列表现在排在详情区之前，用下边距与详情区隔开。 */
+  margin-bottom: 1.25rem;
+}
+
 .catalog h2 {
   margin: 0 0 0.75rem;
   font-size: 1.05rem;
