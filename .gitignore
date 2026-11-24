@@ -1,0 +1,79 @@
+# ---------- 依赖与构建产物 ----------
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ---------- 编辑器 / 系统 ----------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---------- 本地环境与密钥（绝不入库） ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+secrets/
+
+# ---------- 原始第三方解剖资产（约 3.6 GB 解压产物，只留在本地） ----------
+assets_raw/**
+!assets_raw/README.md
+
+# ---------- 医疗影像与模型权重（隐私 + 体积，绝不入库） ----------
+*.nii
+*.nii.gz
+*.nrrd
+*.mhd
+*.mha
+*.dcm
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.npz
+*.npy
+*.h5
+logs/
+runs/
+wandb/
+
+# ---------- 个人材料（证件/成绩单/简历，绝不入库） ----------
+*身份证*
+*护照*
+*成绩单*
+*简历*
+*个人材料/
+
+# ---------- 临时与抓包 ----------
+*.tmp
+*.log
+scratch/
+tmp/
+
+# ---------- 说明：以下演示资产【必须】入库，故不被上面规则排除 ----------
+# public/assets/structures.json
+# public/assets/slices/*.webp|png
+# public/assets/meshes/*.glb
+# 若将来引入新的中间产物目录，先补进本文件再使用。

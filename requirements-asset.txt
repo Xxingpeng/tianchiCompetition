@@ -1,0 +1,8 @@
+# 资产管线运行依赖（conda env `tianchi`, Python 3.11.18）
+# 安装：python -m pip install -r requirements-asset.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+# 说明：不引入 trimesh/pyvista —— OBJ 解析、体素化、GLB 写出全部由 tools/asset_pipeline 自带实现，
+#       这样公开仓库不携带第三方二进制依赖，换机可复现，也便于单测。
+numpy==2.4.6
+scipy==1.17.1
+scikit-image==0.26.0
+pillow==13.0.0

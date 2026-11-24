@@ -1,0 +1,8 @@
+"""资产管线运行与检查依赖（conda env `tianchi`）。
+
+    python -m pip install -r requirements-dev.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+"""
+
+pytest==9.2.0
+pytest-cov==7.1.0
+ruff==0.17.6
