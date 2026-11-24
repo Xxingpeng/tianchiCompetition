@@ -8,11 +8,16 @@
 
 ## 当前状态 (最后更新: 2026-11-24 · by Qoder)
 
-- **阶段**:`开发` —— 六步交付流程**第③步（本地实现 + 自测）**,M2/M3 已走 BP3D 正式路线,**BP3D 改动尚未提交**
+- **阶段**:`开发` —— 六步交付流程**第③步（本地实现 + 自测）**,M1/M2/M3 均已完成并推送,下一步 M4 前端单页功能
 - **上一步完成**:
+  - **M1 前端工程骨架**（Vite 8 + React 19 + TS 6 + Vitest 5,Three.js 依赖已就位待 M4 使用）:
+    - 门禁实测:`npm ci` → `prettier --check .` → `eslint .` → `tsc --noEmit` → `vitest run`（**16 passed / 3 files**）→ `vite build`（JS 224.12 KiB,gzip 70.92 KiB,远低于首屏 3 MB 闸）全绿。
+    - 浏览器实测（`vite preview` + 真实 `public/assets/structures.json`）:渲染出 9 个结构、逐条来源（8 条 `BP3D / *_FJ####.obj` + 1 条"自制几何（BP3D 未收录 lxa）"）、用途声明与 BP3D 署名原文均可见,控制台无报错。
+    - `.github/workflows/ci.yml` 只有 CI（`web` + `asset-pipeline` 两个 job),无任何 `SSH_*`、无部署步骤。
+    - 干净 checkout 可复现性已验证:删掉 `node_modules` 后 `npm ci` 重装,六道门禁与构建仍全绿（US-1 AC4）。
   - 项目书就地修订完成并备份（见里程碑）。
   - `gh repo clone Xxingpeng/tianchiCompetition` → `F:\天池赛\tianchiCompetition`;`main` 已有引导提交 `7493745`。
-  - 开发分支 `feature/1-anatomy-sketch-demo` 已切出,已有 3 个提交（`871450c` 管线 / `355e429` 兜底资产 / `bbed3c6` standards）。
+  - 开发分支 `feature/1-anatomy-sketch-demo` 已切出并**已推送到 origin**（`871450c` 管线 / `355e429` 兜底资产 / `bbed3c6` standards / `593921e` 管线改 BP3D / `1ec6e36` 资产重生成 / `8374d78` 文档与许可）。
   - **BP3D Release 4.0 已下载并逐个核对**:`isa_BP3D_4.0_obj_99.zip`（142,903,898 B）→ 8 个心脏部件 OBJ 放入 `assets_raw/bodyparts3d/`（gitignored）,`bp3d_manifest.json` 全部 `verified: true`,只有左心耳留空并标"BP3D 未收录"。
   - **许可阻塞项已解除**:权利主体存档随包 `README_e.html` §3（2025-02-25 更新）为 **CC BY 4.0**,允许再分发与演绎;`openanatomy.jp` 的 CC-BY-SA 2.1 JP 是旧版表述,不再作为依据。
   - **M2 Python 示意资产管线**:`tools/asset_pipeline/`（geom / voxel / bp3d / fallback / surface / glb / render / catalog / build 九个模块）+ 7 个测试文件。
@@ -22,9 +27,9 @@
     - `provenance_mode = bp3d`;9 结构全部落地（8 个 BP3D + 1 个自制左心耳）,`excluded` 为空。
     - 体积:切面 64.8 KiB + GLB 3925.9 KiB + JSON 13.2 KiB ≈ **3.91 MB**;单文件最大 `myo.glb` 1816.4 KiB（阈值 2 MB,已用 91%,再加密体素会先撞这条线）。
     - 视觉抽查通过:心室壁包住心腔、升主动脉轴位为圆断面、冠/矢状位为竖条带;自制左心耳与左心房之间留有一格空隙（规则"绝不覆盖 BP3D 体素",宁可小）。
-- **下一步 (TODO 第一条)**:**M1 前端工程骨架**（Vite + React + TS + Three.js、ESLint/Prettier/vitest、`.github/workflows/ci.yml` 仅 CI）→ 再做 M4 单页功能。
+- **下一步 (TODO 第一条)**:**M4 前端单页功能**（US-2 检索 → US-3 信息卡 → US-4 三视图 → US-5 GLB 3D → US-7 提示与署名 → US-8 可访问性/响应式）。
 - **阻塞项**:
-  1. **需人类动作**:批准把当前工作树（BP3D 相关改动 + 重生成资产）提交并推送到 `feature/1-anatomy-sketch-demo`（AI 不擅自 push）。
+  1. **需人类动作**:M4 完成后批准提交/推送,并由 AI 开 PR（确认门 5）——AI 不 push、不合并。
   2. **需人类动作**:天池报名 + 组队 + 实名认证 + 阿里云大学生认证（截止前必须完成,否则无法评奖）。
   3. ~~BP3D 原始包待下载~~ ✅ 已完成（2026-11-24）。
   4. ~~BP3D 许可表述冲突~~ ✅ 已按权利主体存档定稿为 CC BY 4.0。
@@ -37,9 +42,9 @@
 ### P0 · 资格与仓库
 
 - [ ] **人工**:天池赛项报名、组队、实名认证、阿里云大学生认证（全员）
-- [ ] **人工确认**本次 `standards/` + `.gitignore` 内容 → 允许首次提交
-- [ ] `main` 最小引导提交 + 推送,并对 `git ls-files` 做泄露抽查
-- [ ] 开启 `main` 分支保护（要求 PR + CI 通过）
+- [x] **人工确认**本次 `standards/` + `.gitignore` 内容 → 允许首次提交（2026-11-24 已批准并推送）
+- [x] `main` 最小引导提交 + 推送,并对 `git ls-files` 做泄露抽查（引导提交 `7493745`;抽查无影像/权重/原始包）
+- [ ] 开启 `main` 分支保护（要求 PR + CI 通过）—— **需人类在 GitHub 设置里操作**
 
 ### P0 · 资产与许可
 
@@ -52,8 +57,8 @@
 
 ### P0 · 工程
 
-- [ ] 从 `main` 开 `feature/1-anatomy-sketch-demo`:Vite + React + TS + Three.js 骨架（分支已开,工程待建）
-- [ ] 写 `.github/workflows/ci.yml`（**只有 CI,无 SSH/CD**）
+- [x] 从 `main` 开 `feature/1-anatomy-sketch-demo`:Vite + React + TS + Three.js 骨架（2026-11-24,M1 完成,`npm ci` 后门禁全绿）
+- [x] 写 `.github/workflows/ci.yml`（**只有 CI,无 SSH/CD**;`web` + `asset-pipeline` 两个 job,Actions 首跑待 M5 提 PR）
 - [x] 实现 `structures.json` schema 与构建期一致性校验（五项缺一即失败,见 `catalog.validate_catalog`）
 - [x] `tools/asset_pipeline/` 骨架 + pytest 用例（91 passed / 覆盖率 98.5%）
 
@@ -84,6 +89,7 @@
 | 2026-11-24 | 前端**不复用** `target_labels.py` 的别名→整数映射,结构表由资产管线独立生成 | 该表与 2026-11-20 标签纠正声明冲突,复用会把"左心室"指向心肌 |
 | 2026-11-24 | 三视图与 3D 网格**从同一份统一体素派生** | 保证 UI 与几何完全一致,避免"图与模型对不上" |
 | 2026-11-24 | 资产体积门禁:单个 GLB ≤ **2 MB**、全部网格合计 ≤ **8 MB**、首屏非网格资源 ≤ **3 MB** | 静态托管与评委侧网络可接受;超限先减面而不是砍结构 |
+| 2026-11-24 | 前端测试环境 jsdom 钉 **`^29.1.1`**,`engines.node` 抬到 **`>=22.13.0`** | jsdom 30+ 的 `engines` 下限 22.22.2 与本机 Node 22.14 冲突,崩在 undici 的 zstd 分支上;钉住次新大版本比升级用户工具链或用 `--force` 更可控,且本地与 CI 用同一份 lockfile |
 
 ---
 
@@ -107,6 +113,8 @@
 - **`--out` 指到非 `assets` 目录会让校验全线假报"未落盘"**:清单存站点相对路径 `assets/...`,校验按 `root = out.parent` 解析;曾把产出指到临时目录,63 项全红,而资产本身没问题。解决:`build.main` 硬约束 `--out` 必须以 `assets` 结尾并给出原因。验证:`test_out_guard_requires_an_assets_dir`。
 - **manifest 里的 FMA/BP 编号与"FMA 许可未核实"不矛盾**:编号取自 BP3D 随包 `isa_parts_list_e.txt` / `isa_element_parts.txt`（CC BY 4.0）,属出处引用而非再分发 FMA 数据集;页面不展示这些编号。理由已写进 `NOTICE.md` §3,别在仓库里留成"看起来违规"的悬案。
 - **资产清单路径与写盘路径是两个坐标系**:`structures.json` 存站点相对路径 `assets/...`,磁盘上文件在 `public/assets/...`。曾按 `out / rel` 写盘,产出 `public/assets/assets/meshes/*.glb`。解决:写盘用 `out/meshes`,校验用 `root = out.parent`;验证:`test_procedural_build_passes_its_own_validation`、`test_missing_assets_are_reported`。
+- **jsdom 30+ 在 Node 22.14 上让 vitest 起不了 worker**:`npx vitest run` 报 3 个 `[vitest-pool]: Failed to start forks worker`,真正原因是 `node_modules/undici/lib/interceptor/decompress.js` 里 `createZstdDecompress.bind(...)` —— 本机 Node 22.14.0 没有 `zlib.createZstdDecompress`,而 jsdom 30/31 的 `engines` 下限是 `^22.22.2`。npm 事先给过 EBADENGINE 警告但照样装上了。解决:**把 jsdom 钉在 `^29.1.1`**（`engines: ^22.13.0`,带的 undici 7.30.2 不走 zstd 分支）,并把 `package.json` 的 `engines.node` 提到 `>=22.13.0`;不改用户本机 Node、不用 `--force`/`--legacy-peer-deps`。CI 用 `node-version: "22"`（≥22.22）同样吃这个版本,本地与 CI 一致。
+- **远端 `main` 不见了,默认分支被顶到 feature 分支**:`git ls-remote --heads origin` 只有 `feature/1-anatomy-sketch-demo`,`gh api .../branches/main/protection` 返回 404,仓库 `default_branch` 已是 feature 分支,本地 `main` 显示 `[origin/main: gone]`。影响:GitHub Flow 的 PR 目标缺失,`main` 分支保护也无从谈起。解决（2026-11-24 已按人工批准执行）:`git push origin main`（内容早已随 feature 分支公开,不新增对象）+ `gh repo edit --default-branch main`,现在 `ls-remote` 两条分支都在、`default_branch = main`。**仍未做**:`main` 分支保护（要求 PR + CI 通过）——需人工在 GitHub 设置里开,或用 `gh api` 代开。
 - **待确认:git 身份邮箱**:当前提交内嵌 `898328775@qq.com`,仓库公开后可见。是否换成 GitHub noreply 邮箱由本人决定,AI 不改全局 git 配置。
 
 ---
@@ -115,16 +123,16 @@
 
 - [x] 2026-11-24 定位研究资产真实位置在 `D:\codex\project002_解剖本体文本引导3D医学分割`（工作区 `F:\天池赛` 原本无资产),并逐项核实:源码目录、33 份配置、109 个 run、指标 JSON、基线对比文件均存在;网格类资产为 **0**。
 - [x] 2026-11-24 完成项目书就地修订:429 行 / 35,716 字节,原文件备份为 `.bak-20261124`（15,135 字节）。新增 §0 三处最重要变化、§6.1 许可判定表、§6.5 标签映射冻结、§6.6 公开仓库卫生、§11 对齐官方提交清单、§12 P0 待办、附录 A 证据索引。
-- [x] 2026-11-24 读完 `开发规范standards/standards-template` 全部 11 个文件,并把六步流程与确认门纳入本项目 TODO 结构。
-- [x] 2026-11-24 克隆空仓库 `tianchiCompetition`,复制 `standards/`（11 项）。
-- [x] 2026-11-24 填好 `standards/00`（含对 `05`/`03` 的两处已确认偏离）、`standards/01`（US-1~US-9 带 Given/When/Then 验收）、`standards/PROGRESS.md`;落 `.gitignore`、根 `README.md`、`NOTICE.md` 骨架。
+- [x] 2026-11-24 规范落地与仓库初始化:读完 `开发规范standards/standards-template` 全部 11 个文件并把六步流程/确认门纳入 TODO;克隆空仓库 `tianchiCompetition` 并复制 `standards/`;填好 `standards/00`（含对 `05`/`03` 的两处已确认偏离）、`standards/01`（US-1~US-9 带 Given/When/Then 验收）、`standards/PROGRESS.md`;落 `.gitignore`、根 `README.md`、`NOTICE.md` 骨架。
 - [x] 2026-11-24 **M2 · 资产管线**:`tools/asset_pipeline/` 九个模块（`geom`/`voxel`/`bp3d`/`fallback`/`surface`/`glb`/`render`/`catalog`/`build`）+ 7 个测试文件 82 用例,覆盖率 98.3%。三视图与 GLB 共用一份标注体素;切面取结构最密层;开口 OBJ、坐标错位、超预算冲突全部在构建期硬失败。
 - [x] 2026-11-24 **M3 首版 · 资产产出**:程序化兜底路线生成 `public/assets/`（9 结构 × 3 视图 × 底图+overlay = 54 PNG、9 GLB、`structures.json`）,合计 ≈1.25 MB,单文件最大 451.9 KiB,构建期自校验通过,`provenance_mode` 如实标为 `procedural_fallback`。
 - [x] 2026-11-24 **BP3D 正式几何接入**:下载 `isa_BP3D_4.0_obj_99.zip`（142,903,898 B）,按 `isa_parts_list_e.txt` / `isa_element_parts.txt` 逐个核对文件名并写进 `bp3d_manifest.json`（8 条 `verified: true`;心肌取 *wall of ventricle* FMA13884/BP7815;肺静脉取 *trunk of pulmonary vein*;左心耳确认 BP3D 无词条）。实测轴向与本项目同号、无需翻转。
 - [x] 2026-11-24 **M3 重生成 · BP3D 路线**:`--source bp3d --grid 96 --spacing 1.6` → 8 部件共用变换 `scale=1.1556 offset=[52.9, 219.9, -1350.5]`,自制左心耳 1616 体素,9 结构全部可用、`excluded` 为空,合计 ≈3.91 MB,构建期自校验通过;视觉抽查确认心室壁包心腔、主动脉断面形态正确。
 - [x] 2026-11-24 **许可阻塞项解除**:在权利主体存档随包 README 核实 BP3D 为 **CC BY 4.0**（允许再分发与演绎）,`NOTICE.md` §2/§6 与项目书 §6.1 同步定稿署名原文。
 - [x] 2026-11-24 **门禁补齐**:pytest 由 82 → **91 用例 / 覆盖率 98.5%**,新增开口面片容忍度、按部件吞没比例、预算兜底、自制部件锚定与不覆盖、`--out` 目录约束等判据用例;`ruff check` / `ruff format --check` 全绿。
-- [ ] BP3D 路线的工作树提交（**等待人工确认**;推送需另行批准）
-- [ ] 首次引导提交（**等待人工确认**）
+- [x] 2026-11-24 **BP3D 工作树提交并推送**（人工批准）:`593921e` 管线改 BP3D 默认源 / `1ec6e36` 资产重生成 / `8374d78` 文档与许可;`feature/1-anatomy-sketch-demo` 已在 origin。
+- [x] 2026-11-24 **M1 · 前端工程骨架 + CI**:Vite 8 + React 19 + TS 6 + Vitest 5 + ESLint 10 flat config + Prettier 3。`src/types.ts` 与 `src/data/catalog.ts` 把 `structures.json` 的 schema 变成运行期硬校验（schema 版本、9 个 label 唯一、`#rrggbb`、三视图路径、体积>0、声明必须含"示意"）,一次收集全部问题;`App.tsx` 有 loading/error/ready 三态、skip-link、`role="status"`/`role="alert"`。门禁:`npm ci` → prettier → eslint → tsc → **vitest 16 passed** → `vite build`（JS 224.12 KiB / gzip 70.92 KiB）。浏览器实测真实目录:9 结构 + 逐条来源 + BP3D 署名与用途声明可见,控制台无报错。
+- [x] M1 骨架的工作树提交并推送（人工批准 → `2858ff8` 前端骨架 / `b72443c` CI / 本条 docs 提交）
+- [x] 远端 `main` 与默认分支修复（人工批准 → `git push origin main` + `gh repo edit --default-branch main`）
 
 > 反臃肿:里程碑超过 15 条时,把更早内容合并成一行摘要,保持本文件可快速阅读。

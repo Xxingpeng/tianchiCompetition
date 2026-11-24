@@ -73,7 +73,7 @@ PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈�
 
 - [x] 复核许可表述差异：以权利主体存档（DBCLS/LSDB Archive）随包 `README_e.html` 为准，**CC BY 4.0**；`openanatomy.jp` 历史页面的 CC-BY-SA 2.1 JP 是旧版表述，不再作为依据
 - [x] 补齐 §2 的版本、下载日期、包大小与文件名核对结论（`assets_raw/bp3d_manifest.json`）
-- [ ] 页面可见区域确认出现 BP3D 署名原文与用途声明
-- [ ] `NOTICE.md` 与页面署名文本一致
+- [x] 页面可见区域确认出现 BP3D 署名原文与用途声明（2026-11-24 `vite preview` 浏览器实测：页脚两行均在，控制台无报错）
+- [x] `NOTICE.md` 与页面署名文本一致（`structures.json` 的 notice 行与本文件 §2 署名原文逐字符相等）
 - [ ] 抽查公开页面源码，确认不含 FMA ID、真实病例编号、个人材料
 - [ ] `git ls-files` 抽查，确认无影像/权重/原始包入库

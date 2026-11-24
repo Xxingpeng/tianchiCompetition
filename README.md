@@ -32,6 +32,8 @@ npm run check      # 格式 + lint + 类型 + 测试
 npm run build      # 产出 dist/
 ```
 
+需要 Node.js ≥ 22.13（`package.json` 的 `engines` 已锁）。测试环境用 jsdom 29：jsdom 30+ 的 engines 下限是 22.22.2，在 22.13–22.21 上会让 vitest 起 worker 时崩在 undici 的 zstd 分支上，因此刻意不跟到最新版。
+
 准备资产输入（仅重建演示资产时需要）：把 BodyParts3D Release 4.0 的 OBJ 文件按 `assets_raw/README.md` 的清单放入目录，再运行 `tools/asset_pipeline` 的生成脚本。
 
 ## 开发约定
