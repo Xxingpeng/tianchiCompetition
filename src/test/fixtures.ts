@@ -22,6 +22,8 @@ export function structure(overrides: Partial<StructureRecord> = {}): StructureRe
     label: 3,
     name: "左心室",
     en_name: "Left ventricle",
+    // 注意：overrides 不会重置 aliases。造第二条结构时必须自带别名，
+    // 否则两条结构共用 "LV"，检索测试会在毫无察觉的情况下出现两个候选。
     aliases: ["左室", "left ventricle", "LV"],
     description: "位于左心房下方的心腔，壁最厚。",
     parent: "心腔",
@@ -53,6 +55,7 @@ export function catalog(overrides: Partial<Catalog> = {}): Catalog {
         label: 1,
         name: "心肌",
         en_name: "Myocardium",
+        aliases: ["心肌壁", "myocardium"],
         provenance: "BP3D / myo_FJ2428.obj",
       }),
     ],

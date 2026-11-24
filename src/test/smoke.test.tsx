@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App";
 import { catalog } from "./fixtures";
@@ -20,10 +20,20 @@ describe("页面骨架", () => {
   it("载入完成后列出结构名与逐条来源", async () => {
     mockFetch(catalog());
     render(<App />);
-    expect(await screen.findByRole("heading", { name: /已收录 2 个结构/ })).toBeInTheDocument();
-    expect(screen.getByText("左心室")).toBeInTheDocument();
-    expect(screen.getByText("BP3D / lv_FJ2422.obj")).toBeInTheDocument();
-    expect(screen.getByText("BP3D / myo_FJ2428.obj")).toBeInTheDocument();
+    const section = await screen.findByRole("region", { name: /已收录 2 个结构/ });
+    expect(within(section).getByText("左心室")).toBeInTheDocument();
+    expect(within(section).getByText("BP3D / lv_FJ2422.obj")).toBeInTheDocument();
+    expect(within(section).getByText("BP3D / myo_FJ2428.obj")).toBeInTheDocument();
+  });
+
+  it("载入后默认展示一个结构的完整详情，页面不是空的", async () => {
+    mockFetch(catalog());
+    render(<App />);
+    // 默认选标签最小的那条（心肌），保证评委一进站就有内容可看
+    expect(await screen.findByRole("heading", { name: "心肌" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "三视图示意切面" })).toBeInTheDocument();
+    expect(screen.getAllByRole("figure")).toHaveLength(3);
+    expect(screen.getByRole("button", { name: /心肌/ })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("用途声明出现在页面上", async () => {
