@@ -131,7 +131,7 @@
 技术备注:
 - Three.js 原生 + GLTFLoader;网格来自体素化后 `marching_cubes` + 减面,保证与 US-4 的高亮同源。
 
-### US-6 示意资产生成管线 · 优先级 P0 · 状态: Backlog
+### US-6 示意资产生成管线 · 优先级 P0 · 状态: 已完成（2026-11-24，BP3D 路线，本地门禁全绿）
 
 作为 **项目开发者**,
 我想要 一条可重跑、可审计的 Python 资产管线,
@@ -147,7 +147,8 @@
 技术备注:
 - **一律在 conda env `tianchi`（Python 3.11.18）执行**，不碰研究环境 `FMA`。依赖见 `requirements-asset.txt`（numpy 2.4.6 / scipy 1.17.1 / scikit-image 0.26.0 / pillow 13.0.0）与 `requirements-dev.txt`（pytest 9.2.0 / pytest-cov 7.1.0 / ruff 0.17.6）。
 - **不引入 trimesh**：OBJ 解析、体素化、`marching_cubes`、GLB 写出全部由 `tools/asset_pipeline` 纯 numpy 自实现，减少外部二进制依赖。
-- BP3D 与研究体素网格的仿射对齐是本项目最大技术不确定项；管线先用**程序化隐式几何**跑通全链（零许可风险、当天可演示），BP3D OBJ 作为同源替换项后续接入。
+- **几何来源分两层**:**BP3D OBJ 是默认路线**（已接入 Release 4.0,文件名逐个核对,产物 `provenance_mode = bp3d`）;**程序化隐式几何只作离线/CI 兜底**,用于干净 runner 上没有原始包时仍能验证"体素化 → 渲染 → 导出 → 校验"全链。两条路线的产物在 `structures.json` 里逐条标 `provenance`,页面如实显示来源,不互相冒充。
+- BP3D 各部件共用一次均匀缩放 + 平移,实测轴向与本项目 `[左右, 前后, 上下]` 同号、无需翻转;仿射对位不再是不确定项。
 
 ### US-7 许可、署名与用途提示 · 优先级 P0 · 状态: Backlog
 
