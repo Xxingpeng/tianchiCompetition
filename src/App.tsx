@@ -1,7 +1,15 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { InfoCard } from "./components/InfoCard";
+import { StructurePicker } from "./components/StructurePicker";
+import { TriView } from "./components/TriView";
 import { CatalogError, loadCatalog, selectableStructures } from "./data/catalog";
-import type { Catalog } from "./types";
+import type { Catalog, StructureRecord } from "./types";
 import "./styles.css";
+
+// Three.js 有 600 多 KB，只有真正看 3D 时才需要，所以按需加载，首屏 JS 保持在 200 多 KB。
+const MeshViewer = lazy(() =>
+  import("./components/MeshViewer").then((module) => ({ default: module.MeshViewer })),
+);
 
 type State =
   | { kind: "loading" }
@@ -57,30 +65,7 @@ export function App() {
           </div>
         )}
 
-        {state.kind === "ready" && (
-          <section aria-labelledby="catalog-heading">
-            <h2 id="catalog-heading">已收录 {state.catalog.structures.length} 个结构</h2>
-            <ul className="structure-list">
-              {selectableStructures(state.catalog).map((s) => (
-                <li key={s.id}>
-                  <span
-                    className="swatch"
-                    style={{ backgroundColor: s.color }}
-                    aria-hidden="true"
-                  />
-                  <strong>{s.name}</strong>
-                  <span className="en-name">{s.en_name}</span>
-                  <span className="provenance">{s.provenance}</span>
-                </li>
-              ))}
-            </ul>
-            {state.catalog.excluded.length > 0 && (
-              <p className="excluded">
-                未纳入：{state.catalog.excluded.map((e) => `${e.id}（${e.reason}）`).join("；")}
-              </p>
-            )}
-          </section>
-        )}
+        {state.kind === "ready" && <Browser catalog={state.catalog} />}
       </main>
 
       <footer className="site-footer">
@@ -97,5 +82,93 @@ export function App() {
         </p>
       </footer>
     </>
+  );
+}
+
+function Browser({ catalog }: { catalog: Catalog }) {
+  const structures = useMemo(() => selectableStructures(catalog), [catalog]);
+  const [selectedId, setSelectedId] = useState<string | null>(structures[0]?.id ?? null);
+  const selected = structures.find((s) => s.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (catalog.excluded.length > 0) {
+      console.warn(
+        "目录中被排除的结构（几何或许可不达标）：",
+        catalog.excluded.map((e) => `${e.id}：${e.reason}`),
+      );
+    }
+  }, [catalog]);
+
+  return (
+    <>
+      <StructurePicker
+        structures={structures}
+        selected={selected}
+        onSelect={(structure) => setSelectedId(structure.id)}
+      />
+
+      {selected ? (
+        <section className="detail-grid" aria-labelledby="detail-heading">
+          {/* 详情区先出 h2 再进 h3，否则标题层级会从 h1 直接跳到 h3。 */}
+          <h2 id="detail-heading" className="detail-title">
+            结构详情
+          </h2>
+          <InfoCard structure={selected} />
+          <TriView structure={selected} />
+          <Suspense
+            fallback={
+              <section className="mesh-viewer">
+                <h3>三维形态</h3>
+                <p role="status">正在准备 3D 视图…</p>
+              </section>
+            }
+          >
+            <MeshViewer key={selected.id} structure={selected} />
+          </Suspense>
+        </section>
+      ) : (
+        <p role="status">当前没有可选结构，请先在上方搜索或从列表中选择。</p>
+      )}
+
+      <section aria-labelledby="catalog-heading" className="catalog">
+        <h2 id="catalog-heading">已收录 {structures.length} 个结构</h2>
+        <ul className="structure-list">
+          {structures.map((s) => (
+            <li key={s.id}>
+              <StructureButton structure={s} active={s.id === selectedId} onPick={setSelectedId} />
+            </li>
+          ))}
+        </ul>
+        {catalog.excluded.length > 0 && (
+          <p className="excluded">
+            未纳入：{catalog.excluded.map((e) => `${e.id}（${e.reason}）`).join("；")}
+          </p>
+        )}
+      </section>
+    </>
+  );
+}
+
+function StructureButton({
+  structure,
+  active,
+  onPick,
+}: {
+  structure: StructureRecord;
+  active: boolean;
+  onPick: (id: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="structure-button"
+      aria-pressed={active}
+      onClick={() => onPick(structure.id)}
+    >
+      <span className="swatch" style={{ backgroundColor: structure.color }} aria-hidden="true" />
+      <span className="structure-name">{structure.name}</span>
+      <span className="en-name">{structure.en_name}</span>
+      <span className="provenance">{structure.provenance}</span>
+    </button>
   );
 }

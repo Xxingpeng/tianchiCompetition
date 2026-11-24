@@ -87,15 +87,25 @@ main {
   gap: 0.5rem;
 }
 
-.structure-list li {
+.structure-button {
   display: grid;
   grid-template-columns: 0.875rem 1fr;
   align-items: baseline;
   gap: 0.15rem 0.6rem;
+  width: 100%;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--line);
   border-radius: 0.5rem;
   background: var(--bg-soft);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.structure-button[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .swatch {
@@ -105,6 +115,209 @@ main {
   height: 0.875rem;
   border: 1px solid var(--ink-muted);
   border-radius: 2px;
+}
+
+.picker {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.picker-input {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  font: inherit;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.picker-hint,
+.picker-current,
+.mesh-help,
+.slice-note,
+.mesh-status {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--bg);
+  max-height: 18rem;
+  overflow: auto;
+}
+
+.picker-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+.picker-list li[aria-selected="true"] {
+  background: #e6eff8;
+}
+
+.picker-list .swatch {
+  grid-row: auto;
+}
+
+.hit-via,
+.picker-more,
+.picker-empty {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.info-card,
+.tri-view,
+.mesh-viewer,
+.catalog {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 1rem 1.1rem;
+  background: var(--bg);
+}
+
+.info-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+}
+
+.info-card dl {
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) 1fr;
+  gap: 0.3rem 0.9rem;
+  margin: 0;
+}
+
+.info-card dt {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.info-card dd {
+  margin: 0;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.tri-view h3,
+.mesh-viewer h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.highlight-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.slices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.slices figure {
+  margin: 0;
+}
+
+.slice-stack {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #101418;
+  border-radius: 0.4rem;
+  overflow: hidden;
+}
+
+.slice-stack img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.slices figcaption {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.mesh-host {
+  display: grid;
+  place-items: center;
+  background: #101418;
+  border-radius: 0.4rem;
+  min-height: 12rem;
+}
+
+.mesh-host canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.mesh-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.mesh-buttons button {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: var(--bg-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+.catalog h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
 }
 
 .en-name,
