@@ -1,0 +1,465 @@
+{
+  "schema_version": 1,
+  "provenance_mode": "procedural_fallback",
+  "grid": {
+    "shape": [
+      96,
+      96,
+      96
+    ],
+    "spacing_mm": [
+      1.6,
+      1.6,
+      1.6
+    ],
+    "origin_mm": [
+      -76.80000000000001,
+      -76.80000000000001,
+      -76.80000000000001
+    ],
+    "axis_order": [
+      "左右",
+      "前后",
+      "上下"
+    ],
+    "axis_note": "V[i0,i1,i2]：i0 右→左，i1 前→后，i2 下→上"
+  },
+  "notices": [
+    "示意结构模型，非真实病例影像，亦非分割模型推理结果；仅用于解剖学习展示，不含诊断或治疗建议。",
+    "几何为本项目程序化兜底模型，未使用第三方解剖网格；不用于诊断。"
+  ],
+  "structures": [
+    {
+      "id": "lv",
+      "label": 3,
+      "name": "左心室",
+      "en_name": "Left ventricle",
+      "aliases": [
+        "左室",
+        "left ventricle",
+        "LV",
+        "左心室腔"
+      ],
+      "description": "四个心腔中壁最厚、腔最长的一个，位于心脏左下方，收缩时把血送入主动脉。",
+      "parent": "心腔",
+      "color": "#d33d51",
+      "mesh": "assets/meshes/lv.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/lv_axial_base.png",
+          "overlay": "assets/slices/lv_axial_overlay.png",
+          "slice_index": 22,
+          "slice_voxels": 52
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/lv_coronal_base.png",
+          "overlay": "assets/slices/lv_coronal_overlay.png",
+          "slice_index": 56,
+          "slice_voxels": 14
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/lv_sagittal_base.png",
+          "overlay": "assets/slices/lv_sagittal_overlay.png",
+          "slice_index": 53,
+          "slice_voxels": 11
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 67,
+        "centroid_slice_index": [
+          22,
+          56,
+          53
+        ]
+      }
+    },
+    {
+      "id": "myo",
+      "label": 1,
+      "name": "心肌",
+      "en_name": "Myocardium",
+      "aliases": [
+        "左心室心肌",
+        "心室壁",
+        "myocardium",
+        "LV myocardium"
+      ],
+      "description": "构成心室壁的肌肉层。左心室壁明显厚于右心室，因为它要对抗更高的后负荷。",
+      "parent": "心壁",
+      "color": "#b5651d",
+      "mesh": "assets/meshes/myo.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/myo_axial_base.png",
+          "overlay": "assets/slices/myo_axial_overlay.png",
+          "slice_index": 36,
+          "slice_voxels": 476
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/myo_coronal_base.png",
+          "overlay": "assets/slices/myo_coronal_overlay.png",
+          "slice_index": 47,
+          "slice_voxels": 791
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/myo_sagittal_base.png",
+          "overlay": "assets/slices/myo_sagittal_overlay.png",
+          "slice_index": 42,
+          "slice_voxels": 605
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 17665,
+        "centroid_slice_index": [
+          36,
+          47,
+          42
+        ]
+      }
+    },
+    {
+      "id": "rv",
+      "label": 5,
+      "name": "右心室",
+      "en_name": "Right ventricle",
+      "aliases": [
+        "右室",
+        "right ventricle",
+        "RV",
+        "右心室腔"
+      ],
+      "description": "位于心脏最靠前的一面，壁薄、腔呈新月形包在左心室右侧，把血泵入肺动脉。",
+      "parent": "心腔",
+      "color": "#2f7ed8",
+      "mesh": "assets/meshes/rv.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/rv_axial_base.png",
+          "overlay": "assets/slices/rv_axial_overlay.png",
+          "slice_index": 41,
+          "slice_voxels": 193
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/rv_coronal_base.png",
+          "overlay": "assets/slices/rv_coronal_overlay.png",
+          "slice_index": 39,
+          "slice_voxels": 471
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/rv_sagittal_base.png",
+          "overlay": "assets/slices/rv_sagittal_overlay.png",
+          "slice_index": 39,
+          "slice_voxels": 445
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 4635,
+        "centroid_slice_index": [
+          41,
+          39,
+          39
+        ]
+      }
+    },
+    {
+      "id": "la",
+      "label": 2,
+      "name": "左心房",
+      "en_name": "Left atrium",
+      "aliases": [
+        "左房",
+        "left atrium",
+        "LA",
+        "左心房腔"
+      ],
+      "description": "位置最靠后的心腔，接收四条肺静脉回流的血，再经二尖口送入左心室。",
+      "parent": "心腔",
+      "color": "#7a5bd6",
+      "mesh": "assets/meshes/la.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/la_axial_base.png",
+          "overlay": "assets/slices/la_axial_overlay.png",
+          "slice_index": 63,
+          "slice_voxels": 178
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/la_coronal_base.png",
+          "overlay": "assets/slices/la_coronal_overlay.png",
+          "slice_index": 63,
+          "slice_voxels": 133
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/la_sagittal_base.png",
+          "overlay": "assets/slices/la_sagittal_overlay.png",
+          "slice_index": 57,
+          "slice_voxels": 116
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 1402,
+        "centroid_slice_index": [
+          63,
+          63,
+          57
+        ]
+      }
+    },
+    {
+      "id": "ra",
+      "label": 4,
+      "name": "右心房",
+      "en_name": "Right atrium",
+      "aliases": [
+        "右房",
+        "right atrium",
+        "RA",
+        "右心房腔"
+      ],
+      "description": "接收上下腔静脉回流的血，位于心脏右上方，与右心室以三尖口相通。",
+      "parent": "心腔",
+      "color": "#1f9c8f",
+      "mesh": "assets/meshes/ra.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/ra_axial_base.png",
+          "overlay": "assets/slices/ra_axial_overlay.png",
+          "slice_index": 59,
+          "slice_voxels": 237
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/ra_coronal_base.png",
+          "overlay": "assets/slices/ra_coronal_overlay.png",
+          "slice_index": 55,
+          "slice_voxels": 230
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/ra_sagittal_base.png",
+          "overlay": "assets/slices/ra_sagittal_overlay.png",
+          "slice_index": 36,
+          "slice_voxels": 223
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 2636,
+        "centroid_slice_index": [
+          59,
+          55,
+          36
+        ]
+      }
+    },
+    {
+      "id": "aorta",
+      "label": 6,
+      "name": "升主动脉",
+      "en_name": "Ascending aorta",
+      "aliases": [
+        "升主动脉",
+        "ascending aorta",
+        "AAo",
+        "主动脉升部"
+      ],
+      "description": "自主动脉口向上的一小段，发出左右冠状动脉后移行为主动脉弓。",
+      "parent": "主动脉",
+      "color": "#c9302c",
+      "mesh": "assets/meshes/aorta.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/aorta_axial_base.png",
+          "overlay": "assets/slices/aorta_axial_overlay.png",
+          "slice_index": 83,
+          "slice_voxels": 152
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/aorta_coronal_base.png",
+          "overlay": "assets/slices/aorta_coronal_overlay.png",
+          "slice_index": 47,
+          "slice_voxels": 271
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/aorta_sagittal_base.png",
+          "overlay": "assets/slices/aorta_sagittal_overlay.png",
+          "slice_index": 52,
+          "slice_voxels": 380
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 3789,
+        "centroid_slice_index": [
+          83,
+          47,
+          52
+        ]
+      }
+    },
+    {
+      "id": "pa",
+      "label": 7,
+      "name": "肺动脉干",
+      "en_name": "Pulmonary trunk",
+      "aliases": [
+        "肺动脉",
+        "pulmonary trunk",
+        "pulmonary artery",
+        "PA"
+      ],
+      "description": "起自右心室，向左后上方走行后分为左右肺动脉，是把血送进肺的动脉。",
+      "parent": "肺动脉",
+      "color": "#4a6fd6",
+      "mesh": "assets/meshes/pa.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/pa_axial_base.png",
+          "overlay": "assets/slices/pa_axial_overlay.png",
+          "slice_index": 78,
+          "slice_voxels": 150
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/pa_coronal_base.png",
+          "overlay": "assets/slices/pa_coronal_overlay.png",
+          "slice_index": 46,
+          "slice_voxels": 240
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/pa_sagittal_base.png",
+          "overlay": "assets/slices/pa_sagittal_overlay.png",
+          "slice_index": 42,
+          "slice_voxels": 264
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 2558,
+        "centroid_slice_index": [
+          78,
+          46,
+          42
+        ]
+      }
+    },
+    {
+      "id": "pv",
+      "label": 8,
+      "name": "肺静脉",
+      "en_name": "Pulmonary veins",
+      "aliases": [
+        "肺静脉",
+        "pulmonary vein",
+        "PV"
+      ],
+      "description": "通常左右各两条，开口于左心房后壁，把已换气的血回流入左心。",
+      "parent": "肺静脉",
+      "color": "#6aa84f",
+      "mesh": "assets/meshes/pv.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/pv_axial_base.png",
+          "overlay": "assets/slices/pv_axial_overlay.png",
+          "slice_index": 67,
+          "slice_voxels": 111
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/pv_coronal_base.png",
+          "overlay": "assets/slices/pv_coronal_overlay.png",
+          "slice_index": 69,
+          "slice_voxels": 106
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/pv_sagittal_base.png",
+          "overlay": "assets/slices/pv_sagittal_overlay.png",
+          "slice_index": 64,
+          "slice_voxels": 44
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 702,
+        "centroid_slice_index": [
+          67,
+          69,
+          64
+        ]
+      }
+    },
+    {
+      "id": "lxa",
+      "label": 9,
+      "name": "左心耳",
+      "en_name": "Left auricle",
+      "aliases": [
+        "左心耳",
+        "left auricle",
+        "left atrial appendage",
+        "LAA"
+      ],
+      "description": "左心房向前突出的耳状盲端，表面有梳状肌，是心房壁最薄处之一。",
+      "parent": "左心房",
+      "color": "#8e6bd0",
+      "mesh": "assets/meshes/lxa.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/lxa_axial_base.png",
+          "overlay": "assets/slices/lxa_axial_overlay.png",
+          "slice_index": 64,
+          "slice_voxels": 100
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/lxa_coronal_base.png",
+          "overlay": "assets/slices/lxa_coronal_overlay.png",
+          "slice_index": 53,
+          "slice_voxels": 128
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/lxa_sagittal_base.png",
+          "overlay": "assets/slices/lxa_sagittal_overlay.png",
+          "slice_index": 69,
+          "slice_voxels": 124
+        }
+      },
+      "provenance": "procedural_fallback",
+      "stats": {
+        "voxels": 1074,
+        "centroid_slice_index": [
+          64,
+          53,
+          69
+        ]
+      }
+    }
+  ],
+  "excluded": []
+}
