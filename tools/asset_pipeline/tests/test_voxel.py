@@ -191,3 +191,28 @@ def test_assign_labels_priority_and_conflict_budget():
     assert volume[4, 4, 4] == 2  # 高 priority 抢到重叠体素
     with pytest.raises(ValueError, match="冲突"):
         assign_labels({"a": a, "b": b}, {"a": 1, "b": 2}, (6, 6, 6), conflict_budget=0)
+
+
+def test_assign_labels_reports_swallowed_parts_by_ratio():
+    """判据是"该部件自身被占掉的比例"，而不是体素盒总体积。
+
+    真实解剖里主动脉穿出左心室腔口只吃掉薄薄一层；而某个部件整块被吞掉，
+    几乎一定是坐标没对齐或缩放错。比例闸先报错，预算闸负责"整体糊在一起"。
+    """
+    big = np.zeros((24, 24, 24), bool)
+    big[:12, :, :] = True
+    small = np.zeros_like(big)
+    small[4:12, :, :] = True  # 落在 big 内部，抢掉它 2/3 的体素
+    with pytest.raises(ValueError, match="被吞掉"):
+        assign_labels({"big": big, "small": small}, {"big": 1, "small": 2}, (24, 24, 24))
+    # 同一对掩码，把比例上限放到最松后就只剩预算判据，两道闸互不取代
+    volume, kept = assign_labels(
+        {"big": big, "small": small},
+        {"big": 1, "small": 2},
+        (24, 24, 24),
+        max_loss_ratio=0.99,
+        conflict_budget=10**6,
+    )
+    assert kept["small"] == int(small.sum())  # 高优先级不被抢占
+    assert kept["big"] == int(big.sum()) - int((big & small).sum())
+    assert np.all(volume[4] == 2) and np.all(volume[3] == 1)

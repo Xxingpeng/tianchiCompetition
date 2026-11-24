@@ -28,6 +28,10 @@ from .voxel import assign_labels
 
 ROOT = Path(__file__).resolve().parents[2]
 
+# BP3D 确实没有独立部件、由本项目自制并按正式几何贴附的结构 -> 锚点结构 id。
+# 左心耳（auricle of left atrium）在 isa_parts_list_e.txt 里没有词条，只能自作。
+SELF_MADE = {"lxa": "la"}
+
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="生成解剖智绘的演示资产")
@@ -104,7 +108,9 @@ def _make_volume(args: argparse.Namespace, shape: tuple[int, int, int], origin: 
             "请按 assets_raw/README.md 放置原始包"
         )
     excluded = [
-        {"id": b.id, "reason": f"OBJ 缺失：{b.obj or 'manifest 里还没填文件名'}"} for b in absent
+        {"id": b.id, "reason": f"OBJ 缺失：{b.obj or 'manifest 里还没填文件名'}"}
+        for b in absent
+        if b.id not in SELF_MADE
     ]
     excluded += [
         {"id": b.id, "reason": f"已载入，但文件名未与下载包核对：{b.obj}"}
@@ -112,6 +118,14 @@ def _make_volume(args: argparse.Namespace, shape: tuple[int, int, int], origin: 
         if not b.verified
     ]
     meshes = bp3d_mod.load_meshes(manifest, Path(args.assets_raw), present)
+    for b in present:
+        a = bp3d_mod.audit_mesh(meshes[b.id])
+        flag = (
+            f"（边界边 {a['open_edges']}，在 {bp3d_mod.MAX_OPEN_EDGES} 条上限内）"
+            if a["open_edges"]
+            else ""
+        )
+        print(f"   {b.id:6s} {b.obj:18s} v={a['vertices']:6d} f={a['faces']:6d} {flag}")
     volume, _kept, (scale, offset) = bp3d_mod.build_label_volume(
         meshes,
         labels,
@@ -125,7 +139,17 @@ def _make_volume(args: argparse.Namespace, shape: tuple[int, int, int], origin: 
         f">> BP3D 路线：{len(present)} 个部件共用变换 "
         f"scale={scale:.4f} offset={np.round(offset, 1).tolist()}"
     )
-    return volume, {b.id: f"BP3D / {b.obj}" for b in present}, excluded, "bp3d"
+    provenance = {b.id: f"BP3D / {b.obj}" for b in present}
+    self_made = [b for b in absent if b.id in labels and b.id in SELF_MADE]
+    for b in self_made:
+        anchor = BY_ID[SELF_MADE[b.id]]
+        la_mask = volume == int(anchor.label)
+        mask = fallback.auricle_from_la(la_mask, args.spacing, origin)
+        mask &= volume == 0  # 自制部件绝不覆盖 BP3D 体素，宁可小
+        volume[mask] = int(b.meta.label)
+        provenance[b.id] = f"自制几何（BP3D 未收录 {b.id}），按 BP3D {anchor.id} 体素包围盒贴附"
+        print(f"   {b.id:6s} 自制贴附：{int(mask.sum())} 体素（锚点 {anchor.id}）")
+    return volume, provenance, excluded, "bp3d"
 
 
 def build(args: argparse.Namespace) -> int:
@@ -235,6 +259,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     if args.grid < 32 or args.grid > 256:
         raise SystemExit("--grid 需在 32..256 之间：太小几何失真，太大白屏")
+    out = Path(args.out)
+    if out.name != "assets":
+        # 清单里存的是站点相对路径 assets/...，校验必须从其父目录解析；
+        # --out 指到别处（例如临时目录）会让每一项都报"未落盘"，是假信号。
+        raise SystemExit(
+            f"--out 需指向站点根下的 assets 目录（如 public/assets），当前是 {args.out}"
+        )
     return build(args)
 
 

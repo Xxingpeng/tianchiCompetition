@@ -11,14 +11,28 @@ import pytest
 from tools.asset_pipeline.bp3d import (
     Bp3dManifest,
     ObjBinding,
+    audit_mesh,
     build_label_volume,
     load_manifest,
     load_meshes,
     obj_path,
     resolve_bindings,
 )
-from tools.asset_pipeline.geom import write_obj
+from tools.asset_pipeline.geom import Mesh, boundary_edges, write_obj
 from tools.asset_pipeline.tests.test_voxel import box_mesh
+
+
+def patch_mesh(n: int) -> Mesh:
+    """n×n 的平面三角面片，边界边 4n 条：模拟下载截断或整片面缺失。"""
+    idx = {(i, j): i * (n + 1) + j for i in range(n + 1) for j in range(n + 1)}
+    verts = np.array([[i, j, 0.0] for i in range(n + 1) for j in range(n + 1)], float)
+    faces = []
+    for i in range(n):
+        for j in range(n):
+            a, b = idx[(i, j)], idx[(i + 1, j)]
+            c, d = idx[(i + 1, j + 1)], idx[(i, j + 1)]
+            faces += [(a, b, c), (a, c, d)]
+    return Mesh(verts, np.array(faces, np.int32))
 
 
 def make_obj(dir_path, name: str, lo, hi) -> str:
@@ -50,17 +64,49 @@ def test_load_meshes_rejects_degenerate_obj(tmp_path):
         load_meshes(manifest, tmp_path)
 
 
-def test_load_meshes_rejects_open_obj(tmp_path):
-    """开口 OBJ（下载不完整或部件本身是面片）一旦体素化会凭空围出实体，必须在入口就拦下。"""
+def test_load_meshes_tolerates_a_few_pinholes(tmp_path):
+    """BP3D 发布网格自带个位数针孔（心肌 FJ2428 实测 7 条），远小于体素尺度。
+
+    要求边界边为 0 会把正式几何全部挡在门外，所以少量针孔必须放行。
+    """
     (tmp_path / "bodyparts3d").mkdir(parents=True, exist_ok=True)
     verts = "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\n"
-    # 只写 1 个三角面 -> 4 条边界边，明显不是封闭部件
-    (tmp_path / "bodyparts3d" / "open.obj").write_text(verts + "f 1 2 3\n", encoding="utf-8")
+    (tmp_path / "bodyparts3d" / "pinhole.obj").write_text(verts + "f 1 2 3\n", encoding="utf-8")
+    manifest = Bp3dManifest(
+        path=tmp_path, obj_dir="bodyparts3d", bindings=[ObjBinding(id="lv", obj="pinhole.obj")]
+    )
+    meshes = load_meshes(manifest, tmp_path)
+    assert boundary_edges(meshes["lv"]) == 3  # 单个三角面的三条边都只被用了一次
+
+
+def test_load_meshes_rejects_open_obj(tmp_path):
+    """开口面片/下载截断会一次报出成百上千条边界边，这种量级必须拦下。
+
+    奇偶填充会把开口网格凭空围成实体，产出一张解剖上不存在的心脏。
+    """
+    (tmp_path / "bodyparts3d").mkdir(parents=True, exist_ok=True)
+    # n×n 网格面片：4n 条边界边，n=17 -> 68 条，刚过 MAX_OPEN_EDGES
+    write_obj(tmp_path / "bodyparts3d" / "open.obj", patch_mesh(17), name="open")
     manifest = Bp3dManifest(
         path=tmp_path, obj_dir="bodyparts3d", bindings=[ObjBinding(id="lv", obj="open.obj")]
     )
     with pytest.raises(ValueError, match="边界边"):
         load_meshes(manifest, tmp_path)
+    # 同一份面片在显式收紧上限时更早报错，说明判据用的是这个参数而不是硬编码
+    with pytest.raises(ValueError, match="边界边"):
+        load_meshes(manifest, tmp_path, max_open_edges=8)
+
+
+def test_audit_mesh_reports_pinholes_and_counts(tmp_path):
+    """体检指标是构建日志和 NOTICE 台账的数据来源，三项都得是整数。"""
+    (tmp_path / "bodyparts3d").mkdir(parents=True, exist_ok=True)
+    name = make_obj(tmp_path / "bodyparts3d", "box.obj", (0, 0, 0), (10, 10, 10))
+    manifest = Bp3dManifest(
+        path=tmp_path, obj_dir="bodyparts3d", bindings=[ObjBinding(id="lv", obj=name)]
+    )
+    audit = audit_mesh(load_meshes(manifest, tmp_path)["lv"])
+    assert audit == {"vertices": 8, "faces": 12, "open_edges": 0}
+    assert audit_mesh(patch_mesh(4))["open_edges"] == 16
 
 
 def test_load_meshes_accepts_obj_with_duplicated_vertices(tmp_path):
@@ -140,13 +186,27 @@ def test_build_label_volume_keeps_relative_positions(tmp_path):
     assert scale > 0 and len(offset) == 3
 
 
-def test_build_label_volume_raises_on_unreasonable_overlap():
-    lo = np.array([0.0, 0.0, 0.0])
-    hi = np.array([10.0, 10.0, 10.0])
-    mesh = box_mesh(lo, hi)
-    with pytest.raises(ValueError, match="冲突"):
+def test_build_label_volume_raises_when_a_part_is_swallowed():
+    """完全重叠 = 某个部件整块被吞掉，几乎一定是坐标没对齐或缩放错。"""
+    mesh = box_mesh()
+    with pytest.raises(ValueError, match="被吞掉"):
+        build_label_volume({"lv": mesh, "la": mesh}, {"lv": 3, "la": 2}, (40, 40, 40))
+
+
+def test_build_label_volume_raises_when_total_overlap_is_unreasonable():
+    """两箱错开叠放：单个部件只损失约 30%（正常穿插量级），但总穿插远超预算。
+
+    两道闸各管一种失控，这条只让第二道触发，用来证明预算检查没有被比例检查取代。
+    """
+    with pytest.raises(ValueError, match="超预算"):
         build_label_volume(
-            {"lv": mesh, "la": mesh}, {"lv": 3, "la": 2}, (40, 40, 40), conflict_budget=10
+            {
+                "lv": box_mesh((0, 0, 0), (10, 10, 10)),
+                "la": box_mesh((0, 0, 7), (10, 10, 17)),
+            },
+            {"lv": 3, "la": 2},
+            (40, 40, 40),
+            conflict_budget=100,
         )
 
 

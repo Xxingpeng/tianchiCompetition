@@ -160,6 +160,36 @@ def raw_masks(
     }
 
 
+def auricle_from_la(
+    la_mask: np.ndarray,
+    spacing: float,
+    origin: Sequence[float],
+    radii_mm: Sequence[float] = (13.0, 11.0, 11.0),
+    shift_mm: Sequence[float] = (-2.0, -16.0, 6.0),
+) -> np.ndarray:
+    """自制左心耳：贴在 BP3D 左心房腔的前上角。
+
+    BP3D 没有 auricle of left atrium 词条，所以这个部件只能自作。做法不是再抄一遍
+    兜底心脏模型，而是**以 BP3D 左心房体素的实际包围盒为锚**，因此它跟着正式几何走，
+    不会因为兜底模型与 BP3D 位置不同而飘到别处。产出随后会被"不得覆盖已标注体素"
+    的规则裁掉，宁可小也不冒充 BP3D。
+
+    shift_mm 的方向按解剖意图取：略偏右、明显偏前、偏上（耳部向前上方包绕主动脉根）。
+    """
+    idx = np.argwhere(la_mask)
+    if not len(idx):
+        return np.zeros(la_mask.shape, dtype=bool)
+    lo = idx.min(0).astype(float)
+    hi = idx.max(0).astype(float)
+    origin_a = np.asarray(origin, float)
+    corner = origin_a + (hi + 0.5) * spacing  # 左、后、上三个正方向的角
+    center = corner + np.asarray(shift_mm, float)
+    center[0] = origin_a[0] + (lo[0] + hi[0] + 1.0) / 2.0 * spacing + shift_mm[0]
+    return sample_implicit(
+        ellipsoid(center, radii_mm), tuple(int(s) for s in la_mask.shape), spacing, origin
+    )
+
+
 def build_masks(
     voxel_shape: Sequence[int],
     spacing: float = 1.0,

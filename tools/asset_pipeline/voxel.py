@@ -130,16 +130,26 @@ def crop_to(mask: np.ndarray, pad: int = 1) -> tuple[slice, ...]:
     return tuple(out)
 
 
+#: 单个部件最多允许被更高优先级部件占掉的比例。
+#: 判据要抓的是"部件被吞掉"——坐标翻转、缩放错、对位偏了都会让某个部件几乎整块消失；
+#: 而真实解剖里主动脉穿出左心室腔口、心壁包着心腔这类共面穿插只吃掉薄薄一层。
+#: 所以按"占该部件自身的比例"设限，而不是按体素盒总体积设一个没有解剖含义的常数。
+MAX_LOSS_RATIO = 0.35
+
+
 def assign_labels(
     masks: dict[str, np.ndarray],
     priority: dict[str, int],
     shape: Sequence[int],
-    conflict_budget: int = 20,
+    conflict_budget: int | None = None,
+    max_loss_ratio: float = MAX_LOSS_RATIO,
 ) -> tuple[np.ndarray, dict[str, int]]:
     """多个结构占据同一体素时按 priority 大者胜，并返回每个结构实际保留的体素数。
 
-    BP3D 相邻部件的表面会有几个体素互相穿插，这是正常的；但一旦冲突量级失控，
-    就说明坐标对齐或缩放出了问题，因此超预算直接报错而不是悄悄吞掉。
+    BP3D 相邻部件的表面会有体素互相穿插，这是正常的；两道检查各自负责一种失控：
+    - 任一部件自身被占掉的比例超过 `max_loss_ratio` -> 大概率是错位/缩放错；
+    - 总穿插量超过 `conflict_budget`（默认按原始占据总量 6%）-> 大概率是整体糊在一起。
+    任一命中即报错，而不是悄悄把体素吞掉。
     """
     volume = np.zeros(tuple(int(s) for s in shape), dtype=np.int32)
     kept: dict[str, int] = {}
@@ -147,11 +157,21 @@ def assign_labels(
         mine = masks[sid] & (volume == 0)
         volume[mine] = priority.get(sid, 0)
         kept[sid] = int(mine.sum())
-    total_conflict = sum(int(masks[sid].sum()) for sid in masks) - sum(kept.values())
-    if total_conflict > conflict_budget:
-        occupancy = {s: int(m.sum()) for s, m in masks.items()}
+    raw = {s: int(m.sum()) for s, m in masks.items()}
+    total_conflict = sum(raw.values()) - sum(kept.values())
+    budget = (
+        conflict_budget if conflict_budget is not None else max(600, int(0.06 * sum(raw.values())))
+    )
+    loss = {s: (raw[s] - kept[s]) / raw[s] for s in raw if raw[s]}
+    swallowed = {s: round(v, 3) for s, v in loss.items() if v > max_loss_ratio}
+    if swallowed:
         raise ValueError(
-            f"体素冲突 {total_conflict} 超预算 {conflict_budget}，"
-            f"疑似坐标未对齐或缩放不当；各结构原始占据：{occupancy}"
+            f"部件被吞掉的比例超过 {max_loss_ratio:.0%}：{swallowed}；"
+            f"原始占据 {raw}，保留 {kept}。这种量级说明坐标未对齐或缩放不当。"
+        )
+    if total_conflict > budget:
+        raise ValueError(
+            f"体素冲突 {total_conflict} 超预算 {budget}，各结构原始占据：{raw}。"
+            "相邻穿插不应有这么多，疑似部件整体重叠。"
         )
     return volume, kept

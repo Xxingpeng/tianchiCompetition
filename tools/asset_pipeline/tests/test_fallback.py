@@ -87,3 +87,27 @@ def test_build_masks_respects_priority_order():
 
 def test_fallback_labels_match_frozen_meta_labels():
     assert {sid: meta.label for sid, meta in BY_ID.items()} == fb.FALLBACK_LABELS
+
+
+def test_auricle_is_anchored_to_the_la_mask_not_to_hardcoded_numbers():
+    """自制左心耳以左心房体素的包围盒为锚：平移 la 掩码，耳必须同步平移。
+
+    这条是"跟着正式几何走"的唯一保证——BP3D 的心脏位置与兜底模型不同，
+    写死坐标会让耳飘到别处去。
+    """
+    la = np.zeros(SHAPE, bool)
+    la[20:28, 24:32, 20:28] = True
+    first = fb.auricle_from_la(la, SPACING, ORIGIN)
+    assert int(first.sum()) > 0
+    assert first.shape == SHAPE
+
+    shifted = np.zeros(SHAPE, bool)
+    shifted[22:30, 24:32, 20:28] = True
+    second = fb.auricle_from_la(shifted, SPACING, ORIGIN)
+    assert np.array_equal(second[2:], first[:-2])
+
+
+def test_auricle_of_empty_la_is_empty():
+    """左心房一个体素都没有时（OBJ 缺件）返回全 False，而不是拿包围盒的极值去算。"""
+    out = fb.auricle_from_la(np.zeros(SHAPE, bool), SPACING, ORIGIN)
+    assert out.shape == SHAPE and not out.any()
