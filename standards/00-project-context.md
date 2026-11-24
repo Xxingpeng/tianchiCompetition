@@ -47,7 +47,7 @@ tianchiCompetition/
 ├── package.json / tsconfig.json / vite.config.ts
 ├── src/                       # 前端源码
 │   ├── main.tsx / App.tsx
-│   ├── components/            # SearchBox / StructureCard / TriView / MeshViewer / Notices
+│   ├── components/            # StructurePicker / InfoCard / TriView / HeartModel（整颗心脏,懒加载）
 │   ├── data/                  # 读取 structures.json 的加载与检索逻辑（纯函数,便于测试）
 │   └── types/
 ├── public/

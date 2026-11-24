@@ -8,7 +8,7 @@
 
 ## 当前状态 (最后更新: 2026-11-24 · by Qoder)
 
-- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 全部完成,`pull/1` 已开且 CI 全绿,下一步 M6 发布到 Qoder Sites
+- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 与追加的 M4b（整颗心脏 3D + 两栏）全部提交完成,`pull/1` 待人工 merge,下一步 M6 发布到 Qoder Sites
 - **上一步完成**:
   - **M1 前端工程骨架**（Vite 8 + React 19 + TS 6 + Vitest 5,Three.js 依赖已就位待 M4 使用）:
     - 门禁实测:`npm ci` → `prettier --check .` → `eslint .` → `tsc --noEmit` → `vitest run`（**16 passed / 3 files**）→ `vite build`（JS 224.12 KiB,gzip 70.92 KiB,远低于首屏 3 MB 闸）全绿。
@@ -41,7 +41,15 @@
     - Actions 首跑（US-1 AC2）:`pull_request` run `45397236128` 与 `push` run `45397174177` 的两个 job 全 success,`gh pr checks 1` 四项 pass——按 job 的 `conclusion` 逐条核对,不看 run 表面状态。
     - **[pull/1](https://github.com/Xxingpeng/tianchiCompetition/pull/1)** `feature/1-anatomy-sketch-demo` → `main`:OPEN、`MERGEABLE`、非 draft,正文按"改了什么/为什么/如何验证/风险与边界/未做"五段写全。**AI 不合并**,等人工审核。
     - 顺手做了发布前的产物自检:`dist/` 经 `vite preview` 起服务,`index`/`structures.json`/GLB/PNG 全 200,生产包实测切结构（肺动脉干→`pa_*`）与英文检索（`pulmonary` → 2 条候选）都正常、控制台零消息、axe 0 违规。**这是 M6 发布物可以直接给 Qoder Sites 的证据**。
-- **下一步 (TODO 第一条)**:**M6 发布**——US-9 用 Qoder Sites 发布 `dist/` 产物并回填公开 URL（发布是对外动作,需人工批准）;同时等人工 merge `pull/1` 与开启 `main` 分支保护。
+  - **M4b 整颗心脏 3D + 两栏布局**（2026-11-24,由用户看截图后追加:"左列太长,收窄;右半放心脏解剖 3D",参考站 `d-d-d.cn/web3d/heart`。三项确认:用我们自己的 9 个 GLB 合成整颗心脏 / 点击部件选结构 + 悬停显示名 / 移除单结构"三维形态"面板）:
+    - 改动:新增 `src/data/heart.ts`（`partOpacity`、`isTap` 两个纯函数,不碰 WebGL 就能测）与 `src/components/HeartModel.tsx`（`VIEW_SIZE=640`,9 个部件塞进同一个 `THREE.Group`,按并包围盒把最长边归一到 2 个世界单位、相机 3.2 起）;删除 `MeshViewer.tsx` 与 `mesh.test.tsx`;`App.tsx` 改成 `.layout` 两栏（`minmax(13rem,20rem)` + `minmax(0,1fr)`,`max-width: 48rem` 退回单栏）,`styles.css` 的 `.mesh-*` 全部改名 `.heart-*`。
+    - 门禁实测:`prettier --check` / `eslint .` / `tsc --noEmit` 全绿,`vitest` **39 passed / 7 files**,`vite build` 首屏 **232.47 kB**（gzip 73.77）+ 懒加载 `HeartModel` **642.89 kB**（gzip 160.80）——Three.js 仍全部留在懒加载 chunk,首屏没被这次改动顶上去。
+    - 浏览器实测（`vite preview` 4173 + 真实 `public/assets`,控制台**零消息**）:9 个 GLB 合成成功,状态行"已高亮 心肌,其余部件半透明。";canvas 绘制缓冲 800×800（dpr 1.25）而 CSS 盒 323×323 随栏宽收缩,**未被拉伸**;`toDataURL` 像素统计 22% 有光、颜色簇出现 ≥8 个色系（红橙/青/紫…）→ 画面上确实是多个不同色的部件同场景,不是一整块。
+    - 交互证据:悬停四个取样点分别报"肺动脉干（Pulmonary trunk）""左心房（Left atrium）";点选后 `.info-card h3` 与列表 `aria-pressed` 同步成"左心房"（三维—色块—信息卡三者同一结构）;按下-抬起位移超阈值不触发选中;连续两次"放大"改变像素哈希,随后"复位视角"回到**同一帧**（`288af2e6` 相等）。
+    - 修掉的两处工具反馈:`react-hooks/refs` 报渲染期写 ref → `onSelectRef` 挪进 `useEffect`;`noUncheckedIndexedAccess` 报 `scenes[index]` 可能 undefined → 加载任务直接返回 `{ structure, part }`,顺带把 `selectedId` 从加载 effect 里摘干净（透明度只由 `[selectedId, status]` effect 应用,否则每次选中都要重载 9 个 GLB）。
+    - **未做的验证**:①≥1280px 真实视口的整页观感——内置浏览器面板固定 415px,`take_screenshot` 仍报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`,宽屏只验到编译后 CSS 里的 `.layout` 规则与 `@media (width <= 48rem)` 存在,以及列宽算术（728 内容宽 = 320 + 24 + 384）不溢出;②OrbitControls 的**拖拽旋转**无法用合成 PointerEvent 证明（`setPointerCapture` 对不存在的 `pointerId` 抛错,画面哈希纹丝不动）,缩放/复位走的是按钮路径、已有像素证据,旋转仍由真人手测覆盖。
+
+- **下一步 (TODO 第一条)**:**M6 发布**——US-9 用 Qoder Sites 发布 `dist/` 产物并回填公开 URL（发布是对外动作,需人工批准）;同时等人工 merge `pull/1` 与开启 `main` 分支保护。M4b 已按确认门 3 批准拆成四个提交推送,`.gitignore` 那条放行（忽略 `*.qoder.site` 本机绑定描述符,含站点不透明引用、换机不可复用）已单独走 `chore(repo)`。
 - **阻塞项**:
   1. **需人类动作**:审核并 merge `pull/1`（AI 不合并）;merge 后开启 `main` 分支保护（要求 PR + CI 通过）。US-9 的 Qoder Sites 发布同样需人工批准。
   2. **需人类动作**:天池报名 + 组队 + 实名认证 + 阿里云大学生认证（截止前必须完成,否则无法评奖）。
@@ -78,10 +86,12 @@
 
 ### P1 · 功能
 
-- [x] US-2 检索 → US-3 信息卡 → US-4 三视图 → US-5 3D 网格 → US-8 体验打磨（2026-11-24,M4 完成:本地门禁 + 浏览器实测全绿,待推送）
+- [x] US-2 检索 → US-3 信息卡 → US-4 三视图 → US-5 3D → US-8 体验打磨（2026-11-24,M4 完成、M4b 把 US-5 改成整颗心脏合成:本地门禁 + 浏览器实测全绿,已推入 pull/1 等人工合并）
 - [ ] US-9 发布到 Qoder Sites,回填公开 URL
 
 ### P2 · 收尾
+
+- [ ] **人工**:在桌面宽度（≥1280px）真实浏览器里看一眼两栏版式与整颗心脏的观感,顺手确认拖拽旋转跟手——内置浏览器面板固定 415px,`take_screenshot` 报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`,合成 PointerEvent 又驱动不了 OrbitControls 的旋转（见 GOTCHAS）
 
 - [ ] 作品帖五段必填内容 + 对帖内每条事实做一次复核
 - [ ] 每完成一个模块更新本文件（确认门 3）
@@ -104,6 +114,8 @@
 | 2026-11-24 | 三视图与 3D 网格**从同一份统一体素派生** | 保证 UI 与几何完全一致,避免"图与模型对不上" |
 | 2026-11-24 | 资产体积门禁:单个 GLB ≤ **2 MB**、全部网格合计 ≤ **8 MB**、首屏非网格资源 ≤ **3 MB** | 静态托管与评委侧网络可接受;超限先减面而不是砍结构 |
 | 2026-11-24 | 前端测试环境 jsdom 钉 **`^29.1.1`**,`engines.node` 抬到 **`>=22.13.0`** | jsdom 30+ 的 `engines` 下限 22.22.2 与本机 Node 22.14 冲突,崩在 undici 的 zstd 分支上;钉住次新大版本比升级用户工具链或用 `--force` 更可控,且本地与 CI 用同一份 lockfile |
+| 2026-11-24 | 3D 区域从"单结构网格面板"改为**同一场景合成整颗心脏**（9 个部件 GLB）,并移除 `MeshViewer` | `surface.py` 写出的顶点是世界毫米,9 个部件放一起自动成型、零配准,且与切面同源;学习者要的是毗邻关系,单结构孤立旋转看不到;只保留一个场景也避免每次切结构重载网格 |
+| 2026-11-24 | 页面改为**左检索/列表 + 右整颗心脏与详情**两栏,`max-width: 48rem` 退回单栏 | 用户反馈"结构列表太长把页面拉长";两栏让 3D 与详情同屏对照,窄屏退回流式不破版 |
 
 ---
 
@@ -129,9 +141,14 @@
 - **资产清单路径与写盘路径是两个坐标系**:`structures.json` 存站点相对路径 `assets/...`,磁盘上文件在 `public/assets/...`。曾按 `out / rel` 写盘,产出 `public/assets/assets/meshes/*.glb`。解决:写盘用 `out/meshes`,校验用 `root = out.parent`;验证:`test_procedural_build_passes_its_own_validation`、`test_missing_assets_are_reported`。
 - **jsdom 30+ 在 Node 22.14 上让 vitest 起不了 worker**:`npx vitest run` 报 3 个 `[vitest-pool]: Failed to start forks worker`,真正原因是 `node_modules/undici/lib/interceptor/decompress.js` 里 `createZstdDecompress.bind(...)` —— 本机 Node 22.14.0 没有 `zlib.createZstdDecompress`,而 jsdom 30/31 的 `engines` 下限是 `^22.22.2`。npm 事先给过 EBADENGINE 警告但照样装上了。解决:**把 jsdom 钉在 `^29.1.1`**（`engines: ^22.13.0`,带的 undici 7.30.2 不走 zstd 分支）,并把 `package.json` 的 `engines.node` 提到 `>=22.13.0`;不改用户本机 Node、不用 `--force`/`--legacy-peer-deps`。CI 用 `node-version: "22"`（≥22.22）同样吃这个版本,本地与 CI 一致。
 - **远端 `main` 不见了,默认分支被顶到 feature 分支**:`git ls-remote --heads origin` 只有 `feature/1-anatomy-sketch-demo`,`gh api .../branches/main/protection` 返回 404,仓库 `default_branch` 已是 feature 分支,本地 `main` 显示 `[origin/main: gone]`。影响:GitHub Flow 的 PR 目标缺失,`main` 分支保护也无从谈起。解决（2026-11-24 已按人工批准执行）:`git push origin main`（内容早已随 feature 分支公开,不新增对象）+ `gh repo edit --default-branch main`,现在 `ls-remote` 两条分支都在、`default_branch = main`。**仍未做**:`main` 分支保护（要求 PR + CI 通过）——需人工在 GitHub 设置里开,或用 `gh api` 代开。
-- **宽屏会把 3D 画布拉满整栏**:`renderer.setSize(480, 480, false)` 只定绘制缓冲,CSS 再写 `width: 100%` 就让 canvas 在 1280px 栏里长到 1280×1280——把 480 的缓冲拉伸到发糊,还把整页撑成一屏图。实测方式:把 `#root` 依次约束到 380/1280 读 canvas 的 CSS 盒。解决:`style.maxWidth = "480px"` + `height: auto`（canvas 属性本身是正方形,`auto` 会保住比例）,窄屏照常缩小、宽屏封顶。
+- **宽屏会把 3D 画布拉满整栏**:`renderer.setSize(480, 480, false)` 只定绘制缓冲,CSS 再写 `width: 100%` 就让 canvas 在 1280px 栏里长到 1280×1280——把 480 的缓冲拉伸到发糊,还把整页撑成一屏图。实测方式:把 `#root` 依次约束到 380/1280 读 canvas 的 CSS 盒。解决:`style.maxWidth = "480px"` + `height: auto`（canvas 属性本身是正方形,`auto` 会保住比例）,窄屏照常缩小、宽屏封顶。M4b 换成整颗心脏后同一套写法沿用,`VIEW_SIZE` 抬到 **640**（`maxWidth` 同步用 `VIEW_SIZE` 而不是硬编码）,两栏布局下列宽更窄,实测 415px 视口下 CSS 盒 323×323、缓冲仍 800×800（dpr 1.25）。
 - **内置浏览器的 `press_key`/`click` 按 uid 打不中时会静默无副作用**:重渲染后旧 uid 失效,回车选择、Esc 关闭、点结构按钮都出现"工具报成功、页面没反应"。这不是应用缺陷——同一批交互用 `evaluate_script` 派发（`element.click()` / PointerEvent）全部生效,且 vitest 已覆盖键盘路径。影响:验证结论必须以 DOM 探针或像素哈希为准,不能拿工具的"Successfully"当证据。
 - **`git push` 走 schannel 时 TLS 握手随机失败**：M4 推送连报两次 `schannel: failed to receive handshake, SSL/TLS connection failed`,而同一时刻 `curl https://github.com` 与 `curl https://api.github.com` 都返回 200、`gh auth status` 正常——说明不是网络断了,是 git 的 schannel 后端在这次会话里过不去。解决（不改全局配置）:`git -c http.version=HTTP/1.1 push origin ...` 一次成功。以后碰到同样报错先试这一条,不要盲目重试或改 `http.sslbackend`。
+- **合成 PointerEvent 测不出 OrbitControls 的旋转**:`pointerdown → pointermove → pointerup` 全在 canvas 上派发,画面哈希一点没动——OrbitControls 在 `pointerdown` 里要 `domElement.setPointerCapture(event.pointerId)`,而合成事件的 `pointerId` 不是真实活跃指针,这句直接抛错、旋转链根本没接上。影响:验证只能证明**按钮路径**（放大/缩小/复位）和选中/半透明重渲染,旋转必须真人手测,别拿"像素没变"当"旋转坏了"或"旋转验过了"。
+- **整颗心脏必须按部件建材质,半透明层要关 `depthWrite`**:9 个部件共用一份材质就没法只高亮其中一个;而选中某结构时其余部件降到 0.3 透明度,若这些半透明层仍写深度,前面的部件会把后面的整块挡掉,画面看着像少了一半。解决:每结构一份 `MeshStandardMaterial`,`material.depthWrite = material.opacity > 0.9`;验证:`src/test/heart.test.tsx` 的 `partOpacity` 用例 + 浏览器点选后像素哈希变化。
+- **把 `selectedId` 放进 GLB 加载 effect 的依赖 = 每次选中重载 9 个网格**:透明度只是材质属性,却会让整个 `Promise.all(GLTFLoader)` 重跑。解决:加载 effect 依赖只有 `[structures, supported]`,`selectedId` 走另一个 `useEffect([selectedId, status])` 调 `applyOpacities`;`react-hooks/exhaustive-deps` 之所以不报警,是因为加载 effect 里已经不再读 `selectedId`——**别为了"顺手初始化透明度"把它加回去**,`status` 翻到 `ready` 本身就会触发那个 effect。
+- **回调 ref 在渲染期赋值会被 `react-hooks/refs` 拦住**:`onSelectRef.current = onSelect` 写在函数体里 ESLint 直接报 error。解决:放进 `useEffect(() => { onSelectRef.current = onSelect }, [onSelect])`;这个 ref 的存在本身是为了让加载 effect 不把 `onSelect`（每次渲染都是新函数）吃进依赖。
+- **`noUncheckedIndexedAccess` 下 `scenes[index]` 判不出成对关系**:`structures.forEach((s, i) => scenes[i].…)` 类型上是 `Group | undefined`,两处报错。解决:让每个加载任务直接 resolve `{ structure, part }`,配关系写进类型而不是靠下标,顺带省掉一次越界可能。
 - **待确认:git 身份邮箱**:当前提交内嵌 `898328775@qq.com`,仓库公开后可见。是否换成 GitHub noreply 邮箱由本人决定,AI 不改全局 git 配置。
 
 ---
@@ -154,5 +171,6 @@
 - [x] 2026-11-24 **M4 · 前端单页功能与可访问性**:检索（中/英/别名,三档排名 + 上限 8）、信息卡、三视图 + 可关高亮图层、GLB 3D（拖拽/滚轮/按钮缩放、无 WebGL 局部降级）、来源与许可提示、`h2` 分节 + combobox 键盘语义。门禁:prettier/eslint/tsc/`vitest 36 passed`/`vite build`（首屏 232.32 kB + 懒加载 639.88 kB）全绿;浏览器实测 63 个资产全部可取、3D 交互有像素证据、axe 0 违规。附带修掉宽屏画布被拉满整栏的缺陷（`max-width: 480px`）。
 - [x] 2026-11-24 **M4 提交并推送**（人工批准）:`dd672d7` feat(web) / `82fcbcc` test(web) / `ab3b7b4` docs(standards);`git ls-files` 抽查 134 个跟踪文件,无影像/权重/压缩包/证件,最大对象 `myo.glb` 1.86 MB。
 - [x] 2026-11-24 **M5 · CI 自检与 PR**（人工批准）:`306f2db` 推送后开 **pull/1** → `main`;Actions `pull_request` 与 `push` 两条 run 的两个 job 全 success、`gh pr checks` 四项 pass,US-1 AC2 落地。发布前另用 `vite preview` 验过 `dist/` 产物:四类路由 200、生产包交互正常、控制台零消息、axe 0 违规。合并留给人工。
+- [x] 2026-11-24 **M4b · 整颗心脏 3D 与两栏布局**（用户追加需求,人工批准四个提交 → `f34ea8b` feat(web) / `9d1d4d8` test(web) / `f5d0260` chore(repo) / 本条 docs 提交）:`HeartModel` 用同一场景合成 9 个部件 GLB（世界毫米坐标,零配准）,悬停报名称、单击选结构、非选中半透明 0.3;删除单结构 `MeshViewer`,页面改左检索右展示两栏、48rem 退回单栏。门禁 prettier/eslint/tsc + **39 passed** + `vite build` 首屏 232.49 kB / 懒加载 642.89 kB 全绿;生产包实测合成成功、点选与信息卡同步、复位回到同一帧、控制台零消息。
 
 > 反臃肿:里程碑超过 15 条时,把更早内容合并成一行摘要,保持本文件可快速阅读。
