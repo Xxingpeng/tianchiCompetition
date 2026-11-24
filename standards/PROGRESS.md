@@ -126,6 +126,7 @@
 - **远端 `main` 不见了,默认分支被顶到 feature 分支**:`git ls-remote --heads origin` 只有 `feature/1-anatomy-sketch-demo`,`gh api .../branches/main/protection` 返回 404,仓库 `default_branch` 已是 feature 分支,本地 `main` 显示 `[origin/main: gone]`。影响:GitHub Flow 的 PR 目标缺失,`main` 分支保护也无从谈起。解决（2026-11-24 已按人工批准执行）:`git push origin main`（内容早已随 feature 分支公开,不新增对象）+ `gh repo edit --default-branch main`,现在 `ls-remote` 两条分支都在、`default_branch = main`。**仍未做**:`main` 分支保护（要求 PR + CI 通过）——需人工在 GitHub 设置里开,或用 `gh api` 代开。
 - **宽屏会把 3D 画布拉满整栏**:`renderer.setSize(480, 480, false)` 只定绘制缓冲,CSS 再写 `width: 100%` 就让 canvas 在 1280px 栏里长到 1280×1280——把 480 的缓冲拉伸到发糊,还把整页撑成一屏图。实测方式:把 `#root` 依次约束到 380/1280 读 canvas 的 CSS 盒。解决:`style.maxWidth = "480px"` + `height: auto`（canvas 属性本身是正方形,`auto` 会保住比例）,窄屏照常缩小、宽屏封顶。
 - **内置浏览器的 `press_key`/`click` 按 uid 打不中时会静默无副作用**:重渲染后旧 uid 失效,回车选择、Esc 关闭、点结构按钮都出现"工具报成功、页面没反应"。这不是应用缺陷——同一批交互用 `evaluate_script` 派发（`element.click()` / PointerEvent）全部生效,且 vitest 已覆盖键盘路径。影响:验证结论必须以 DOM 探针或像素哈希为准,不能拿工具的"Successfully"当证据。
+- **`git push` 走 schannel 时 TLS 握手随机失败**：M4 推送连报两次 `schannel: failed to receive handshake, SSL/TLS connection failed`,而同一时刻 `curl https://github.com` 与 `curl https://api.github.com` 都返回 200、`gh auth status` 正常——说明不是网络断了,是 git 的 schannel 后端在这次会话里过不去。解决（不改全局配置）:`git -c http.version=HTTP/1.1 push origin ...` 一次成功。以后碰到同样报错先试这一条,不要盲目重试或改 `http.sslbackend`。
 - **待确认:git 身份邮箱**:当前提交内嵌 `898328775@qq.com`,仓库公开后可见。是否换成 GitHub noreply 邮箱由本人决定,AI 不改全局 git 配置。
 
 ---
@@ -146,5 +147,6 @@
 - [x] M1 骨架的工作树提交并推送（人工批准 → `2858ff8` 前端骨架 / `b72443c` CI / 本条 docs 提交）
 - [x] 远端 `main` 与默认分支修复（人工批准 → `git push origin main` + `gh repo edit --default-branch main`）
 - [x] 2026-11-24 **M4 · 前端单页功能与可访问性**:检索（中/英/别名,三档排名 + 上限 8）、信息卡、三视图 + 可关高亮图层、GLB 3D（拖拽/滚轮/按钮缩放、无 WebGL 局部降级）、来源与许可提示、`h2` 分节 + combobox 键盘语义。门禁:prettier/eslint/tsc/`vitest 36 passed`/`vite build`（首屏 232.32 kB + 懒加载 639.88 kB）全绿;浏览器实测 63 个资产全部可取、3D 交互有像素证据、axe 0 违规。附带修掉宽屏画布被拉满整栏的缺陷（`max-width: 480px`）。
+- [x] 2026-11-24 **M4 提交并推送**（人工批准）:`dd672d7` feat(web) / `82fcbcc` test(web) / `ab3b7b4` docs(standards);`git ls-files` 抽查 134 个跟踪文件,无影像/权重/压缩包/证件,最大对象 `myo.glb` 1.86 MB。
 
 > 反臃肿:里程碑超过 15 条时,把更早内容合并成一行摘要,保持本文件可快速阅读。
