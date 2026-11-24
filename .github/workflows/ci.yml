@@ -1,0 +1,75 @@
+# CI 只做检查，不做部署：本项目的发布链路走 Qoder Sites（见 standards/00 §7 偏离 1），
+# 因此这里不配置任何 SSH_* Secret，也不产出可部署制品。
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: 前端（格式 / 静态检查 / 类型 / 单测 / 构建）
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: 按 lockfile 安装
+        run: npm ci
+
+      - name: Prettier
+        run: npx prettier --check .
+
+      - name: ESLint
+        run: npx eslint .
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Vitest（组件冒烟 + 可访问性）
+        run: npx vitest run
+
+      - name: Vite 构建
+        run: npx vite build
+
+  asset-pipeline:
+    name: 资产管线（格式 / lint / 单测 + 覆盖率阈值）
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-asset.txt -r requirements-dev.txt
+
+      # 干净 runner 上没有 assets_raw/ 里的 BP3D 原始包（被 .gitignore 排除），
+      # 所以这里跑的是兜底几何链路；正式几何由本地 --source bp3d 重跑并核对。
+      - name: Ruff 格式
+        run: ruff format --check tools/
+
+      - name: Ruff 检查
+        run: ruff check tools/
+
+      - name: pytest（覆盖率阈值写在 pyproject.toml，避免两处漂移）
+        run: python -m pytest
