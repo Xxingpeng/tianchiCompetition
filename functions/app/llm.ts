@@ -36,15 +36,9 @@ export function dashScopeConfig(
 ): DashScopeConfig | null {
   const apiKey = normalizeApiKey(getEnv("DASHSCOPE_API_KEY"));
   if (!apiKey || /[\r\n]/.test(apiKey)) return null;
-  const baseEnv = getEnv("DASHSCOPE_BASE_URL")?.trim();
-  const rawBase = baseEnv?.length ? baseEnv : DEFAULT_DASHSCOPE_BASE_URL;
-  if (rawBase.length > 300) return null;
-  const baseUrl = rawBase.replace(/\/+$/, "");
-  try {
-    if (new URL(baseUrl).protocol !== "https:") return null;
-  } catch {
-    return null;
-  }
+  // 生产固定走官方公开兼容端点：站点 Secret 曾多次出现区域/工作空间不匹配，
+  // 这里不再读取 DASHSCOPE_BASE_URL，避免再被错误端点带进 401。
+  const baseUrl = DEFAULT_DASHSCOPE_BASE_URL;
   const modelEnv = getEnv("DASHSCOPE_MODEL")?.trim();
   const model = modelEnv?.length ? modelEnv : DEFAULT_DASHSCOPE_MODEL;
   if (!model || model.length > 100 || /[\r\n]/.test(model)) return null;

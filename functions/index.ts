@@ -3,12 +3,7 @@
 import { encodeSSE, readSSE } from "./sse.mjs";
 import { parseCt } from "./app/ct.ts";
 import { AGENT_SYSTEM, degradedAnswer } from "./app/prompt.ts";
-import {
-  buildChatMessages,
-  dashScopeConfig,
-  DEFAULT_DASHSCOPE_BASE_URL,
-  parseDashScopeFrame,
-} from "./app/llm.ts";
+import { buildChatMessages, dashScopeConfig, parseDashScopeFrame } from "./app/llm.ts";
 import { heartKnowledge } from "./knowledge/heart-knowledge.ts";
 import { createRetriever } from "./app/retrieval.ts";
 import { truncate } from "./app/text.ts";
@@ -82,13 +77,11 @@ function suspiciousKeyShape(apiKey: string): boolean {
 }
 
 // 上游拒绝时只保留粗粒度类别（invalid_key/workspace/permission/model），
-// 不把错误报文、主机或凭据带出 Function；custombase/publicbase 仅表示是否默认端点。
+// 不把错误报文、主机或凭据带出 Function。
 async function upstreamFailureReason(
   response: Response,
-  baseUrl: string,
   keyShape: "kok" | "kbad",
 ): Promise<string> {
-  const base = baseUrl === DEFAULT_DASHSCOPE_BASE_URL ? "publicbase" : "custombase";
   let kind = response.status === 401 ? "auth" : response.status === 403 ? "forbidden" : "other";
   try {
     const raw = (await response.text()).slice(0, 1024);
@@ -101,7 +94,7 @@ async function upstreamFailureReason(
   } catch {
     // 非 JSON 错误体（如网关 HTML）：保留状态类别。
   }
-  return `http_${response.status}_${base}_${kind}_${keyShape}`;
+  return `http_${response.status}_${kind}_${keyShape}`;
 }
 
 function rateLimited(ip: string): boolean {
@@ -187,7 +180,6 @@ async function runAnswer(
     if (!response.ok) {
       const reason = await upstreamFailureReason(
         response,
-        config.baseUrl,
         suspiciousKeyShape(config.apiKey) ? "kbad" : "kok",
       );
       logUpstreamFailure(

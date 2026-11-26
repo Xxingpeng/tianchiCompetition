@@ -26,7 +26,7 @@ describe("dashScopeConfig", () => {
     });
   });
 
-  it("接受 https 覆盖并去掉尾部斜杠", () => {
+  it("忽略自定义端点，始终使用公开兼容端点", () => {
     const config = dashScopeConfig(
       env({
         DASHSCOPE_API_KEY: "sk-test",
@@ -34,20 +34,18 @@ describe("dashScopeConfig", () => {
         DASHSCOPE_MODEL: " custom-model ",
       }),
     );
-    expect(config?.baseUrl).toBe("https://example.com/compatible-mode/v1");
+    expect(config?.baseUrl).toBe(DEFAULT_DASHSCOPE_BASE_URL);
     expect(config?.model).toBe("custom-model");
   });
 
-  it("拒绝非 https、畸形地址与换行注入", () => {
-    expect(
-      dashScopeConfig(
-        env({ DASHSCOPE_API_KEY: "sk-test", DASHSCOPE_BASE_URL: "http://example.com" }),
-      ),
-    ).toBeNull();
-    expect(
-      dashScopeConfig(env({ DASHSCOPE_API_KEY: "sk-test", DASHSCOPE_BASE_URL: "not a url" })),
-    ).toBeNull();
+  it("拒绝换行注入与异常模型名", () => {
     expect(dashScopeConfig(env({ DASHSCOPE_API_KEY: "sk-a\nb" }))).toBeNull();
+    expect(
+      dashScopeConfig(env({ DASHSCOPE_API_KEY: "sk-test", DASHSCOPE_MODEL: "x".repeat(101) })),
+    ).toBeNull();
+    expect(
+      dashScopeConfig(env({ DASHSCOPE_API_KEY: "sk-test", DASHSCOPE_MODEL: "m\nx" })),
+    ).toBeNull();
   });
 
   it("清洗整行粘贴、包裹引号与 Bearer 前缀", () => {
