@@ -61,7 +61,7 @@ export function encodeSSE(event, data) {
   return new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
-// For the application's projected SSE, not raw QCA events. Returning true means
+// For the application's projected SSE, not raw upstream events. Returning true means
 // the callback has handled an explicit terminal state (success OR failure).
 export async function consumeSSE(response, onFrame, options = {}) {
   if (

@@ -1,19 +1,18 @@
-// Sites Function 入口：浏览器 → 本站 Function → Qoder Cloud Agents。
-// 浏览器永远拿不到 PAT；这里只转发经过校验的问题与已检索到的资料。
-import { CloudAgentsError, createCloudAgentsClient } from "./cloud-agents.mjs";
+// Sites Function 入口：浏览器 → 本站 Function → DashScope 兼容接口。
+// 浏览器永远拿不到模型密钥；这里只转发经过校验的问题与已检索到的资料。
 import { encodeSSE, readSSE } from "./sse.mjs";
-import { degradedAnswer, AGENT_SYSTEM } from "./app/prompt.ts";
+import { AGENT_SYSTEM, degradedAnswer } from "./app/prompt.ts";
+import { buildChatMessages, dashScopeConfig, parseDashScopeFrame } from "./app/llm.ts";
 import { heartKnowledge } from "./knowledge/heart-knowledge.ts";
 import { createRetriever } from "./app/retrieval.ts";
 import { truncate } from "./app/text.ts";
 import { FOCUS_TITLES, planTurn } from "./app/turn.ts";
 
-const CLOUD_ORIGIN = "https://api.qoder.com.cn";
-const CONFIG_TAG = "tutor-v1";
 const MAX_BODY_BYTES = 12 * 1024;
 const MAX_QUESTION_CHARS = 400;
-const SESSION_TTL_MS = 20 * 60 * 1000;
 const STREAM_LIFETIME_MS = 90 * 1000;
+const UPSTREAM_TIMEOUT_MS = 45 * 1000;
+const MAX_ANSWER_CHARS = 6000;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT = 10;
 const DAILY_LIMIT = 800;
@@ -31,15 +30,8 @@ const SSE_HEADERS = {
 
 const kb = heartKnowledge;
 const retrieve = createRetriever(kb);
-const cloud = createCloudAgentsClient({ origin: CLOUD_ORIGIN });
+const readEnv = (name: string) => globalThis.Deno?.env.get(name);
 
-interface AgentBinding {
-  agent: { type: "agent"; id: string; version: number };
-  environment_id: string;
-}
-
-let resourcesPromise: Promise<AgentBinding> | null = null;
-const sessions = new Map<string, { id: string; lastEventId?: string; touched: number }>();
 const busyConversations = new Set<string>();
 const rateBuckets = new Map<string, number[]>();
 let dailyKey = "";
@@ -50,111 +42,18 @@ function json(body: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });
 }
 
-function safeFailure(error: unknown): { code: string; diagnosticId?: string } {
-  if (!(error instanceof CloudAgentsError)) return { code: "ai_service_unavailable" };
-  const diagnosticId = (error as unknown as { diagnosticId?: unknown }).diagnosticId;
-  return typeof diagnosticId === "string"
-    ? { code: error.code, diagnosticId }
-    : { code: error.code };
-}
-
-async function pickModel(): Promise<string> {
-  const list = await cloud.request("/api/v1/cloud/models");
-  const models: unknown[] = Array.isArray(list?.data) ? list.data : [];
-  const enabled = models.find(
-    (item) => item && typeof item === "object" && (item as { enabled?: boolean }).enabled !== false,
-  ) as { id?: unknown } | undefined;
-  if (!enabled || typeof enabled.id !== "string")
-    throw new CloudAgentsError("ai_model_unavailable");
-  return enabled.id;
-}
-
-async function ensureResources(): Promise<AgentBinding> {
-  if (resourcesPromise) return resourcesPromise;
-  const pending = (async (): Promise<AgentBinding> => {
-    const scope = "anatomy-sketch";
-    const agentMeta = { app: scope, role: "heart-tutor", config: CONFIG_TAG };
-    const envMeta = { app: scope, role: "sandbox", config: CONFIG_TAG };
-
-    const [agents, environments] = await Promise.all([
-      cloud.findResources("agents", agentMeta),
-      cloud.findResources("environments", envMeta),
-    ]);
-
-    let environment = environments[0];
-    if (!environment) {
-      environment = await cloud.request("/api/v1/cloud/environments", {
-        method: "POST",
-        body: {
-          name: "anatomy-sketch-sandbox",
-          config: { type: "cloud" },
-          metadata: envMeta,
-        },
-      });
-    }
-    if (!environment || !/^env_[A-Za-z0-9_-]+$/.test(String(environment.id))) {
-      throw new CloudAgentsError("ai_response_invalid");
-    }
-
-    let agent = agents[0];
-    if (!agent) {
-      const model = await pickModel();
-      agent = await cloud.request("/api/v1/cloud/agents", {
-        method: "POST",
-        idempotencyKey: `anatomy-sketch-${CONFIG_TAG}`,
-        body: {
-          name: "anatomy-sketch-tutor",
-          model,
-          system: AGENT_SYSTEM,
-          metadata: agentMeta,
-        },
-      });
-    }
-    const version = Number(agent?.version);
-    if (
-      !agent ||
-      !/^agent_[A-Za-z0-9_-]+$/.test(String(agent.id)) ||
-      !Number.isInteger(version) ||
-      version < 1
-    ) {
-      throw new CloudAgentsError("ai_response_invalid");
-    }
-    return {
-      agent: { type: "agent" as const, id: String(agent.id), version },
-      environment_id: String(environment.id),
-    };
-  })().catch((error: unknown) => {
-    resourcesPromise = null;
-    throw error;
-  });
-  resourcesPromise = pending;
-  return pending;
-}
-
-async function resolveSession(
-  conversationId: string,
-): Promise<{ id: string; lastEventId?: string; cold: boolean }> {
-  const now = Date.now();
-  const existing = sessions.get(conversationId);
-  if (existing && now - existing.touched < SESSION_TTL_MS) {
-    existing.touched = now;
-    return { id: existing.id, lastEventId: existing.lastEventId, cold: false };
+class AiChannelError extends Error {
+  code: string;
+  constructor(code: string) {
+    super(code);
+    this.code = code;
   }
-  const binding = await ensureResources();
-  const created = await cloud.request("/api/v1/cloud/sessions", {
-    method: "POST",
-    body: { agent: binding.agent, environment_id: binding.environment_id },
-  });
-  const id = String(created?.id ?? "");
-  if (!/^sess_[A-Za-z0-9_-]+$/.test(id)) throw new CloudAgentsError("ai_response_invalid");
-  const record = { id, touched: now, lastEventId: undefined as string | undefined };
-  sessions.set(conversationId, record);
-  if (sessions.size > 64) {
-    for (const [key, value] of sessions) {
-      if (now - value.touched >= SESSION_TTL_MS) sessions.delete(key);
-    }
-  }
-  return { id, cold: true };
+}
+
+function safeFailure(error: unknown): { code: string } {
+  return {
+    code: error instanceof AiChannelError ? error.code : "ai_service_unavailable",
+  };
 }
 
 function rateLimited(ip: string): boolean {
@@ -181,86 +80,65 @@ function rateLimited(ip: string): boolean {
   return false;
 }
 
-function extractText(value: unknown): string {
-  if (!Array.isArray(value)) return "";
-  return value
-    .map((block) => {
-      if (!block || typeof block !== "object") return "";
-      const item = block as { text?: unknown };
-      return typeof item.text === "string" ? item.text : "";
-    })
-    .join("");
-}
-
-function extractDelta(
-  event: unknown,
-  eventName = "",
-): { text: string; id?: string; type: string; failed: boolean; idle: boolean } {
-  const record = (event ?? {}) as Record<string, unknown>;
-  const type = typeof record.type === "string" && record.type ? record.type : eventName;
-  const eventId = typeof record.event_id === "string" ? record.event_id : undefined;
-  const delta = (record.delta ?? record.event_delta) as Record<string, unknown> | undefined;
-  if (delta && typeof delta === "object") {
-    const content = delta.content as Record<string, unknown> | undefined;
-    if (typeof content?.text === "string" && content.text) {
-      return { text: content.text, id: eventId, type, failed: false, idle: false };
-    }
-  }
-  const failed = type === "session.error" || type.endsWith("generation.error");
-  const idle = type === "session.status_idle" || type === "session.status.idle";
-  if (type === "agent.message") {
-    const content =
-      record.content ?? (record.message as Record<string, unknown> | undefined)?.content;
-    return { text: extractText(content), id: eventId, type, failed, idle };
-  }
-  return { text: "", id: eventId, type, failed, idle };
-}
-
 interface Sink {
   send: (event: string, data: unknown) => void;
   signal: AbortSignal;
 }
 
 async function runAnswer(
-  session: { id: string; lastEventId?: string },
-  userMessage: string,
+  plan: { userMessage: string },
+  history: ChatInput["history"],
   sink: Sink,
 ): Promise<boolean> {
-  const upstream = await cloud.openStream(session.id, {
-    lastEventId: session.lastEventId,
-    signal: sink.signal,
-  });
+  const config = dashScopeConfig(readEnv);
+  if (!config) throw new AiChannelError("ai_not_configured");
+
+  const upstream = new AbortController();
+  const abort = () => upstream.abort();
+  sink.signal.addEventListener("abort", abort, { once: true });
+  const timeout = setTimeout(abort, UPSTREAM_TIMEOUT_MS);
   try {
-    await cloud.request(`/api/v1/cloud/sessions/${session.id}/events`, {
+    const response = await fetch(`${config.baseUrl}/chat/completions`, {
       method: "POST",
-      body: { events: [{ type: "user.message", content: [{ type: "text", text: userMessage }] }] },
+      headers: {
+        authorization: `Bearer ${config.apiKey}`,
+        "content-type": "application/json",
+        accept: "text/event-stream",
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages: buildChatMessages(AGENT_SYSTEM, history, plan.userMessage),
+        stream: true,
+        temperature: 0.3,
+        max_tokens: 800,
+      }),
+      signal: upstream.signal,
     });
+    if (!response.ok || !response.body) throw new AiChannelError("ai_service_unavailable");
+
     let streamed = false;
-    let lastId = session.lastEventId;
-    for await (const frame of readSSE(upstream.body, {
-      signal: sink.signal,
+    let written = 0;
+    for await (const frame of readSSE(response.body, {
+      signal: upstream.signal,
     } as unknown as Parameters<typeof readSSE>[1])) {
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(frame.data);
-      } catch {
-        continue;
-      }
-      const result = extractDelta(parsed, frame.event);
-      const frameId = frame.id || result.id;
-      if (frameId && frameId === session.lastEventId) continue;
-      if (result.failed) throw new CloudAgentsError("ai_generation_failed");
-      if (result.text) {
-        if (!streamed || result.type !== "agent.message") sink.send("delta", { text: result.text });
-        streamed = true;
-      }
-      if (frameId) lastId = frameId;
-      if (result.idle) break;
+      const parsed = parseDashScopeFrame(frame.data);
+      if (parsed.done) break;
+      if (parsed.failed) throw new AiChannelError("ai_generation_failed");
+      if (!parsed.text) continue;
+      const room = MAX_ANSWER_CHARS - written;
+      if (room <= 0) break;
+      const text = parsed.text.length > room ? parsed.text.slice(0, room) : parsed.text;
+      written += text.length;
+      sink.send("delta", { text });
+      streamed = true;
     }
-    session.lastEventId = lastId;
     return streamed;
+  } catch (error) {
+    if (error instanceof AiChannelError) throw error;
+    throw new AiChannelError("ai_generation_failed");
   } finally {
-    upstream.close();
+    clearTimeout(timeout);
+    sink.signal.removeEventListener("abort", abort);
   }
 }
 
@@ -395,11 +273,8 @@ async function handleChat(request: Request): Promise<Response> {
 
   const ip = clientIp(request);
 
-  // 先做一次不依赖会话的规划：越界、问候与安全分流完全不碰云端，也不占用提问配额。
-  const initial = planTurn(
-    { text: parsed.text, history: parsed.history, focus: parsed.focus },
-    retrieve,
-  );
+  // 先规划一次：越界、问候与安全分流完全不碰云端，也不占用提问配额。
+  const initial = planTurn({ text: parsed.text, focus: parsed.focus }, retrieve);
   if (initial.kind !== "answer") {
     return sseResponse(async ({ send }) => {
       send("meta", { mode: "static", sources: [] });
@@ -436,27 +311,10 @@ async function handleChat(request: Request): Promise<Response> {
       activeAi = Math.max(0, activeAi - 1);
     };
     try {
-      let plan = initial;
-      let session: { id: string; lastEventId?: string } | null = null;
-      try {
-        const resolved = await resolveSession(parsed.conversationId);
-        session = resolved;
-        if (resolved.cold) {
-          const replanned = planTurn(
-            { text: parsed.text, history: parsed.history, focus: parsed.focus },
-            retrieve,
-            true,
-          );
-          if (replanned.kind === "answer") plan = replanned;
-        }
-      } catch {
-        session = null;
-      }
-
       sink.send("meta", {
-        mode: plan.mode,
-        topic: plan.topic,
-        sources: plan.citations.map((citation) => ({
+        mode: initial.mode,
+        topic: initial.topic,
+        sources: initial.citations.map((citation) => ({
           n: citation.n,
           title: citation.title,
           url: citation.url,
@@ -467,16 +325,14 @@ async function handleChat(request: Request): Promise<Response> {
       });
 
       let answered = false;
-      if (session) {
-        try {
-          answered = await runAnswer(session, plan.userMessage, sink);
-        } catch (error) {
-          const failure = safeFailure(error);
-          sink.send("status", { code: failure.code });
-          answered = false;
-        }
+      try {
+        answered = await runAnswer(initial, parsed.history, sink);
+      } catch (error) {
+        const failure = safeFailure(error);
+        sink.send("status", { code: failure.code });
+        answered = false;
       }
-      if (!answered) sink.send("delta", { text: degradedAnswer(plan.citations) });
+      if (!answered) sink.send("delta", { text: degradedAnswer(initial.citations) });
       sink.send("done", { degraded: !answered });
     } finally {
       release();
@@ -492,6 +348,7 @@ Deno.serve((request) => {
       service: "anatomy-sketch-chat",
       knowledgeChunks: kb.chunks.length,
       structureIds: Object.keys(FOCUS_TITLES),
+      aiConfigured: dashScopeConfig(readEnv) !== null,
     });
   }
   if (request.method !== "POST" || !pathname.endsWith("/chat")) {

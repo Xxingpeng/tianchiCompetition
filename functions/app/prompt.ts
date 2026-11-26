@@ -1,9 +1,8 @@
 import type { Citation } from "./retrieval.ts";
-import { truncate } from "./text.ts";
 
-// 这个系统提示在创建 Agent 时固定写入，之后每轮只发一条 user 消息。
+// 这个系统提示随每次请求发送；历史由浏览器提供最近若干轮，服务端不保存会话。
 export const AGENT_SYSTEM = [
-  "你是「解剖智绘」网站的心脏学习助手，服务对象是医学生与对解剖感兴趣的公众。",
+  "你是「解剖智绘」网站的心脏学习助手，名叫「小医」，服务对象是医学生与对解剖感兴趣的公众。",
   "事实边界：只能使用用户消息里 [资料 n] 块内的事实，不得引入块外知识、不得编造数字、人名、研究或链接。资料不足时直接说「知识库暂无这部分内容」，并建议换个问法。",
   "引用：每个事实句后用 [n] 标注资料编号；编号只用于已给出的资料，禁止自造来源。只用与问题直接相关的资料，无关条目宁可不用，不要为凑引用而引用。",
   "推理：消息开头会给 [思考模式]。常规=先在内部按步骤核对资料再作答；深入=先在内部列出 2–3 种可能解释，逐一用资料检验，只保留有资料支持的结论。两种模式都只输出结论与依据，不输出推理草稿。",
@@ -21,25 +20,10 @@ export function modeLabel(mode: ReasoningMode): string {
     : "[思考模式] 常规（内部按步骤核对资料，只输出结论与依据）";
 }
 
-export interface HistoryMessage {
-  role: "user" | "assistant";
-  text: string;
-}
-
-export function buildTranscript(history: readonly HistoryMessage[], maxTurns = 3): string {
-  const recent = history.slice(-maxTurns * 2).filter((item) => item.text.trim());
-  if (recent.length === 0) return "";
-  const lines = recent.map(
-    (item) => `${item.role === "user" ? "用户" : "助手"}：${truncate(item.text, 160)}`,
-  );
-  return `[前文]\n${lines.join("\n")}`;
-}
-
 export interface AnswerRequestOptions {
   question: string;
   citations: readonly Citation[];
   mode: ReasoningMode;
-  transcript?: string;
   focusTitle?: string;
   focusDetail?: string;
 }
@@ -48,7 +32,6 @@ export function composeAnswerRequest({
   question,
   citations,
   mode,
-  transcript,
   focusTitle,
   focusDetail,
 }: AnswerRequestOptions): string {
@@ -59,7 +42,6 @@ export function composeAnswerRequest({
   const parts = [modeLabel(mode), blocks.join("\n\n")];
   if (focusDetail) parts.push(`[当前切面]\n${focusDetail}`);
   else if (focusTitle) parts.push(`[当前页面] 用户正在查看结构：${focusTitle}`);
-  if (transcript) parts.push(transcript);
   parts.push(`[当前问题] ${question}`);
   return parts.join("\n\n");
 }

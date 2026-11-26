@@ -1,12 +1,6 @@
 import { describeFocus, FOCUS_DETAILS, focusDetail } from "./focus.ts";
 import { assessDifficulty, classifyIntent, type Topic } from "./intent.ts";
-import {
-  buildTranscript,
-  composeAnswerRequest,
-  degradedAnswer,
-  type HistoryMessage,
-  type ReasoningMode,
-} from "./prompt.ts";
+import { composeAnswerRequest, degradedAnswer, type ReasoningMode } from "./prompt.ts";
 import { emptyReply, insufficientReply, staticReply } from "./replies.ts";
 import { normalize } from "./text.ts";
 import type { Citation, RetrievalResult } from "./retrieval.ts";
@@ -32,7 +26,6 @@ export type TurnPlan =
 
 export interface TurnInput {
   text: string;
-  history: readonly HistoryMessage[];
   focus?: string;
 }
 
@@ -46,7 +39,7 @@ function anchor(title: string | undefined, question: string): string {
   return normalize(question).includes(normalize(title)) ? question : `${title} ${question}`;
 }
 
-export function planTurn(input: TurnInput, retrieve: Retrieve, coldStart = false): TurnPlan {
+export function planTurn(input: TurnInput, retrieve: Retrieve): TurnPlan {
   const question = input.text.trim();
   if (!question) return { kind: "static", reply: emptyReply() };
 
@@ -85,7 +78,6 @@ export function planTurn(input: TurnInput, retrieve: Retrieve, coldStart = false
         question,
         citations,
         mode,
-        transcript: coldStart ? buildTranscript(input.history) : undefined,
         focusDetail: describeFocus(detail),
       }),
     };
@@ -108,7 +100,6 @@ export function planTurn(input: TurnInput, retrieve: Retrieve, coldStart = false
       question,
       citations,
       mode,
-      transcript: coldStart ? buildTranscript(input.history) : undefined,
       focusTitle: selectedTitle,
     }),
   };

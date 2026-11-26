@@ -9,18 +9,18 @@ const retrieve = createRetriever(kb);
 
 describe("planTurn", () => {
   it("越界问题直接给静态回复，不产生资料", () => {
-    const plan = planTurn({ text: "帮我订一张机票", history: [] }, retrieve);
+    const plan = planTurn({ text: "帮我订一张机票" }, retrieve);
     expect(plan.kind).toBe("static");
     if (plan.kind === "static") expect(plan.reply).toContain("超出");
   });
 
   it("范围外知识在没有资料时明确说没有，而不是硬答", () => {
-    const plan = planTurn({ text: "量子纠缠的贝尔不等式", history: [] }, retrieve);
+    const plan = planTurn({ text: "量子纠缠的贝尔不等式" }, retrieve);
     expect(plan.kind).not.toBe("answer");
   });
 
   it("解剖问题产出资料块、引用编号与常规模式", () => {
-    const plan = planTurn({ text: "左心室为什么壁厚", history: [] }, retrieve);
+    const plan = planTurn({ text: "左心室为什么壁厚" }, retrieve);
     expect(plan.kind).toBe("answer");
     if (plan.kind !== "answer") return;
     expect(plan.topic).toBe("anatomy");
@@ -35,7 +35,6 @@ describe("planTurn", () => {
     const plan = planTurn(
       {
         text: "为什么左心室壁比右心室厚？收缩期和舒张期分别有什么影响，和主动脉压力有什么关系？",
-        history: [],
       },
       retrieve,
     );
@@ -44,13 +43,13 @@ describe("planTurn", () => {
   });
 
   it("切面问题在未选结构时先引导选择", () => {
-    const plan = planTurn({ text: "这个高亮是什么", history: [] }, retrieve);
+    const plan = planTurn({ text: "这个高亮是什么" }, retrieve);
     expect(plan.kind).toBe("static");
     if (plan.kind === "static") expect(plan.reply).toContain("先在左侧");
   });
 
   it("切面问题带上当前结构的真实取层索引", () => {
-    const plan = planTurn({ text: "轴位切面在第几层", history: [], focus: "lv" }, retrieve);
+    const plan = planTurn({ text: "轴位切面在第几层", focus: "lv" }, retrieve);
     expect(plan.kind).toBe("answer");
     if (plan.kind !== "answer") return;
     expect(plan.topic).toBe("view");
@@ -60,25 +59,10 @@ describe("planTurn", () => {
   });
 
   it("当前选中的结构能补全指代", () => {
-    const plan = planTurn({ text: "它有什么作用", history: [], focus: "lv" }, retrieve);
+    const plan = planTurn({ text: "它有什么作用", focus: "lv" }, retrieve);
     expect(plan.kind).toBe("answer");
     if (plan.kind === "answer")
       expect(plan.userMessage).toContain("[当前页面] 用户正在查看结构：左心室");
-  });
-
-  it("冷启动才附带前文摘要", () => {
-    const history = [
-      { role: "user" as const, text: "左心室在哪" },
-      { role: "assistant" as const, text: "在左心房下方。" },
-    ];
-    const cold = planTurn({ text: "那心肌呢", history, focus: "myo" }, retrieve, true);
-    const warm = planTurn({ text: "那心肌呢", history, focus: "myo" }, retrieve, false);
-    if (cold.kind === "answer" && warm.kind === "answer") {
-      expect(cold.userMessage).toContain("[前文]");
-      expect(warm.userMessage).not.toContain("[前文]");
-    } else {
-      throw new Error("两个规划都应当是回答");
-    }
   });
 
   it("焦点白名单只接受目录内结构", () => {
