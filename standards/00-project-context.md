@@ -2,7 +2,7 @@
 
 > **作用**:这是项目的"身份档案"。AI 接管项目时先读这里,了解项目目标、技术栈、目录、部署取值。
 > **更新时机**:架构、技术栈、目录结构、端口、部署目录、重要约束变化时更新。
-> **最后更新**:2026-11-24 · by Qoder（依据当日对研究仓库、本机环境与赛题官方页面的核对结果填写）
+> **最后更新**:2026-11-26 · by Qoder（补充小医命名、DashScope 模型通道与 Secret 边界）
 
 ---
 
@@ -16,7 +16,7 @@
   - 解剖信息卡（显示名、英文名、简短学习说明、一条上级关系）
   - 轴位/冠状位/矢状位三视图示意切面 + 目标结构高亮 overlay + 文字图例
   - 整颗心脏 3D（9 个部件同场景,悬停报名称、点选结构、非选中半透明）
-  - 心脏学习助手：右下角问答（解剖 + CT 概念 + 本站切面讲解）,意图分流、检索来源常显、不提供医疗建议
+  - 小医 · 心脏学习助手：右下角问答（解剖 + CT 概念 + 本站切面讲解）,意图分流、检索来源常显、不提供医疗建议
   - 数据来源、许可与"仅用于学习展示"用途提示
 - **输入/数据**:自制的静态示意资产——`structures.json` + WebP/PNG 切面 + GLB 网格。来源为 BodyParts3D（CC BY 4.0）派生几何 + 自制左心耳。
   - 助手知识库是 23 条改写资料（OpenStax CC BY 4.0 / Radiopaedia CC BY-NC-SA 3.0 非商业教学引用 / 本站自述）,见 `NOTICE.md` §2a。
@@ -36,7 +36,7 @@
 | 样式 | CSS Modules | 组件内聚,不额外引框架;若后续需要再换 Tailwind |
 | 测试 | vitest（前端 + 助手纯逻辑）+ pytest（`tools/` 资产脚本） | 与两类代码语言匹配 |
 | 格式/静态检查 | ESLint + Prettier（前端）、ruff（Python）、`tsc --noEmit`、`deno check`（Function 入口） | 对应三类代码的可机检门禁;`functions/index.ts` 只由 Deno 检查 |
-| 打包/运行 | `vite build` 静态产物 + **Qoder Sites Functions（Deno）** 提供同源 `/functions/v1/app/chat` | 静态托管放不了密钥;Function 调 Qoder Cloud Agents,`QODER_PAT` 由平台注入、只在服务端读取 |
+| 打包/运行 | `vite build` 静态产物 + **Qoder Sites Functions（Deno）** 提供同源 `/functions/v1/app/chat` | 静态托管放不了密钥;Function 调 DashScope OpenAI 兼容接口,`DASHSCOPE_API_KEY` 由平台以应用 Secret 注入、只在服务端读取 |
 | CI | GitHub Actions（PR 触发） | 见 §5 偏离说明:**只做 CI** |
 | CD | **Qoder Sites**（由 Qoder 的 sites 工具链发布,非 Actions runner） | 赛题硬性要求评委入口必须是 Sites 公开地址;发布含助手版本时 `prepare_site` 必须带 `functionDirectory: "functions"` |
 
@@ -54,9 +54,9 @@ tianchiCompetition/
 │   └── types/
 ├── functions/                 # Qoder Sites Functions（Deno,仅站点托管时运行）
 │   ├── index.ts               # /chat SSE + /health;限流、并发、超时、降级
-│   ├── app/                   # 意图/检索/提示词/回合/focus（由 vitest 覆盖）
+│   ├── app/                   # 意图/检索/提示词/回合/focus/llm 配置（由 vitest 覆盖）
 │   ├── knowledge/             # 23 条资料（TS 模块,避免 Edge 打包丢 JSON）
-│   └── cloud-agents.mjs / sse.mjs
+│   └── sse.mjs                # SSE 读写工具（Function 与浏览器共用约定）
 ├── public/
 │   ├── assets/slices/         # 示意切面与 overlay（WebP/PNG）— 进 Git
 │   ├── assets/meshes/         # GLB 网格 — 进 Git
@@ -65,7 +65,7 @@ tianchiCompetition/
 ├── assets_raw/                # BP3D 下载与解压产物 — 被 .gitignore 排除
 ├── tests/                     # vitest 用例;tools 的 pytest 放 tools/asset_pipeline/tests
 ├── .github/workflows/ci.yml   # 仅 CI
-├── .env.example               # 本地联调模板;真实 .env 被 gitignore
+├── .env.example               # 本地联调模板（DASHSCOPE_*）;真实 .env 被 gitignore
 ├── NOTICE.md                  # 资产与助手资料来源、生成步骤、许可与署名原文
 └── README.md
 ```

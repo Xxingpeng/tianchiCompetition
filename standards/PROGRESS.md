@@ -8,7 +8,7 @@
 
 ## 当前状态 (最后更新: 2026-11-26 · by Qoder)
 
-- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 与追加的 M4b/M4c 已推送,`pull/1` 仍待人工 merge。**M6 已发布**:https://anatomy-sketch-ip6pfjkttvk.qoder.zone 服务 M4c 静态产物（公开、免登录）。**M7b–M7d 心脏学习助手已实现完成**:意图分流 + 23 条 BM25 检索 + CoT/ToT 提示 + QCA 流式 Function + 右下角可访问面板,**本地门禁全绿（78 用例 / 12 文件、`deno check` 通过）**,但**尚未提交、未带 Function 重新发布**,线上仍是 M7 之前的静态版（有整颗心脏、无助手入口）。下一步 M7e:文档定稿后过确认门提交,再 `prepare_site`（必须带 `functionDirectory: "functions"`）重新发布并做真人问答验收。
+- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 与追加的 M4b/M4c 已推送,`pull/1` 仍待人工 merge。**M6 已发布**:https://anatomy-sketch-ip6pfjkttvk.qoder.zone 服务 M4c 静态产物（公开、免登录）。**M7 小医 · 心脏学习助手已完成定稿**:意图分流 + 23 条 BM25 检索 + CoT/ToT 提示 + **DashScope 流式 Function** + 右下角小医面板（用户提供的头像）,本地门禁全绿（**84 用例 / 13 文件**、`deno check` 通过）,并对真实模型跑通流式回答、CT 回答、越界拦截与无 key 降级。**尚未提交、未带 Function 重新发布**;线上仍是 M7 之前的静态版（有整颗心脏、无小医入口）。下一步:过确认门提交推送 → `prepare_site`（带 `functionDirectory: "functions"` 与 `DASHSCOPE_API_KEY` Secret）→ 用户在真实浏览器确认观感 → 发布并线上验收。
 - **上一步完成**:
   - **M1 前端工程骨架**（Vite 8 + React 19 + TS 6 + Vitest 5,Three.js 依赖已就位待 M4 使用）:
     - 门禁实测:`npm ci` → `prettier --check .` → `eslint .` → `tsc --noEmit` → `vitest run`（**16 passed / 3 files**）→ `vite build`（JS 224.12 KiB,gzip 70.92 KiB,远低于首屏 3 MB 闸）全绿。
@@ -55,20 +55,21 @@
     - **法线平滑被证伪并撤销**:用户批准"加"之后实测是**空操作**——`mergeVertices` 对 83,496 个顶点合并掉 **0 个**（耗时 188.4 ms）,GLB 本来就是**带平均法线索引**几何（myo `posCount 38,674 / idxCount 232,692`,36% 顶点法线等于其面法线）,`computeVertexNormals` 再算一遍结果相同;浏览器端纹理指标前后**逐字节一致**（meanGrad 3.75 / meanLum 92 / px 9,475）。台阶感来自 96³ 体素的真实几何,抬高 `--grid` 会先撞单文件 2 MB 闸（myo 已 1,816.4 KiB / 91%）,故撤销该改动、只保留配色修复。
     - 门禁:`npm run check` 全绿（**39 passed**）,`vite build` 首屏 232.49 kB（gzip 73.80）+ 懒加载 `HeartModel` **642.99 kB**（撤销平滑后回到未增体积,比平滑版本小 1.3 kB）。
     - **未做的验证（M4b 提出,M4c 复核仍未解除）**:①≥1280px 真实视口的整页观感——内置浏览器面板固定 415px,`take_screenshot` 仍报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`,宽屏只验到编译后 CSS 里的 `.layout` 规则与 `@media (width <= 48rem)` 存在,以及列宽算术（728 内容宽 = 320 + 24 + 384）不溢出;②OrbitControls 的**拖拽旋转**无法用合成 PointerEvent 证明（`setPointerCapture` 对不存在的 `pointerId` 抛错,画面哈希纹丝不动）,缩放/复位走的是按钮路径、已有像素证据,旋转仍由真人手测覆盖。
-  - **M7b–M7d 心脏学习助手（问答 + 示意切面讲解）实现完成,未提交**（2026-11-26;用户要求:普及心脏知识/帮助看 CT、无幻觉、轻量 RAG、意图识别、严格限制话题、优化 system prompt、省 token 的历史记忆、常规 CoT / 高难度 ToT、高权威来源、**必须展示检索来源**;范围经确认"问答 + 示意切面讲解",不做真实 CT 上传/诊断）:
+  - **M7 小医 · 心脏学习助手（问答 + 示意切面讲解）完成定稿,未提交**（2026-11-26;用户要求:普及心脏知识/帮助看 CT、无幻觉、轻量 RAG、意图识别、严格限制话题、优化 system prompt、省 token 的历史记忆、常规 CoT / 高难度 ToT、高权威来源、**必须展示检索来源**;范围经确认"问答 + 示意切面讲解",不做真实 CT 上传/诊断;追加要求:用指定图片作头像、助手名 **小医**、打通 DashScope）:
     - **知识层**（`functions/knowledge/heart-knowledge.ts`,原 JSON 已删）:23 条中文资料,只收 OpenStax A&P 2e §19.1/§19.3（CC BY 4.0）、Radiopaedia CT 条目（CC BY-NC-SA 3.0,非商业教学引用）与本站自述;检索器跳过未登记来源,保证每条引用都能展示出版方与许可。
     - **意图与安全**（`app/intent.ts`）:顺序为 空 → 急症 → 症状/用药/手术 → 问候 → 自我介绍 → CT → 切面 → 解剖 → 站内帮助 → 越界;越界、症状、急症、问候、站内用法全部零 token 静态回复;"它/这个"单独出现且已选中结构时按解剖追问处理。
-    - **检索**（`app/retrieval.ts`）:BM25 + 中文 1/2-gram,索引与查询都丢弃单字中文与单字母拉丁词元（否则"的/学"把无关问句拉过阈值,已由"量子力学波函数坍缩"用例锁定）,标题 ×3、关键词 ×2、主题 ×1.15,`minScore 1.2`、`k=4`;结果为空直接走"知识库暂无"静态回复。
-    - **提示与记忆**（`app/prompt.ts`）:每轮注入 `[思考模式] 常规/深入`（常规内部逐步核对;深入内部列 2–3 种解释逐一用资料检验,都只输出结论与 `[n]`）;热会话只发当前问题,冷启动最多重放 3 轮 × 160 字摘要,浏览器只保留最近 6 轮,不落数据库。
+    - **检索**（`app/retrieval.ts`）:BM25 + 中文 2-gram,索引与查询都丢弃单字中文与单字母拉丁词元,并过滤疑问/客套词;标题 ×3、关键词 ×2、主题 ×1.15,`minScore 2.1`、`k=4`;判出主题后收窄候选（解剖题只取 anatomy,CT 题保留 anatomy 作看图基础）;结果为空直接走"知识库暂无"静态回复。
+    - **提示与记忆**（`app/prompt.ts` + `app/llm.ts`）:每轮注入 `[思考模式] 常规/深入`（常规内部逐步核对;深入内部列 2–3 种解释逐一用资料检验,都只输出结论与 `[n]`）;历史由浏览器携带最近 6 条消息（服务端每条截断 300 字）直接作为 `messages` 发送,服务端不保存会话、不落数据库;原冷启动摘要路径已删除。
     - **切面讲解**（`app/focus.ts` + `app/turn.ts`）:9 个结构的三视图 0 起切层索引冻结在服务端,选中结构时以 `[当前切面]` 注入真实页面状态;`focus.test.ts` 与 `public/assets/structures.json` 做漂移比对,防止两边改不同步。
-    - **Function**（`functions/index.ts` + `cloud-agents.mjs` + `sse.mjs`）:同源 Origin 校验、12 KB 请求体/400 字问题上限、单 IP 10 次/10 分钟 + 全站 800 次/日 + 3 路并发、单会话互斥;`QODER_PAT` 只在 Function 内由平台注入;先开事件流再发用户消息,按 `Last-Event-ID` 去重,90 s 超时;上游失败时 `status` + 知识库原文降级（`degradedAnswer`）,从不转发上游错误文本。
-    - **前端**（`src/components/AssistantPanel.tsx` + `src/data/assistant.ts`）:右下角浮动面板（不挤压三视图列）,每次 AI 回答**常显**来源列表（标题/出版方/许可/摘要/新窗口链接）,静态回复显式标"本次未使用外部资料";流式增量渲染、停止按钮、Esc 收起、Enter 发送兼容输入法、`aria-live` 状态、400 字上限、移动端全宽。
-    - **门禁实测**:`deno check --no-lock --node-modules-dir=none functions/index.ts` 通过;`npm run format` / `lint` / `typecheck` 全绿;`vitest` **78 passed / 12 files**（其中 `functions/app` 34 条:意图 11、检索 9、回合 11、focus 3）;`vite build` 首屏 **239.91 kB**（gzip 76.58）+ 懒加载 `HeartModel` 642.99 kB + CSS 7.78 kB。
-    - **浏览器实测（本地 dev,416×554）**:面板 385×474、与启动按钮间距 12px、无横向溢出,chips/来源区/页脚声明均在;本地无 Function 时显示"助手暂时不可用（HTTP 404）",不白屏。
-    - **本地 Function 冒烟（无 PAT,端口 8000）**:`GET /health` 返回 `knowledgeChunks=23` 与 9 个结构 id;`POST /functions/v1/app/chat` 的问候、CT、切面（带/不带 focus）、越界、症状五类分流符合预期;正常解剖问题返回 4 条来源 + `degraded:true` 知识库原文（无 PAT 时按设计降级,未白屏、未泄上游错误）;连续 12 条静态回复后仍可发起 AI 提问,配额用满后返回 429 `rate_limited` → **静态回复不占 AI 配额**。
-    - **未验/边界**:①**线上真实 QCA 问答未验**——本地 `.env` 为空,且静态发布不含 Function,必须 M7e 之后在真实站点验证增量输出、最终回复与来源展示;②无数据库,会话映射与限流都在 isolate 内存,冷启动会新建 Cloud Session（已按冷启动路径重放摘要）;③ToT 是**提示词级**多假设检验,不是字面树搜索;④CT 仅概念与本站示意切面,不支持上传影像。
+    - **模型通道**（`app/llm.ts` + `functions/index.ts`）:**DashScope OpenAI 兼容接口**,默认 `https://dashscope.aliyuncs.com/compatible-mode/v1`、模型 `qwen4-max`,可用 `DASHSCOPE_BASE_URL` / `DASHSCOPE_MODEL` 覆盖,密钥只读 `DASHSCOPE_API_KEY`;流式解析 `choices[0].delta.content`,以 `[DONE]` 结束;上游 45 s 超时、整条流 90 s、答案上限 6000 字;失败只回安全错误码,从不转发上游报文。原 Qoder Cloud Agents 客户端（`cloud-agents.mjs`）与冷启动会话映射已删除。
+    - **Function 防护**（`functions/index.ts`）:同源 Origin 校验、12 KB 请求体/400 字问题上限、单 IP 10 次/10 分钟 + 全站 800 次/日 + 3 路并发、单会话互斥;静态分流在建流前完成、不占配额;`/health` 增加 `aiConfigured`;上游失败时 `status` + 知识库原文降级（`degradedAnswer`）。
+    - **前端**（`src/components/AssistantPanel.tsx` + `src/data/assistant.ts` + `src/assets/xiaoyi.webp`）:右下角浮动面板（不挤压三视图列）,标题与启动按钮均为 **小医**,头像为用户提供图片中心裁切的 256×256 WebP（12 KB）;每次 AI 回答**常显**来源列表（标题/出版方/许可/摘要/新窗口链接）,静态回复显式标"本次未使用外部资料";流式增量渲染、停止按钮、Esc 收起、Enter 发送兼容输入法、`aria-live` 状态、400 字上限、移动端全宽。
+    - **门禁实测**:`deno check --no-lock --node-modules-dir=none functions/index.ts` 通过;`npm run format` / `lint` / `typecheck` 全绿;`vitest` **84 passed / 13 files**（其中 Function 40 条:意图 11、检索 9、回合 10、focus 3、llm 配置与帧解析 7）;`vite build` 首屏 **240.25 kB**（gzip 76.70）+ 懒加载 `HeartModel` 642.99 kB + CSS 8.15 kB + 头像 11.96 kB。
+    - **本地真实模型冒烟（端口 8000,`.env` 注入,经 Vite 5173 同源代理复测）**:`/health` 返回 `aiConfigured:true`;"左心室为什么比右心室壁厚？"增量输出并以 `[1][2]` 引资料、4 条来源正确;"窗宽窗位是什么？"走 CT 主题并给出纵隔窗数值;"最近胸痛该吃什么药？"零 token 静态拦截;换无效 key 后返回 `status: ai_service_unavailable` + 知识库原文降级。
+    - **浏览器实测（内置面板 416×554,修复 Vite 依赖缓存 504 后）**:启动按钮"问问小医"、头像 256×256 且加载成功、面板标题"小医"与副标题完整;点示例问题后 **4.1 s** 流式完成 195 字回答、4 条来源（标题/出版方/CC BY 4.0/摘要）与正文 `[n]` 一致,无降级标记。**截图仍报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`**,头像观感与宽屏版式需用户目测。
+    - **未验/边界**:①**线上真实问答未验**——静态发布不含 Function,必须重新发布后在真实站点复测增量输出、来源与 `/health`;②小医头像与面板观感需用户在真实浏览器确认;③限流/并发为 isolate 内存计数,冷启动会归零;④ToT 是**提示词级**多假设检验,不是字面树搜索;⑤CT 仅概念与本站示意切面,不支持上传影像。
 
-- **下一步 (TODO 第一条)**:**M7e 发布含 Function 的新版并线上验收**——先把 `.env.example` + `functions/**` + `src/**` + 文档过确认门提交推 `pull/1`（AI 不合并）,再用 `prepare_site`（**必须带 `functionDirectory: "functions"`**,新 actionId;漏掉会只发静态产物、助手 404）→ `publish_site` → `get_publish_status` 确认 `published: true`,最后在真实浏览器走一轮问答:增量输出、最终回复、来源列表、`/functions/v1/app/health` 的 `knowledgeChunks=23`;若 PAT/建 Agent 失败,核对降级路径是否给出知识库原文。仍等人工 merge `pull/1` 与开启 `main` 分支保护。
+- **下一步 (TODO 第一条)**:**提交 + 发布含小医的版本并线上验收**——先把 `.env.example` + `functions/**`（含删除的 `cloud-agents.mjs`）+ `src/**` + 文档过确认门提交推 `pull/1`（AI 不合并）,再用 `prepare_site`（**必须带 `functionDirectory: "functions"` 与 `secretNames: ["DASHSCOPE_API_KEY"]`**,新 actionId;漏掉会只发静态产物、助手 404）→ 在 Sites 设置里用 Secret 输入框写入模型密钥（**不接受把密钥贴进聊天**）→ 本地/工作台预览让用户确认小医头像与面板观感 → `publish_site` → `get_publish_status` 确认 `published: true`,最后在真实浏览器走一轮问答:增量输出、来源列表、`/functions/v1/app/health` 的 `aiConfigured=true` 与 `knowledgeChunks=23`;若上游失败,核对降级路径是否给出知识库原文。仍等人工 merge `pull/1` 与开启 `main` 分支保护。
 - **阻塞项**:
   1. **需人类动作**:审核并 merge `pull/1`（AI 不合并）;merge 后开启 `main` 分支保护（要求 PR + CI 通过）。
   2. **需人类动作**:天池报名 + 组队 + 实名认证 + 阿里云大学生认证（截止前必须完成,否则无法评奖）。
@@ -107,8 +108,8 @@
 
 - [x] US-2 检索 → US-3 信息卡 → US-4 三视图 → US-5 3D → US-8 体验打磨（2026-11-24,M4 完成、M4b 把 US-5 改成整颗心脏合成:本地门禁 + 浏览器实测全绿,已推入 pull/1 等人工合并）
 - [x] US-9 发布到 Qoder Sites,回填公开 URL（2026-11-26:https://anatomy-sketch-ip6pfjkttvk.qoder.zone ,线上 `index-B9dAoW10.js` + `HeartModel-BkImm3qP.js` 均 200,真实页面 h2 含"心脏整体形态"、canvas 800×800、状态行"已高亮 心肌",控制台零消息）
-- [x] US-10 心脏学习助手（问答 + 示意切面讲解）代码与本地门禁（2026-11-26,**未提交/未发布**;`deno check` + prettier/eslint/tsc 全绿、**78 passed / 12 files**;线上真实问答待 M7e）
-- [ ] M7e 带 Function 重新发布并线上验一轮问答（必须 `functionDirectory: "functions"`;新 actionId 不能复用 `ec709890-…`）
+- [x] US-10 小医 · 心脏学习助手（问答 + 示意切面讲解）代码、命名、头像与本地门禁（2026-11-26,**未提交/未发布**;`deno check` + prettier/eslint/tsc 全绿、**84 passed / 13 files**;DashScope 真实流式回答与降级路径本地跑通;线上真实问答待发布）
+- [ ] 提交并重新发布含 Function 的版本,线上验一轮问答（必须 `functionDirectory: "functions"` + `secretNames: ["DASHSCOPE_API_KEY"]`;新 actionId 不能复用 `ec709890-…` / `1b6356ad-…`）
 - [ ] M7a 伪 CT 轴位切面 + 逐层真值（用户最初设想的"看 CT"扩展,**未排期**;当前 CT 仅概念问答 + 本站三视图切面讲解）
 
 ### P2 · 收尾
@@ -139,11 +140,12 @@
 | 2026-11-24 | 3D 区域从"单结构网格面板"改为**同一场景合成整颗心脏**（9 个部件 GLB）,并移除 `MeshViewer` | `surface.py` 写出的顶点是世界毫米,9 个部件放一起自动成型、零配准,且与切面同源;学习者要的是毗邻关系,单结构孤立旋转看不到;只保留一个场景也避免每次切结构重载网格 |
 | 2026-11-24 | 页面改为**左检索/列表 + 右整颗心脏与详情**两栏,`max-width: 48rem` 退回单栏 | 用户反馈"结构列表太长把页面拉长";两栏让 3D 与详情同屏对照,窄屏退回流式不破版 |
 | 2026-11-24 | 3D"颜色太浅"按**混色**修:选中件走不透明通道、非选中 0.3 → **0.18**、`metalness 0 / roughness 0.85`、灯 1.6/1.4/0.3;同时**放弃表面法线平滑** | 用户选定"A：保留层次"（非选中仍半透明）。实测发白来自双面半透明壳叠加与高光,不是过曝;色卡距离像素 0 → 21,644、受光面亮度比 1.05 为证。平滑经顶点/法线测量确认是空操作（合并 0 顶点、GLB 本就带平均法线),留着只增 188 ms 首帧与 1.3 kB |
-| 2026-11-26 | 助手走 **同源 Sites Function → Qoder Cloud Agents**,`QODER_PAT` 只在 Function 内读取,浏览器零密钥 | 静态托管放不了密钥;用户明确 PAT 由平台托管;同源 Function 还能做限流、输入上限与统一降级,不必把 CORS/PAT 暴露给前端 |
-| 2026-11-26 | 无数据库:会话映射、限流计数都在 isolate 内存;热会话单轮、冷启动重放 3 轮摘要、浏览器保留 6 轮 | 后端能力只有 functions/qoder/storage,不引数据库;演示规模下内存足够,冷启动虽丢映射但有摘要重建路径,失败还有知识库降级 |
+| 2026-11-26 | ~~助手走 **同源 Sites Function → Qoder Cloud Agents**~~（同日被下一条取代） | 第一版方案;后因用户提供 DashScope 密钥与专属端点,改为直连兼容接口,减少一层平台耦合 |
+| 2026-11-26 | 模型通道改为 **同源 Sites Function → DashScope OpenAI 兼容接口**;`DASHSCOPE_API_KEY` 作为 Sites 应用 Secret 注入,浏览器零密钥 | 用户指定密钥、模型 `qwen4-max` 与工作空间端点;兼容接口协议简单、可直接本地复现,同源 Function 继续承担限流、输入上限与统一降级。代码默认公共兼容端点,专属端点只通过环境变量覆盖,避免把用户私有地址写进仓库 |
+| 2026-11-26 | 无数据库:**历史由浏览器携带最近 6 条消息**,服务端不保存会话;限流与并发计数只在 isolate 内存 | 单轮问答只需最近上下文,浏览器已有完整对话;去掉会话映射后冷启动无状态,失败仍有知识库降级,演示规模足够 |
 | 2026-11-26 | 知识库**只收能逐条展示许可的 23 条**:OpenStax（CC BY 4.0）、Radiopaedia（CC BY-NC-SA 3.0,非商业教学引用）、本站自述;不整段复制教科书 | 用户要求高权威来源且必须展示来源;逐条绑定 source 元数据,检索器会跳过未登记来源,从结构上杜绝"引用无出处" |
 | 2026-11-26 | CoT/ToT 做**提示词级模式**,按难度启发式选择;只输出结论与 `[n]`,不展示推理草稿 | 真正的 ToT 树搜索会成倍消耗 token/时延;医学问答要的是可核对的事实链而不是思考过程,提示词内多假设检验已能覆盖比较/机制类问题 |
-| 2026-11-26 | 检索用 BM25 + 中文双字过滤,`minScore 1.2`、`k=4`;无命中直接静态回复 | 单字中文（的/学/心）几乎命中全部资料,会把"量子力学"这类越界问句拉过阈值;双字过滤后既保住召回又让越界问题落空,且完全可单测 |
+| 2026-11-26 | 检索用 BM25 + 中文双字过滤,`minScore 2.1`、`k=4`,并按主题收窄候选;无命中直接静态回复 | 单字中文（的/学/心）几乎命中全部资料,会把"量子力学"这类越界问句拉过阈值;双字过滤 + 查询停用词 + 主题收窄后既保住召回又让越界问题落空,且完全可单测 |
 
 ---
 
@@ -184,9 +186,11 @@
 - **检索来源列表本身也在被评委看**:低分条目只命中"心脏"这种通用词,模型可以不引用,但来源区一摊开就显得不专业——"心脏的瓣膜……"曾带出"心脏的位置与朝向","心动周期"带出 CT 时相条目。解决三件套:查询侧丢疑问/客套词与跨词虚词双字;`minScore` 参照 23 条小语料抬到 2.1;`planTurn` 判出主题后**按主题收窄候选**（解剖题只取 anatomy,CT 题保留 anatomy 作看图基础）。验证:`retrieval.test.ts` 9 条含"解剖题不混入 CT/站内目录""CT 题保留解剖条目"两个正反用例。
 - **Deno 入口不能塞进 Node 工具链**:`functions/index.ts` 用 `Deno.serve`/`Deno.env`,已从 eslint 与 tsc 排除,唯一门禁是 `deno check --no-lock --node-modules-dir=none functions/index.ts`;纯逻辑放 `functions/app/` 由 vitest 覆盖。为了让 Deno 与 tsc 都能解析,函数内导入带 `.ts` 后缀,tsconfig 必须保留 `allowImportingTsExtensions`。
 - **别让 Function 在运行时读 JSON**:知识库若用 `Deno.readTextFileSync` 读 JSON,Edge 打包不保证把该文件带上去;已改为 `functions/knowledge/heart-knowledge.ts` 模块。以后加资料继续写 TS,不要改回 JSON。
-- **`QODER_PAT` 不是普通 Secret,发布时也不该声明**:它由平台注入、只允许在 Function 里 `Deno.env.get`;不要写进 `.env.example` 的实际值、不传前端、不进提示词、不列 `prepare_site.secretNames`。`.env` 仅供本地联调,已 gitignore。
-- **`prepare_site` 不带 `functionDirectory` 会只发静态产物**:助手请求会 404,而且页面本身看起来完全正常,很容易误判"已发布成功"。M7e 必须显式传 `"functions"`,并且**新建 actionId**,不能复用 M6 的 `ec709890-…`。
-- **助手面板的探针要等 React 提交,并按会翻转的文案找元素**:首次探针在点击后立刻读 DOM,`hasPanel:false`;启动按钮文案还会从"心脏助手"变成"收起助手"。探针写成 async + `setTimeout` 等待,用包含"心脏助手/收起助手"的文本匹配,不要依赖固定 uid。
+- **`DASHSCOPE_API_KEY` 是应用 Secret,不进仓库、文档、前端或提示词**:本地只放 `.env`（已 gitignore）,线上只在 Qoder Sites 设置里用 Secret 输入框写入,发布时在 `secretNames` 声明名称;不要让用户把密钥贴进聊天,也不要让任何工具输出密钥。代码默认公共兼容端点,专属工作空间地址只用 `DASHSCOPE_BASE_URL` 覆盖。
+- **`prepare_site` 不带 `functionDirectory` 会只发静态产物**:助手请求会 404,而且页面本身看起来完全正常,很容易误判"已发布成功"。发布小医版本必须显式传 `"functions"` 与 `secretNames: ["DASHSCOPE_API_KEY"]`,并且**新建 actionId**,不能复用 M6 的 `ec709890-…` 或已过期的预览草稿 `1b6356ad-…`。
+- **Deno 的 `--env-file` 不覆盖已存在的系统环境变量**:本机 shell 里已有一个同名 `DASHSCOPE_API_KEY` 时,`deno run --env-file=.env` 仍会使用 shell 的值,坏的测试 key 看起来"能用"。要验证 `.env` 内容必须 `env -u DASHSCOPE_API_KEY deno run --env-file=.env …`。
+- **Git Bash 里 `curl -d` 会把中文请求体变成乱码**:服务端收到非 UTF-8 字节后意图分类落到越界静态回复。把 JSON 写成 UTF-8 文件,再用 `--data-binary @file` 发送;看到"左心室为什么壁厚"被判越界,先查编码而不是改意图词表。
+- **助手面板的探针要等 React 提交,并按会翻转的文案找元素**:首次探针在点击后立刻读 DOM,`hasPanel:false`;启动按钮文案还会从"问问小医"变成"收起小医"。探针写成 async + `setTimeout` 等待,用包含"问问小医/收起小医"的文本匹配,不要依赖固定 uid。
 - **隐藏页里 `setTimeout` 被节流到约 1 秒一次**:内置浏览器面板 `visibilityState=hidden`,需要几百次采样的"扫悬停"探针必然撞 15 s 工具上限。解决:探针改成少量 `await`（每结构一次）或直接读像素分类,别写密集轮询循环。
 - **待确认:git 身份邮箱**:当前提交内嵌 `898328775@qq.com`,仓库公开后可见。是否换成 GitHub noreply 邮箱由本人决定,AI 不改全局 git 配置。
 
@@ -213,6 +217,7 @@
 - [x] 2026-11-24 **M4b · 整颗心脏 3D 与两栏布局**（用户追加需求,人工批准四个提交 → `f34ea8b` feat(web) / `9d1d4d8` test(web) / `f5d0260` chore(repo) / 本条 docs 提交）:`HeartModel` 用同一场景合成 9 个部件 GLB（世界毫米坐标,零配准）,悬停报名称、单击选结构、非选中半透明 0.3;删除单结构 `MeshViewer`,页面改左检索右展示两栏、48rem 退回单栏。门禁 prettier/eslint/tsc + **39 passed** + `vite build` 首屏 232.49 kB / 懒加载 642.89 kB 全绿;生产包实测合成成功、点选与信息卡同步、复位回到同一帧、控制台零消息。
 - [x] 2026-11-24 **M4c · 整颗心脏配色校正**（用户反馈"颜色太浅",确认"A：保留层次";人工批准拆两个提交 → `eb8cc34` feat(web) / `590ea15` docs(standards)）:发白主因是双面半透明壳叠加 + 白色高光,不是过曝——选中件走不透明通道、`DIMMED_OPACITY` 0.3→0.18、`metalness 0 / roughness 0.85`、灯 1.6/1.4/0.3。像素判据:与心肌色卡距离 ≤40 的像素 0 → 21,644,受光面亮度比 1.05。用户批准的"法线平滑"经测量证伪（合并 0/83,496 顶点、GLB 本已带平均法线、纹理指标逐字节一致）后撤销。门禁 `npm run check` 全绿（39 passed）、`vite build` 642.99 kB;Actions `push` 与 `pull_request` 两条 run 的 4 个 job 全 pass。
 - [x] 2026-11-26 **M6 · 发布到 Qoder Sites**（用户批准"把新版提交"）:`prepare_site`(actionId `ec709890-984b-4ffd-8b02-54bffe065b8a`,projectRoot `tianchiCompetition`、webDirectory `dist`) → `publish_site` → `get_publish_status` 返回 `published: true`、`committed: true`。线上 https://anatomy-sketch-ip6pfjkttvk.qoder.zone 回到新构建:`GET /` 200 且入口为 `index-B9dAoW10.js` / `index-s7-RRPQw.css`,`assets/HeartModel-BkImm3qP.js`、`assets/structures.json`、`assets/meshes/myo.glb` 全 200;真实页面探针:h2 = 已收录 9 个结构 / **心脏整体形态** / 结构详情,canvas 800×800,状态行"已高亮 心肌，其余部件半透明。",控制台零消息。替换前线上是 M4 时代的 `index-D0sjdlmb.js`（含 `MeshViewer`、"三维形态"）。
-- [x] 2026-11-26 **M7b–M7d · 心脏学习助手（问答 + 示意切面讲解）**（用户批准范围"问答 + 示意切面讲解"、确认开启后端与 PAT 创建;**代码尚未提交**）:23 条许可可展示资料 + BM25（双字过滤）+ 意图/安全分流 + CoT/ToT 提示 + 冷启动 3 轮摘要 + QCA 流式 Function（限流/并发/超时/降级）+ 右下角可访问面板（来源常显）。门禁 `deno check` 通过、prettier/eslint/tsc 全绿、**78 passed / 12 files**、首屏 239.99 kB（gzip 76.61）;本地 416×554 面板 385×474 无溢出。**线上真实问答未验**,待 M7e 带 Function 重新发布。
+- [x] 2026-11-26 **M7b–M7d · 心脏学习助手初版**（用户批准范围"问答 + 示意切面讲解"、确认开启后端与 PAT 创建;初版代码未提交,后由同日定稿取代）:23 条许可可展示资料 + BM25（双字过滤）+ 意图/安全分流 + CoT/ToT 提示 + QCA 流式 Function（限流/并发/超时/降级）+ 右下角可访问面板（来源常显）。初版门禁 78 passed / 12 files,线上真实问答未验。
+- [x] 2026-11-26 **M7 定稿 · 小医 + DashScope 真实模型**（用户要求头像、命名与密钥;代码**尚未提交、未发布**）:QCA 客户端替换为 DashScope OpenAI 兼容流式接口,模型 `qwen4-max`,密钥只来自 `DASHSCOPE_API_KEY`;删除 `cloud-agents.mjs` 与冷启动会话映射,历史改由浏览器携带最近 6 条消息;前端更名 **小医** 并用指定图片生成 256×256 WebP 头像;`/health` 增加 `aiConfigured`。门禁 `deno check` 通过、`npm run check` **84 passed / 13 files**、首屏 240.25 kB（gzip 76.70）。本地真实模型跑通:解剖题流式回答并带 `[1][2]`、CT 题、症状静态拦截、无效 key 降级;经 Vite 同源代理复测通过。线上待发布后验收。
 
 > 反臃肿:里程碑超过 15 条时,把更早内容合并成一行摘要,保持本文件可快速阅读。

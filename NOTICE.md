@@ -89,5 +89,5 @@ PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈�
 - [x] 页面可见区域确认出现 BP3D 署名原文与用途声明（2026-11-24 `vite preview` 浏览器实测：页脚两行均在，控制台无报错）
 - [x] `NOTICE.md` 与页面署名文本一致（`structures.json` 的 notice 行与本文件 §2 署名原文逐字符相等）
 - [x] 助手资料逐条绑定可展示来源与许可（2026-11-26：OpenStax CC BY 4.0 / Radiopaedia CC BY-NC-SA 3.0 / 本站自述；检索器跳过未登记来源）
-- [ ] 抽查公开页面源码，确认不含 `QODER_PAT`、模型密钥、FMA ID、真实病例编号、个人材料
+- [ ] 抽查公开页面源码，确认不含模型密钥（`DASHSCOPE_API_KEY`）、FMA ID、真实病例编号、个人材料
 - [ ] `git ls-files` 抽查，确认无影像/权重/原始包/.env 入库
