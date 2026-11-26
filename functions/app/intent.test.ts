@@ -77,9 +77,23 @@ describe("isOverviewQuestion", () => {
     expect(isOverviewQuestion("心脏的结构有哪些")).toBe(true);
   });
 
+  it("口语变体与漏字也走泛问检索", () => {
+    for (const question of [
+      "心脏有什么结构",
+      "心脏有什结构",
+      "心脏的结构是什么",
+      "心脏由什么组成",
+      "心脏包括什么",
+      "心脏有哪几部分",
+      "人的心脏有哪些结构",
+    ]) {
+      expect(isOverviewQuestion(question), question).toBe(true);
+    }
+  });
+
   it("问到具体结构时不走泛问检索", () => {
     expect(isOverviewQuestion("心脏有哪些瓣膜")).toBe(false);
-    expect(isOverviewQuestion("心脏有哪些大血管")).toBe(false);
+    expect(isOverviewQuestion("心脏有什么大血管")).toBe(false);
     expect(isOverviewQuestion("左心室有哪些结构")).toBe(false);
   });
 });

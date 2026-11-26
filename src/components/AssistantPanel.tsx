@@ -84,7 +84,7 @@ export function AssistantPanel({ focus }: { focus: StructureRecord | null }) {
     ]);
     setInput("");
     setBusy(true);
-    setNotice("正在回答…");
+    setNotice("正在检索资料…");
     const controller = new AbortController();
     abortRef.current = controller;
     let streamed = "";
@@ -95,7 +95,10 @@ export function AssistantPanel({ focus }: { focus: StructureRecord | null }) {
         focus: focus?.id,
         history,
         signal: controller.signal,
-        onMeta: (sources, mode) => update(assistantId, { sources, mode }),
+        onMeta: (sources, mode) => {
+          update(assistantId, { sources, mode });
+          setNotice("正在作答…");
+        },
         onDelta: (chunk) => {
           streamed += chunk;
           update(assistantId, { text: streamed });
@@ -162,15 +165,23 @@ export function AssistantPanel({ focus }: { focus: StructureRecord | null }) {
               ) : (
                 <div key={turn.id} className="assistant-bubble bot">
                   {turn.pending && !turn.text ? (
-                    <p className="assistant-thinking">正在检索资料并组织回答…</p>
+                    <p className="assistant-thinking">
+                      {turn.sources.length > 0
+                        ? `已找到 ${turn.sources.length} 条资料，正在作答…`
+                        : "正在检索资料…"}
+                    </p>
                   ) : (
-                    <p className={turn.failed ? "assistant-text failed" : "assistant-text"}>
+                    <p
+                      className={`assistant-text${turn.failed ? " failed" : ""}${
+                        turn.pending ? " streaming" : ""
+                      }`}
+                    >
                       {turn.text}
                     </p>
                   )}
                   {turn.mode === "tot" && <p className="assistant-badge">深入模式</p>}
                   {turn.degraded && <p className="assistant-badge">知识库直答 · AI 通道暂不可用</p>}
-                  {turn.sources.length > 0 ? (
+                  {turn.sources.length > 0 && (!turn.pending || turn.text.length > 0) ? (
                     <ol className="assistant-sources">
                       {turn.sources.map((source) => (
                         <li key={`${source.n}-${source.url}`}>

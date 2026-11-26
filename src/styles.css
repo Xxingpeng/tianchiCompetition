@@ -512,6 +512,25 @@ code {
   color: #8a1f1f;
 }
 
+.assistant-text.streaming::after {
+  content: "▍";
+  margin-left: 0.1rem;
+  color: var(--accent);
+  animation: assistant-caret 1s steps(2, start) infinite;
+}
+
+@keyframes assistant-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-text.streaming::after {
+    animation: none;
+  }
+}
+
 .assistant-thinking {
   color: var(--ink-muted);
   font-size: 0.85rem;

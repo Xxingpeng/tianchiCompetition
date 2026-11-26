@@ -82,6 +82,22 @@ describe("planTurn", () => {
     );
   });
 
+  it("漏字的泛问（心脏有什结构）仍覆盖五类资料", () => {
+    const plan = planTurn({ text: "心脏有什结构", focus: "myo" }, retrieve);
+    expect(plan.kind).toBe("answer");
+    if (plan.kind !== "answer") return;
+    expect(plan.userMessage).not.toContain("[当前页面]");
+    const titles = plan.citations.map((citation) => citation.title);
+    expect(titles).toEqual(
+      expect.arrayContaining([
+        "心壁三层结构",
+        "四个瓣膜的分工",
+        "大血管的进出关系",
+        "心脏传导系统",
+      ]),
+    );
+  });
+
   it("问刚才问了哪些问题时从对话历史回答", () => {
     const plan = planTurn(
       {

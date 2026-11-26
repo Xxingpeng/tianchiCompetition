@@ -198,14 +198,20 @@ function isMetaQuestion(text: string): boolean {
 const OVERVIEW_SPECIFIC =
   /(瓣膜|瓣|心腔|心房|心室|血管|动脉|静脉|传导|冠脉|冠状动脉|心肌|心包|间隔|窦房结|房室结|希氏束|浦肯野|腱索|乳头肌)/;
 
+// 泛指问法在口语里很散：「有哪些」「有什么」「有什」（漏字）、「是什么」都要认。
+// 不认这些变体时，单查询只会命中「心壁三层结构」，模型就会误称心腔瓣膜没有资料。
+const OVERVIEW_ASK =
+  "(?:有哪些|有哪几|有什么|有什(?!么)|包括哪些|包括什么|由哪些|由什么|分几|分成几|分为|是什么)";
+const OVERVIEW_PATTERNS = [
+  new RegExp(`(?:^|整个|人的|人体|关于)心脏[^。！？?]{0,8}${OVERVIEW_ASK}`),
+  new RegExp(`^心脏(?:的)?(?:整体)?(?:结构|组成|构成|部分)[^。！？?]{0,6}${OVERVIEW_ASK}`),
+  /^心脏[^。！？?]{0,4}(?:由什么|由哪些|怎么组成|如何组成)/,
+];
+
 export function isOverviewQuestion(raw: string): boolean {
   const text = normalize(raw);
   if (OVERVIEW_SPECIFIC.test(text)) return false;
-  return (
-    /(^|整个)心脏[^。！？?]{0,6}(有哪些|包括哪些|由哪些|分为|组成|构成|分几)/.test(text) ||
-    /(^|整个)心脏[^。！？?]{0,4}(结构|部分)[^。！？?]{0,4}(有哪些|包括|分为)/.test(text) ||
-    /^(心|心脏)[^。！？?]{0,4}(有哪些|由哪些|包括哪些)/.test(text)
-  );
+  return OVERVIEW_PATTERNS.some((pattern) => pattern.test(text));
 }
 
 export function assessDifficulty(raw: string): boolean {

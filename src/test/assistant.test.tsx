@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AssistantPanel } from "../components/AssistantPanel";
@@ -61,6 +61,49 @@ describe("AssistantPanel", () => {
       "https://openstax.org/books/x",
     );
     expect(screen.getByText(/CC BY 4\.0/)).toBeInTheDocument();
+  });
+
+  it("来源等答案首字出现后再显示", async () => {
+    const encoder = new TextEncoder();
+    let controller: ReadableStreamDefaultController<Uint8Array> | null = null;
+    const body = new ReadableStream<Uint8Array>({
+      start(streamController) {
+        controller = streamController;
+      },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(body, {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        }),
+      ),
+    );
+
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
+    if (!controller) throw new Error("流未建立");
+    const stream: ReadableStreamDefaultController<Uint8Array> = controller;
+
+    act(() => {
+      stream.enqueue(
+        encoder.encode(
+          'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://openstax.org/books/x","sourceName":"OpenStax","license":"CC BY 4.0","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
+        ),
+      );
+    });
+    expect(await screen.findByText("已找到 1 条资料，正在作答…")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /心肌厚度/ })).toBeNull();
+
+    act(() => {
+      stream.enqueue(encoder.encode('event: delta\ndata: {"text":"左心室先出场。"}\n\n'));
+      stream.enqueue(encoder.encode('event: done\ndata: {"degraded":false}\n\n'));
+      stream.close();
+    });
+    expect(await screen.findByRole("link", { name: /心肌厚度/ })).toBeInTheDocument();
   });
 
   it("静态回复明确标注未使用外部资料", async () => {
