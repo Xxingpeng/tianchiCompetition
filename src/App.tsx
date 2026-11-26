@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { AssistantPanel } from "./components/AssistantPanel";
 import { InfoCard } from "./components/InfoCard";
 import { StructurePicker } from "./components/StructurePicker";
 import { TriView } from "./components/TriView";
@@ -160,6 +161,8 @@ function Browser({ catalog }: { catalog: Catalog }) {
           <p role="status">当前没有可选结构，请先在上方搜索或从列表中选择。</p>
         )}
       </div>
+
+      <AssistantPanel focus={selected} />
     </div>
   );
 }
