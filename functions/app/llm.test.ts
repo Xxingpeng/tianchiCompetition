@@ -49,6 +49,25 @@ describe("dashScopeConfig", () => {
     ).toBeNull();
     expect(dashScopeConfig(env({ DASHSCOPE_API_KEY: "sk-a\nb" }))).toBeNull();
   });
+
+  it("清洗整行粘贴、包裹引号与 Bearer 前缀", () => {
+    expect(dashScopeConfig(env({ DASHSCOPE_API_KEY: "DASHSCOPE_API_KEY=sk-test" }))?.apiKey).toBe(
+      "sk-test",
+    );
+    expect(dashScopeConfig(env({ DASHSCOPE_API_KEY: ' "sk-test" ' }))?.apiKey).toBe("sk-test");
+    expect(dashScopeConfig(env({ DASHSCOPE_API_KEY: "Bearer sk-test" }))?.apiKey).toBe("sk-test");
+    expect(
+      dashScopeConfig(env({ DASHSCOPE_API_KEY: "export DASHSCOPE_API_KEY=sk-test" }))?.apiKey,
+    ).toBe("sk-test");
+    expect(dashScopeConfig(env({ DASHSCOPE_API_KEY: "DASHSCOPE_API_KEY=" }))).toBeNull();
+    expect(
+      dashScopeConfig(
+        env({
+          DASHSCOPE_API_KEY: "DASHSCOPE_API_KEY=sk-a\nDASHSCOPE_BASE_URL=https://example.com",
+        }),
+      ),
+    ).toBeNull();
+  });
 });
 
 describe("buildChatMessages", () => {

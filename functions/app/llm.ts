@@ -17,10 +17,24 @@ export interface DashScopeConfig {
 export const DEFAULT_DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 export const DEFAULT_DASHSCOPE_MODEL = "qwen4-max";
 
+// 站点 Secret 编辑框常被整行粘贴（`DASHSCOPE_API_KEY=...`）、连同引号或 `Bearer ` 前缀；
+// 这里只做边界清洗，不猜测或改写密钥本身。内部换行仍视为配置错误。
+function normalizeApiKey(raw: string | undefined): string {
+  let key = (raw ?? "").trim();
+  key = key.replace(/^(?:export\s+)?DASHSCOPE_API_KEY\s*=\s*/, "");
+  for (const wrapper of ['"', "'", "`"]) {
+    if (key.length > 1 && key.startsWith(wrapper) && key.endsWith(wrapper)) {
+      key = key.slice(1, -1).trim();
+    }
+  }
+  key = key.replace(/^Bearer\s+/i, "").trim();
+  return key;
+}
+
 export function dashScopeConfig(
   getEnv: (name: string) => string | undefined,
 ): DashScopeConfig | null {
-  const apiKey = getEnv("DASHSCOPE_API_KEY")?.trim();
+  const apiKey = normalizeApiKey(getEnv("DASHSCOPE_API_KEY"));
   if (!apiKey || /[\r\n]/.test(apiKey)) return null;
   const baseEnv = getEnv("DASHSCOPE_BASE_URL")?.trim();
   const rawBase = baseEnv?.length ? baseEnv : DEFAULT_DASHSCOPE_BASE_URL;
