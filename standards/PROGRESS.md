@@ -8,7 +8,7 @@
 
 ## 当前状态 (最后更新: 2026-11-24 · by Qoder)
 
-- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 与追加的 M4b（整颗心脏 3D + 两栏）全部提交完成,`pull/1` 待人工 merge,下一步 M6 发布到 Qoder Sites。**M4c（3D 配色校正）已完成本地门禁与像素验证,停在确认门 3 等批准提交**
+- **阶段**:`开发` —— 六步交付流程**第④步（评审与合并）等待人工**,M1–M5 与追加的 M4b（整颗心脏 3D + 两栏）全部提交完成,`pull/1` 待人工 merge,下一步 M6 发布到 Qoder Sites。**M4c（3D 配色校正）已完成并按确认门 3 批准拆两个提交推送（`eb8cc34` / `590ea15`）,Actions 4 个 job 全 pass,仍等人工 merge**。**M6 已于 2026-11-26 发布:https://anatomy-sketch-ip6pfjkttvk.qoder.zone 已服务 M4c 产物（公开、免登录）;下一增量 M7 聊天助手与示意切面讲解,后端已获用户确认开启**
 - **上一步完成**:
   - **M1 前端工程骨架**（Vite 8 + React 19 + TS 6 + Vitest 5,Three.js 依赖已就位待 M4 使用）:
     - 门禁实测:`npm ci` → `prettier --check .` → `eslint .` → `tsc --noEmit` → `vitest run`（**16 passed / 3 files**）→ `vite build`（JS 224.12 KiB,gzip 70.92 KiB,远低于首屏 3 MB 闸）全绿。
@@ -47,7 +47,7 @@
     - 浏览器实测（`vite preview` 4173 + 真实 `public/assets`,控制台**零消息**）:9 个 GLB 合成成功,状态行"已高亮 心肌,其余部件半透明。";canvas 绘制缓冲 800×800（dpr 1.25）而 CSS 盒 323×323 随栏宽收缩,**未被拉伸**;`toDataURL` 像素统计 22% 有光、颜色簇出现 ≥8 个色系（红橙/青/紫…）→ 画面上确实是多个不同色的部件同场景,不是一整块。
     - 交互证据:悬停四个取样点分别报"肺动脉干（Pulmonary trunk）""左心房（Left atrium）";点选后 `.info-card h3` 与列表 `aria-pressed` 同步成"左心房"（三维—色块—信息卡三者同一结构）;按下-抬起位移超阈值不触发选中;连续两次"放大"改变像素哈希,随后"复位视角"回到**同一帧**（`288af2e6` 相等）。
     - 修掉的两处工具反馈:`react-hooks/refs` 报渲染期写 ref → `onSelectRef` 挪进 `useEffect`;`noUncheckedIndexedAccess` 报 `scenes[index]` 可能 undefined → 加载任务直接返回 `{ structure, part }`,顺带把 `selectedId` 从加载 effect 里摘干净（透明度只由 `[selectedId, status]` effect 应用,否则每次选中都要重载 9 个 GLB）。
-  - **M4c 整颗心脏配色校正（未提交,停在确认门 3 等批准）**（2026-11-24,用户看截图后反馈"颜色太浅了影响观感",并选择"A：保留层次"= 非选中部件仍半透明）:
+  - **M4c 整颗心脏配色校正（已提交并推送:`eb8cc34` feat(web) + `590ea15` docs(standards),CI 两条 run 的 4 个 job 全 pass）**（2026-11-24,用户看截图后反馈"颜色太浅了影响观感",并选择"A：保留层次"= 非选中部件仍半透明）:
     - 定位:发白**不是灯太亮**,是两处混色——① 8 个 `DoubleSide` 半透明壳层层相叠（0.3 不透明度下能叠到三四层）,② `metalness 0.05 + roughness 0.6` 在整个表面铺一层白色高光。选中件还留在半透明队列里,会被自己和背后的部件混成灰。
     - 改动 4 处（`HeartModel.tsx` + `data/heart.ts`,页面结构与布局未动）:灯光改半球 1.6 + 主光 1.4（方向 0.6/0.8/1）+ 补光 0.3;材质 `metalness 0 / roughness 0.85`;`applyOpacities` 里 `transparent = opacity < 1` 且置 `needsUpdate`,让选中件走不透明通道;`DIMMED_OPACITY` 0.3 → **0.18**。
     - 量化验证（同一探针,选中心肌,canvas 缓冲 800²,按色卡距离分类）:与心肌色卡 `rgb(181,101,29)` 距离 ≤40 的像素 **0 → 21,644**,受光面亮度/色卡亮度 **1.05**（等于色卡本色,不再发白也不再发暗）。
@@ -56,9 +56,9 @@
     - 门禁:`npm run check` 全绿（**39 passed**）,`vite build` 首屏 232.49 kB（gzip 73.80）+ 懒加载 `HeartModel` **642.99 kB**（撤销平滑后回到未增体积,比平滑版本小 1.3 kB）。
     - **未做的验证（M4b 提出,M4c 复核仍未解除）**:①≥1280px 真实视口的整页观感——内置浏览器面板固定 415px,`take_screenshot` 仍报 `NATIVE_BROWSER_VIEWPORT_UNAVAILABLE`,宽屏只验到编译后 CSS 里的 `.layout` 规则与 `@media (width <= 48rem)` 存在,以及列宽算术（728 内容宽 = 320 + 24 + 384）不溢出;②OrbitControls 的**拖拽旋转**无法用合成 PointerEvent 证明（`setPointerCapture` 对不存在的 `pointerId` 抛错,画面哈希纹丝不动）,缩放/复位走的是按钮路径、已有像素证据,旋转仍由真人手测覆盖。
 
-- **下一步 (TODO 第一条)**:**M6 发布**——US-9 用 Qoder Sites 发布 `dist/` 产物并回填公开 URL（发布是对外动作,需人工批准）;同时等人工 merge `pull/1` 与开启 `main` 分支保护。M4b 已按确认门 3 批准拆成四个提交推送,`.gitignore` 那条放行（忽略 `*.qoder.site` 本机绑定描述符,含站点不透明引用、换机不可复用）已单独走 `chore(repo)`。
+- **下一步 (TODO 第一条)**:**M7 心脏知识聊天助手 + 示意切面讲解**——用户 2026-11-26 定范围:QCA 流式问答（以 `structures.json` 为知识源）+ 基于自有体素的伪 CT 轴位切面讲解;不做真实 CT 上传/分析（无 GPU、患者影像合规、多模态认图幻觉三条硬约束）。平台路径:浏览器 → 同源 Sites Function → Qoder Cloud Agents,`QODER_PAT` 由平台自动创建并只存服务端;用户已明确确认开启后端与 PAT 创建。需服务端限流 + 超限降级为静态问答卡。**M6 发布已完成**:静态产物已上线 https://anatomy-sketch-ip6pfjkttvk.qoder.zone ,发布动作为 `prepare_site`/`publish_site`（actionId `ec709890-984b-4ffd-8b02-54bffe065b8a`）,线上入口 `index-B9dAoW10.js`、`HeartModel-BkImm3qP.js` 200、控制台零消息。仍等人工 merge `pull/1` 与开启 `main` 分支保护。
 - **阻塞项**:
-  1. **需人类动作**:审核并 merge `pull/1`（AI 不合并）;merge 后开启 `main` 分支保护（要求 PR + CI 通过）。US-9 的 Qoder Sites 发布同样需人工批准。
+  1. **需人类动作**:审核并 merge `pull/1`（AI 不合并）;merge 后开启 `main` 分支保护（要求 PR + CI 通过）。
   2. **需人类动作**:天池报名 + 组队 + 实名认证 + 阿里云大学生认证（截止前必须完成,否则无法评奖）。
   3. ~~BP3D 原始包待下载~~ ✅ 已完成（2026-11-24）。
   4. ~~BP3D 许可表述冲突~~ ✅ 已按权利主体存档定稿为 CC BY 4.0。
@@ -94,7 +94,7 @@
 ### P1 · 功能
 
 - [x] US-2 检索 → US-3 信息卡 → US-4 三视图 → US-5 3D → US-8 体验打磨（2026-11-24,M4 完成、M4b 把 US-5 改成整颗心脏合成:本地门禁 + 浏览器实测全绿,已推入 pull/1 等人工合并）
-- [ ] US-9 发布到 Qoder Sites,回填公开 URL
+- [x] US-9 发布到 Qoder Sites,回填公开 URL（2026-11-26:https://anatomy-sketch-ip6pfjkttvk.qoder.zone ,线上 `index-B9dAoW10.js` + `HeartModel-BkImm3qP.js` 均 200,真实页面 h2 含"心脏整体形态"、canvas 800×800、状态行"已高亮 心肌",控制台零消息）
 
 ### P2 · 收尾
 
@@ -184,5 +184,7 @@
 - [x] 2026-11-24 **M4 提交并推送**（人工批准）:`dd672d7` feat(web) / `82fcbcc` test(web) / `ab3b7b4` docs(standards);`git ls-files` 抽查 134 个跟踪文件,无影像/权重/压缩包/证件,最大对象 `myo.glb` 1.86 MB。
 - [x] 2026-11-24 **M5 · CI 自检与 PR**（人工批准）:`306f2db` 推送后开 **pull/1** → `main`;Actions `pull_request` 与 `push` 两条 run 的两个 job 全 success、`gh pr checks` 四项 pass,US-1 AC2 落地。发布前另用 `vite preview` 验过 `dist/` 产物:四类路由 200、生产包交互正常、控制台零消息、axe 0 违规。合并留给人工。
 - [x] 2026-11-24 **M4b · 整颗心脏 3D 与两栏布局**（用户追加需求,人工批准四个提交 → `f34ea8b` feat(web) / `9d1d4d8` test(web) / `f5d0260` chore(repo) / 本条 docs 提交）:`HeartModel` 用同一场景合成 9 个部件 GLB（世界毫米坐标,零配准）,悬停报名称、单击选结构、非选中半透明 0.3;删除单结构 `MeshViewer`,页面改左检索右展示两栏、48rem 退回单栏。门禁 prettier/eslint/tsc + **39 passed** + `vite build` 首屏 232.49 kB / 懒加载 642.89 kB 全绿;生产包实测合成成功、点选与信息卡同步、复位回到同一帧、控制台零消息。
+- [x] 2026-11-24 **M4c · 整颗心脏配色校正**（用户反馈"颜色太浅",确认"A：保留层次";人工批准拆两个提交 → `eb8cc34` feat(web) / `590ea15` docs(standards)）:发白主因是双面半透明壳叠加 + 白色高光,不是过曝——选中件走不透明通道、`DIMMED_OPACITY` 0.3→0.18、`metalness 0 / roughness 0.85`、灯 1.6/1.4/0.3。像素判据:与心肌色卡距离 ≤40 的像素 0 → 21,644,受光面亮度比 1.05。用户批准的"法线平滑"经测量证伪（合并 0/83,496 顶点、GLB 本已带平均法线、纹理指标逐字节一致）后撤销。门禁 `npm run check` 全绿（39 passed）、`vite build` 642.99 kB;Actions `push` 与 `pull_request` 两条 run 的 4 个 job 全 pass。
+- [x] 2026-11-26 **M6 · 发布到 Qoder Sites**（用户批准"把新版提交"）:`prepare_site`(actionId `ec709890-984b-4ffd-8b02-54bffe065b8a`,projectRoot `tianchiCompetition`、webDirectory `dist`) → `publish_site` → `get_publish_status` 返回 `published: true`、`committed: true`。线上 https://anatomy-sketch-ip6pfjkttvk.qoder.zone 回到新构建:`GET /` 200 且入口为 `index-B9dAoW10.js` / `index-s7-RRPQw.css`,`assets/HeartModel-BkImm3qP.js`、`assets/structures.json`、`assets/meshes/myo.glb` 全 200;真实页面探针:h2 = 已收录 9 个结构 / **心脏整体形态** / 结构详情,canvas 800×800,状态行"已高亮 心肌，其余部件半透明。",控制台零消息。替换前线上是 M4 时代的 `index-D0sjdlmb.js`（含 `MeshViewer`、"三维形态"）。
 
 > 反臃肿:里程碑超过 15 条时,把更早内容合并成一行摘要,保持本文件可快速阅读。

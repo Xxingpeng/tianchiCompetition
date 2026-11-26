@@ -101,7 +101,7 @@ tianchiCompetition/
 | `<HEALTHCHECK>` | 改为**公开 URL 可达性检查**:未登录状态下 `GET /` 返回 200 且 `structures.json`、GLB、切面图均加载成功 | 替代 `curl localhost/health` |
 | `<SSH_USER>` | 不适用 | 见上 |
 | `<SSH_HOST>` | 不适用 | 见上 |
-| 部署地址 | 待填写:`[Qoder Sites 公开访问 URL]` | 发布后填入,并同时填进项目书 §1 |
+| 部署地址 | **https://anatomy-sketch-ip6pfjkttvk.qoder.zone**（2026-11-26 发布 M4c 产物,公开访问、无需登录） | 已填进项目书 §1 |
 
 ## 7. 对通用规范的两处偏离（已确认,2026-11-24）
 
