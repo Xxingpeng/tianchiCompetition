@@ -80,10 +80,7 @@ function keyShapeTag(apiKey: string): string {
 
 // 上游拒绝时只保留粗粒度类别（invalid_key/workspace/permission/model），
 // 不把错误报文、主机或凭据带出 Function。
-async function upstreamFailureReason(
-  response: Response,
-  keyShape: string,
-): Promise<string> {
+async function upstreamFailureReason(response: Response, keyShape: string): Promise<string> {
   let kind = response.status === 401 ? "auth" : response.status === 403 ? "forbidden" : "other";
   try {
     const raw = (await response.text()).slice(0, 1024);
