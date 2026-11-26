@@ -45,16 +45,27 @@ function json(body: Record<string, unknown>, status = 200): Response {
 
 class AiChannelError extends Error {
   code: string;
-  constructor(code: string) {
+  reason?: string;
+  constructor(code: string, reason?: string) {
     super(code);
     this.code = code;
+    this.reason = reason;
   }
 }
 
-function safeFailure(error: unknown): { code: string } {
-  return {
-    code: error instanceof AiChannelError ? error.code : "ai_service_unavailable",
-  };
+function safeFailure(error: unknown): { code: string; reason?: string } {
+  if (!(error instanceof AiChannelError)) return { code: "ai_service_unavailable" };
+  return error.reason ? { code: error.code, reason: error.reason } : { code: error.code };
+}
+
+// 失败分类只用于诊断：只描述错在哪一层，不带主机、密钥或上游报文。
+function networkReason(error: unknown): string {
+  const message = error instanceof Error ? `${error.name} ${error.message}` : "";
+  if (/dns|name or service|resolve/i.test(message)) return "dns";
+  if (/certificate|tls|ssl|cert/i.test(message)) return "tls";
+  if (/timed? ?out|timeout|abort/i.test(message)) return "timeout";
+  if (/connection refused|connect/i.test(message)) return "connect";
+  return "network";
 }
 
 function rateLimited(ip: string): boolean {
@@ -137,9 +148,12 @@ async function runAnswer(
       }),
       signal: upstream.signal,
     });
-    if (!response.ok || !response.body) {
+    if (!response.ok) {
       logUpstreamFailure(`http ${response.status} base ${baseShape(config.baseUrl)}`);
-      throw new AiChannelError("ai_service_unavailable");
+      throw new AiChannelError("ai_service_unavailable", `http_${response.status}`);
+    }
+    if (!response.body) {
+      throw new AiChannelError("ai_service_unavailable", "no_body");
     }
 
     let streamed = false;
@@ -149,7 +163,7 @@ async function runAnswer(
     } as unknown as Parameters<typeof readSSE>[1])) {
       const parsed = parseDashScopeFrame(frame.data);
       if (parsed.done) break;
-      if (parsed.failed) throw new AiChannelError("ai_generation_failed");
+      if (parsed.failed) throw new AiChannelError("ai_generation_failed", "upstream_error");
       if (!parsed.text) continue;
       const room = MAX_ANSWER_CHARS - written;
       if (room <= 0) break;
@@ -165,7 +179,7 @@ async function runAnswer(
     logUpstreamFailure(
       `${message.replace(/https?:\/\/\S+/g, "<url>")} base ${baseShape(config.baseUrl)}`,
     );
-    throw new AiChannelError("ai_generation_failed");
+    throw new AiChannelError("ai_generation_failed", networkReason(error));
   } finally {
     clearTimeout(timeout);
     sink.signal.removeEventListener("abort", abort);
@@ -351,7 +365,10 @@ async function handleChat(request: Request): Promise<Response> {
         answered = await runAnswer(initial, parsed.history, sink);
       } catch (error) {
         const failure = safeFailure(error);
-        sink.send("status", { code: failure.code });
+        sink.send(
+          "status",
+          failure.reason ? { code: failure.code, reason: failure.reason } : { code: failure.code },
+        );
         answered = false;
       }
       if (!answered) sink.send("delta", { text: degradedAnswer(initial.citations) });
