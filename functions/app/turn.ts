@@ -1,7 +1,13 @@
 import { describeFocus, FOCUS_DETAILS, focusDetail } from "./focus.ts";
-import { assessDifficulty, classifyIntent, type Topic } from "./intent.ts";
+import { assessDifficulty, classifyIntent, isOverviewQuestion, type Topic } from "./intent.ts";
 import { composeAnswerRequest, degradedAnswer, type ReasoningMode } from "./prompt.ts";
-import { emptyReply, insufficientReply, staticReply } from "./replies.ts";
+import {
+  emptyReply,
+  historyQuestionsReply,
+  insufficientReply,
+  staticReply,
+  type HistoryTurn,
+} from "./replies.ts";
 import { normalize } from "./text.ts";
 import type { Citation, RetrievalResult } from "./retrieval.ts";
 
@@ -27,23 +33,39 @@ export type TurnPlan =
 export interface TurnInput {
   text: string;
   focus?: string;
+  history?: readonly HistoryTurn[];
 }
 
 type Retrieve = (query: string, topic?: Topic) => RetrievalResult;
 
 // "它/这个"这类指代单独出现时靠当前选中的结构补全语境，避免被当成越界问题。
 const ANAPHORA = /^(它|他|她|这个|那个|该|此)/;
+const FOCUS_REFERENCE =
+  /(^|[^们])它|(这个|那个|该)(结构|心腔|瓣|层|图)|(当前|现在|正在)[^。！？?]{0,4}(查看|选中|选择|看|显示|高亮)|选中的|高亮的/;
+
+// 只有问题本身指向"当前看到的东西"时才带页面焦点；泛指心脏结构时不要主动播报选中项。
+function asksAboutFocus(question: string, topic: Topic): boolean {
+  if (topic === "view") return true;
+  return ANAPHORA.test(question) || FOCUS_REFERENCE.test(question);
+}
 
 function anchor(title: string | undefined, question: string): string {
   if (!title) return question;
   return normalize(question).includes(normalize(title)) ? question : `${title} ${question}`;
 }
 
+// 上级分类词用于泛问；单查"心脏有哪些结构"命中不了心腔、瓣膜等具体条目。
+const OVERVIEW_QUERY = "心壁 瓣膜 大血管 传导系统 心腔";
+
 export function planTurn(input: TurnInput, retrieve: Retrieve): TurnPlan {
   const question = input.text.trim();
   if (!question) return { kind: "static", reply: emptyReply() };
 
   const intent = classifyIntent(question);
+  if (intent.kind === "meta") {
+    return { kind: "static", reply: historyQuestionsReply(input.history ?? []) };
+  }
+
   let topic: Topic;
   if (intent.kind === "static") {
     const selected = focusTitle(input.focus);
@@ -83,9 +105,15 @@ export function planTurn(input: TurnInput, retrieve: Retrieve): TurnPlan {
     };
   }
 
-  // 当前选中的结构名一并进去检索，"它有什么作用"这类追问才有可检索的锚点。
-  const selectedTitle = focusTitle(input.focus);
-  const query = anchor(selectedTitle, question);
+  const wantsFocus = asksAboutFocus(question, topic);
+  const selectedTitle = wantsFocus ? focusTitle(input.focus) : undefined;
+  // 泛问用一组上级分类词检索；只有指代当前结构时才把结构名并进查询。
+  const query =
+    topic === "anatomy" && isOverviewQuestion(question)
+      ? OVERVIEW_QUERY
+      : wantsFocus
+        ? anchor(selectedTitle, question)
+        : question;
   const { citations } = retrieve(query, topic);
   if (citations.length === 0) {
     return { kind: "insufficient", reply: insufficientReply(question) };
@@ -100,7 +128,7 @@ export function planTurn(input: TurnInput, retrieve: Retrieve): TurnPlan {
       question,
       citations,
       mode,
-      focusTitle: selectedTitle,
+      ...(wantsFocus && selectedTitle ? { focusTitle: selectedTitle } : {}),
     }),
   };
 }

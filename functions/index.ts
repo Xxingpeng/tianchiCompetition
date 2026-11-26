@@ -274,7 +274,10 @@ async function handleChat(request: Request): Promise<Response> {
   const ip = clientIp(request);
 
   // 先规划一次：越界、问候与安全分流完全不碰云端，也不占用提问配额。
-  const initial = planTurn({ text: parsed.text, focus: parsed.focus }, retrieve);
+  const initial = planTurn(
+    { text: parsed.text, focus: parsed.focus, history: parsed.history },
+    retrieve,
+  );
   if (initial.kind !== "answer") {
     return sseResponse(async ({ send }) => {
       send("meta", { mode: "static", sources: [] });

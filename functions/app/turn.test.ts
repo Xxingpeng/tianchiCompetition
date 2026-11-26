@@ -65,6 +65,48 @@ describe("planTurn", () => {
       expect(plan.userMessage).toContain("[当前页面] 用户正在查看结构：左心室");
   });
 
+  it("泛指心脏结构时不绑定当前选中结构", () => {
+    const plan = planTurn({ text: "心脏有哪些结构", focus: "myo" }, retrieve);
+    expect(plan.kind).toBe("answer");
+    if (plan.kind !== "answer") return;
+    expect(plan.userMessage).not.toContain("[当前页面]");
+    expect(plan.userMessage).toContain("[当前问题] 心脏有哪些结构");
+    const titles = plan.citations.map((citation) => citation.title);
+    expect(titles).toEqual(
+      expect.arrayContaining([
+        "心壁三层结构",
+        "四个瓣膜的分工",
+        "大血管的进出关系",
+        "心脏传导系统",
+      ]),
+    );
+  });
+
+  it("问刚才问了哪些问题时从对话历史回答", () => {
+    const plan = planTurn(
+      {
+        text: "我刚才问了你哪些问题",
+        history: [
+          { role: "user", text: "心脏有哪些结构" },
+          { role: "assistant", text: "心脏的结构可以分几块来看……" },
+          { role: "user", text: "左心室为什么壁厚" },
+        ],
+      },
+      retrieve,
+    );
+    expect(plan.kind).toBe("static");
+    if (plan.kind !== "static") return;
+    expect(plan.reply).toContain("心脏有哪些结构");
+    expect(plan.reply).toContain("左心室为什么壁厚");
+    expect(plan.reply).not.toContain("[资料");
+  });
+
+  it("没有历史时元问题如实说明", () => {
+    const plan = planTurn({ text: "我们刚才聊了什么" }, retrieve);
+    expect(plan.kind).toBe("static");
+    if (plan.kind === "static") expect(plan.reply).toContain("第一个问题");
+  });
+
   it("焦点白名单只接受目录内结构", () => {
     expect(focusTitle("lv")).toBe("左心室");
     expect(focusTitle("__proto__")).toBeUndefined();

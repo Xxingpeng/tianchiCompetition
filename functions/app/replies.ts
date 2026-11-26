@@ -24,6 +24,27 @@ export function emptyReply(): string {
   return "请输入一个关于心脏解剖或 CT 基础的问题。";
 }
 
+export interface HistoryTurn {
+  role: "user" | "assistant";
+  text: string;
+}
+
+// 元问题直接由历史生成，不经过模型：既不会编造，也不占提问配额。
+export function historyQuestionsReply(history: readonly HistoryTurn[]): string {
+  const questions: string[] = [];
+  for (const turn of history) {
+    if (turn.role !== "user") continue;
+    const text = turn.text.trim();
+    if (text && !questions.includes(text)) questions.push(text);
+  }
+  const recent = questions.slice(-3);
+  if (recent.length === 0) {
+    return "这是这段对话里的第一个问题。我这边没有更早的提问记录，可以继续问心脏解剖或 CT 基础。";
+  }
+  const lines = recent.map((question, index) => `${index + 1}. ${truncate(question, 80)}`);
+  return `这段对话里你问过：\n${lines.join("\n")}\n\n我只保留最近几轮问题，刷新页面后对话记录会清空。`;
+}
+
 export function insufficientReply(question: string): string {
   const quoted = truncate(question, 24);
   return `暂时没有找到可靠资料来回答「${quoted}」。我现在覆盖：心脏位置与心包、心壁三层、四个心腔与瓣膜、腱索与乳头肌、大血管、冠脉循环、传导系统、心动周期，以及 CT 的 HU、窗宽窗位、增强与剂量。可以换个问法，或直接点左侧结构看三视图。`;

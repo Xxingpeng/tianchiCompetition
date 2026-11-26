@@ -6,7 +6,9 @@ export type StaticReply =
   "greeting" | "help" | "off_topic" | "unsafe" | "emergency" | "empty" | "select_structure";
 
 export type Intent =
-  { kind: "static"; reply: StaticReply } | { kind: "answer"; topic: Topic; matched: string[] };
+  | { kind: "static"; reply: StaticReply }
+  | { kind: "meta"; reply: "history_questions" }
+  | { kind: "answer"; topic: Topic; matched: string[] };
 
 const ANATOMY_TERMS = [
   "心脏",
@@ -57,6 +59,17 @@ const ANATOMY_TERMS = [
   "心内膜",
   "心外膜",
   "心肌层",
+  "心率",
+  "心律",
+  "心律失常",
+  "心衰",
+  "心力衰竭",
+  "冠心病",
+  "心肌梗死",
+  "心梗",
+  "房颤",
+  "缺血",
+  "梗死",
   "瓣",
   "heart",
   "cardiac",
@@ -165,6 +178,36 @@ const UNSAFE_PATTERNS: RegExp[] = [
 const EMERGENCY_PATTERN =
   /(救命|自杀|轻生|不想活|昏迷|休克|大出血|喘不上气|呼吸困难|剧烈胸痛|胸痛难忍)/;
 
+// 问"刚才问了什么"这类关于对话本身的问题，答案在浏览器带来的历史里，不该落到越界话术。
+const META_RECALL = /(刚才|刚刚|前面|之前|上面|上一次|问过|说过|聊过)/;
+const META_TARGET = /(问题|话题|对话|聊天|内容|什么|哪些|啥)/;
+const META_VERB = /(问|说|聊|回答|讲|提)/;
+const META_DOMAIN_GUARD = /(结构|心|瓣|腔|血管|动脉|静脉|切面|层面|ct)/;
+
+function isMetaQuestion(text: string): boolean {
+  return (
+    META_RECALL.test(text) &&
+    META_TARGET.test(text) &&
+    META_VERB.test(text) &&
+    !META_DOMAIN_GUARD.test(text)
+  );
+}
+
+// 泛指"心脏由哪些部分组成"时，单个查询词命中不了心腔、瓣膜、大血管等条目；
+// 用一组上级分类词做一次定向检索，避免把资料覆盖说成"知识库暂无"。
+const OVERVIEW_SPECIFIC =
+  /(瓣膜|瓣|心腔|心房|心室|血管|动脉|静脉|传导|冠脉|冠状动脉|心肌|心包|间隔|窦房结|房室结|希氏束|浦肯野|腱索|乳头肌)/;
+
+export function isOverviewQuestion(raw: string): boolean {
+  const text = normalize(raw);
+  if (OVERVIEW_SPECIFIC.test(text)) return false;
+  return (
+    /(^|整个)心脏[^。！？?]{0,6}(有哪些|包括哪些|由哪些|分为|组成|构成|分几)/.test(text) ||
+    /(^|整个)心脏[^。！？?]{0,4}(结构|部分)[^。！？?]{0,4}(有哪些|包括|分为)/.test(text) ||
+    /^(心|心脏)[^。！？?]{0,4}(有哪些|由哪些|包括哪些)/.test(text)
+  );
+}
+
 export function assessDifficulty(raw: string): boolean {
   const text = normalize(raw);
   const length = countChars(text);
@@ -196,7 +239,11 @@ export function classifyIntent(raw: string): Intent {
   if (GREETINGS.has(text.replace(/[!！。.？?~～ ]+$/u, ""))) {
     return { kind: "static", reply: "greeting" };
   }
-  if (/^(你是谁|你叫什么|你能做什么|你会什么|介绍一下你自己|你是什么)/.test(text)) {
+  if (
+    /^(你是谁|你叫什么|你能做什么|你会什么|你能回答(什么|哪些)|你会回答(什么|哪些)|介绍一下你自己|你是什么)/.test(
+      text,
+    )
+  ) {
     return { kind: "static", reply: "help" };
   }
 
@@ -209,6 +256,7 @@ export function classifyIntent(raw: string): Intent {
   if (ct.length > 0) return { kind: "answer", topic: "ct", matched: ct };
   if (view.length > 0) return { kind: "answer", topic: "view", matched: view };
   if (anatomy.length > 0) return { kind: "answer", topic: "anatomy", matched: anatomy };
+  if (isMetaQuestion(text)) return { kind: "meta", reply: "history_questions" };
   if (site.length > 0) return { kind: "static", reply: "help" };
   return { kind: "static", reply: "off_topic" };
 }

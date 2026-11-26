@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assessDifficulty, classifyIntent } from "./intent.ts";
+import { assessDifficulty, classifyIntent, isOverviewQuestion } from "./intent.ts";
 
 describe("classifyIntent", () => {
   it("把心脏结构问题判为解剖范围", () => {
@@ -24,6 +24,12 @@ describe("classifyIntent", () => {
 
   it("站内用法问题走帮助", () => {
     expect(classifyIntent("这个网站怎么用")).toEqual({ kind: "static", reply: "help" });
+    expect(classifyIntent("你能回答哪些问题")).toEqual({ kind: "static", reply: "help" });
+  });
+
+  it("常见心脏疾病词按解剖范围处理，交给资料判断能否回答", () => {
+    expect(classifyIntent("心衰是怎么回事")).toMatchObject({ kind: "answer", topic: "anatomy" });
+    expect(classifyIntent("房颤是什么")).toMatchObject({ kind: "answer", topic: "anatomy" });
   });
 
   it("无关话题被挡住", () => {
@@ -45,6 +51,36 @@ describe("classifyIntent", () => {
 
   it("空输入单独标记", () => {
     expect(classifyIntent("   ")).toEqual({ kind: "static", reply: "empty" });
+  });
+
+  it("问对话本身的问题走历史元意图", () => {
+    expect(classifyIntent("我刚才问了你哪些问题")).toEqual({
+      kind: "meta",
+      reply: "history_questions",
+    });
+    expect(classifyIntent("我们刚才聊了什么")).toEqual({
+      kind: "meta",
+      reply: "history_questions",
+    });
+    // 带解剖对象时仍按解剖题回答，不抢成"列问题"。
+    expect(classifyIntent("你刚才说的左心室为什么厚")).toMatchObject({
+      kind: "answer",
+      topic: "anatomy",
+    });
+  });
+});
+
+describe("isOverviewQuestion", () => {
+  it("识别泛指心脏组成的问法", () => {
+    expect(isOverviewQuestion("心脏有哪些结构")).toBe(true);
+    expect(isOverviewQuestion("心脏由哪些部分组成")).toBe(true);
+    expect(isOverviewQuestion("心脏的结构有哪些")).toBe(true);
+  });
+
+  it("问到具体结构时不走泛问检索", () => {
+    expect(isOverviewQuestion("心脏有哪些瓣膜")).toBe(false);
+    expect(isOverviewQuestion("心脏有哪些大血管")).toBe(false);
+    expect(isOverviewQuestion("左心室有哪些结构")).toBe(false);
   });
 });
 
