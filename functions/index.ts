@@ -242,26 +242,8 @@ function clientIp(request: Request): string {
 }
 
 async function handleChat(request: Request): Promise<Response> {
-  const origin = request.headers.get("origin");
-  if (origin) {
-    try {
-      const originHost = new URL(origin).host;
-      const requestHost = new URL(request.url).host;
-      const loopback = (host: string) => /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
-      if (originHost !== requestHost && !(loopback(originHost) && loopback(requestHost))) {
-        return json(
-          { ok: false, code: "origin_rejected", message: "仅接受本站页面发起的请求。" },
-          403,
-        );
-      }
-    } catch {
-      return json(
-        { ok: false, code: "origin_rejected", message: "仅接受本站页面发起的请求。" },
-        403,
-      );
-    }
-  }
-
+  // 同源写请求由 Sites Gateway 在转发前校验（无/跨站 Origin 直接 sites_gateway_origin_forbidden），
+  // 这里不再比较 host：网关转发时内部 URL 的 host 与公开域名不同，重复校验会误杀合法页面请求。
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
     return json({ ok: false, code: "request_too_large", message: "请求体过大。" }, 413);
