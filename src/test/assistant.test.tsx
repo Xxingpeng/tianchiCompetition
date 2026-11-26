@@ -137,6 +137,8 @@ describe("AssistantPanel", () => {
     await user.click(screen.getByRole("button", { name: "当前 CT 这一层有哪些结构？" }));
     expect(await screen.findByText("本层可见左心室与心肌。")).toBeInTheDocument();
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    // 线上网关会破坏请求体里的原始中文，必须只发 ASCII 转义。
+    expect(init?.body).toMatch(/^[\x20-\x7e]*$/);
     const body = JSON.parse((init?.body as string | undefined) ?? "{}") as {
       ct?: Record<string, unknown>;
       focus?: string;

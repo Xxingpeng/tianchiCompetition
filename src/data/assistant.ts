@@ -90,13 +90,21 @@ function readSources(value: unknown): AssistantSource[] {
   return sources;
 }
 
+// Qoder Sites 网关按单字节转发请求体，非 ASCII 的中文会变成乱码；
+// 纯 ASCII 的 \uXXXX 转义可以原样穿过网关，再由服务端 JSON.parse 还原。
+function encodeChatBody(value: unknown): string {
+  return JSON.stringify(value).replace(/[\u007f-\uffff]/g, (char) => {
+    return "\\u" + char.charCodeAt(0).toString(16).padStart(4, "0");
+  });
+}
+
 // 浏览器侧只认本站 Function 的 SSE 协议；任何解析失败都当作回答不可用，不猜内容。
 export async function askAssistant(input: AskInput): Promise<AssistantAnswer> {
   const response = await fetch("/functions/v1/app/chat", {
     method: "POST",
     credentials: "same-origin",
     headers: { "content-type": "application/json", accept: "text/event-stream" },
-    body: JSON.stringify({
+    body: encodeChatBody({
       text: input.text,
       conversationId: input.conversationId,
       focus: input.focus ?? "",
