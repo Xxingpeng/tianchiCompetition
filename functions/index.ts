@@ -68,19 +68,21 @@ function networkReason(error: unknown): string {
   return "network";
 }
 
-// 401 时附带的形状标记：只说明像不像单独一段 key（整行粘贴、引号、前缀文本），
-// 不包含任何字符内容；kbad 表示值更像被整行或带格式粘贴。
-function suspiciousKeyShape(apiKey: string): boolean {
-  return (
-    apiKey.length < 40 || apiKey.length > 130 || /[=,"']/.test(apiKey) || /DASHSCOPE/i.test(apiKey)
-  );
+// 401 时附带的形状标记：只说明像不像一段单独的 DashScope key（前缀与长度区间），
+// 不包含任何字符内容，便于区分整行粘贴、贴错字段与旧 key。
+function keyShapeTag(apiKey: string): string {
+  const prefix = /^sk-[A-Za-z0-9]/.test(apiKey) ? "ksk" : "knosk";
+  const length = apiKey.length;
+  const band =
+    length < 80 ? "lt80" : length <= 110 ? "80to110" : length <= 130 ? "111to130" : "gt130";
+  return `${prefix}_${band}`;
 }
 
 // 上游拒绝时只保留粗粒度类别（invalid_key/workspace/permission/model），
 // 不把错误报文、主机或凭据带出 Function。
 async function upstreamFailureReason(
   response: Response,
-  keyShape: "kok" | "kbad",
+  keyShape: string,
 ): Promise<string> {
   let kind = response.status === 401 ? "auth" : response.status === 403 ? "forbidden" : "other";
   try {
@@ -178,10 +180,7 @@ async function runAnswer(
       signal: upstream.signal,
     });
     if (!response.ok) {
-      const reason = await upstreamFailureReason(
-        response,
-        suspiciousKeyShape(config.apiKey) ? "kbad" : "kok",
-      );
+      const reason = await upstreamFailureReason(response, keyShapeTag(config.apiKey));
       logUpstreamFailure(
         `http ${response.status} base ${baseShape(config.baseUrl)} class ${reason}`,
       );
