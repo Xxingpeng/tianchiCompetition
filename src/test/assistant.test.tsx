@@ -85,6 +85,28 @@ describe("AssistantPanel", () => {
     expect(await screen.findByText(long, {}, { timeout: 4000 })).toBeInTheDocument();
   }, 10000);
 
+  it("页面不可见时直接铺好全文，避免后台节流拖慢", async () => {
+    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    try {
+      const long = "右心室把血泵入肺动脉干。".repeat(10);
+      const frames = [
+        'event: meta\ndata: {"mode":"cot","sources":[]}\n\n',
+        `event: delta\ndata: ${JSON.stringify({ text: long })}\n\n`,
+        'event: done\ndata: {"degraded":false}\n\n',
+      ].join("");
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sseResponse(frames)));
+
+      const user = userEvent.setup();
+      render(<AssistantPanel focus={null} />);
+      await user.click(screen.getByRole("button", { name: "问问小医" }));
+      await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
+
+      expect(await screen.findByText(long, {}, { timeout: 3000 })).toBeInTheDocument();
+    } finally {
+      hidden.mockRestore();
+    }
+  }, 10000);
+
   it("来源等答案首字出现后再显示", async () => {
     const encoder = new TextEncoder();
     let controller: ReadableStreamDefaultController<Uint8Array> | null = null;

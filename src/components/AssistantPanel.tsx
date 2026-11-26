@@ -118,8 +118,10 @@ export function AssistantPanel({
     const drained = new Promise<void>((resolve) => {
       resolveDrain = resolve;
     });
+    let revealStarted = 0;
     // 网关或中间代理可能把整段 SSE 一次性交给浏览器；按积压自适应逐字放出，
     // 让任何链路上都能看到"正在生成"的过程，而不是整段瞬现。
+    // 后台标签页的定时器会被节流，超过 6 秒也直接铺完，避免队列拖住下一次提问。
     const stopReveal = () => {
       if (revealTimer.current !== null) {
         window.clearInterval(revealTimer.current);
@@ -130,8 +132,10 @@ export function AssistantPanel({
     };
     const reveal = () => {
       if (pending) {
-        const take =
-          pending.length > 240
+        const flush = document.hidden || performance.now() - revealStarted > 6000;
+        const take = flush
+          ? pending.length
+          : pending.length > 240
             ? 12
             : pending.length > 120
               ? 6
@@ -147,7 +151,9 @@ export function AssistantPanel({
       if (finished && !pending) stopReveal();
     };
     const startReveal = () => {
-      revealTimer.current ??= window.setInterval(reveal, 20);
+      if (revealTimer.current !== null) return;
+      revealStarted = performance.now();
+      revealTimer.current = window.setInterval(reveal, 20);
     };
     stopRevealRef.current = stopReveal;
     const smooth = !prefersReducedMotion();
