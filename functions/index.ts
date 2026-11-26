@@ -86,13 +86,35 @@ interface Sink {
   signal: AbortSignal;
 }
 
+// 失败诊断只写私有函数日志：HTTP 状态、错误类型与 base URL 的协议+路径，
+// 不记录主机、密钥或上游报文，避免私有端点与凭证进入任何可读输出。
+function baseShape(baseUrl: string): string {
+  try {
+    const url = new URL(baseUrl);
+    return `${url.protocol}${url.pathname}`;
+  } catch {
+    return "invalid";
+  }
+}
+
+function logUpstreamFailure(detail: string): void {
+  try {
+    console.error("dashscope_upstream", detail.slice(0, 200));
+  } catch {
+    // 日志通道不可用时不影响降级回答。
+  }
+}
+
 async function runAnswer(
   plan: { userMessage: string },
   history: ChatInput["history"],
   sink: Sink,
 ): Promise<boolean> {
   const config = dashScopeConfig(readEnv);
-  if (!config) throw new AiChannelError("ai_not_configured");
+  if (!config) {
+    logUpstreamFailure("config-missing");
+    throw new AiChannelError("ai_not_configured");
+  }
 
   const upstream = new AbortController();
   const abort = () => upstream.abort();
@@ -115,7 +137,10 @@ async function runAnswer(
       }),
       signal: upstream.signal,
     });
-    if (!response.ok || !response.body) throw new AiChannelError("ai_service_unavailable");
+    if (!response.ok || !response.body) {
+      logUpstreamFailure(`http ${response.status} base ${baseShape(config.baseUrl)}`);
+      throw new AiChannelError("ai_service_unavailable");
+    }
 
     let streamed = false;
     let written = 0;
@@ -136,6 +161,10 @@ async function runAnswer(
     return streamed;
   } catch (error) {
     if (error instanceof AiChannelError) throw error;
+    const message = error instanceof Error ? `${error.name}: ${error.message}` : "unknown";
+    logUpstreamFailure(
+      `${message.replace(/https?:\/\/\S+/g, "<url>")} base ${baseShape(config.baseUrl)}`,
+    );
     throw new AiChannelError("ai_generation_failed");
   } finally {
     clearTimeout(timeout);
