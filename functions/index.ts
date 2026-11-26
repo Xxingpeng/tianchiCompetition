@@ -73,9 +73,21 @@ function networkReason(error: unknown): string {
   return "network";
 }
 
+// 401 时附带的形状标记：只说明像不像单独一段 key（整行粘贴、引号、前缀文本），
+// 不包含任何字符内容；kbad 表示值更像被整行或带格式粘贴。
+function suspiciousKeyShape(apiKey: string): boolean {
+  return (
+    apiKey.length < 40 || apiKey.length > 130 || /[=,"']/.test(apiKey) || /DASHSCOPE/i.test(apiKey)
+  );
+}
+
 // 上游拒绝时只保留粗粒度类别（invalid_key/workspace/permission/model），
 // 不把错误报文、主机或凭据带出 Function；custombase/publicbase 仅表示是否默认端点。
-async function upstreamFailureReason(response: Response, baseUrl: string): Promise<string> {
+async function upstreamFailureReason(
+  response: Response,
+  baseUrl: string,
+  keyShape: "kok" | "kbad",
+): Promise<string> {
   const base = baseUrl === DEFAULT_DASHSCOPE_BASE_URL ? "publicbase" : "custombase";
   let kind = response.status === 401 ? "auth" : response.status === 403 ? "forbidden" : "other";
   try {
@@ -89,7 +101,7 @@ async function upstreamFailureReason(response: Response, baseUrl: string): Promi
   } catch {
     // 非 JSON 错误体（如网关 HTML）：保留状态类别。
   }
-  return `http_${response.status}_${base}_${kind}`;
+  return `http_${response.status}_${base}_${kind}_${keyShape}`;
 }
 
 function rateLimited(ip: string): boolean {
@@ -173,7 +185,11 @@ async function runAnswer(
       signal: upstream.signal,
     });
     if (!response.ok) {
-      const reason = await upstreamFailureReason(response, config.baseUrl);
+      const reason = await upstreamFailureReason(
+        response,
+        config.baseUrl,
+        suspiciousKeyShape(config.apiKey) ? "kbad" : "kok",
+      );
       logUpstreamFailure(
         `http ${response.status} base ${baseShape(config.baseUrl)} class ${reason}`,
       );
