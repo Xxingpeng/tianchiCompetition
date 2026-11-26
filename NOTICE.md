@@ -29,6 +29,18 @@ BP3D 部件与文件名的对应（`verified: true` 表示已与下载包实际�
 - **网格完整性**：BP3D 发布网格自带个位数针孔（`myo_FJ2428.obj` 实测 7 条边界边），远小于 1.6 mm 体素尺度，不会让奇偶填充漏出实体；构建器对边界边的上限是 64 条，用来拦下载截断/整片面缺失这种成百上千条的量级，而不是要求为 0。
 - **本地处理**：原始解压包约 480 MB（整包 3.6 GB 只取筛选后的 8 个 OBJ），全部放在 `assets_raw/` 下并被 `.gitignore` 排除，**不进入 Git**；入库的只有 `assets_raw/README.md` 与 `bp3d_manifest.json`。
 
+## 2a. 心脏学习助手知识来源（2026-11-26）
+
+助手的检索语料是 `functions/knowledge/heart-knowledge.ts` 中 **23 条**中文改写资料，不整段复制原文；每条资料在界面上随回答常显来源名称、出版方、许可与链接。来源只有三类：
+
+| 来源 | 许可 | 用法 |
+|---|---|---|
+| OpenStax《Anatomy and Physiology 2e》§19.1 Heart Anatomy / §19.3 Cardiac Muscle and Electrical Activity，https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy | **CC BY 4.0** | 心脏解剖、传导系统与心动周期的事实基础；已改写为中文短条目，界面展示书名、章节、出版方与许可，满足署名要求 |
+| Radiopaedia "Computed Tomography" 条目，https://radiopaedia.org/articles/computed-tomography | **CC BY-NC-SA 3.0** | 仅 CT 概念（窗宽窗位、增强、剂量、CT vs MRI）的非商业教学引用；未复制图像，未整段转载 |
+| 本站自述（`site-catalog`） | 本项目自有 | 三视图取层、9 个结构的页面行为说明，与 `structures.json` 一致（有漂移测试） |
+
+边界：助手**不提供诊断、用药、手术建议**；个人症状类问题只提醒咨询医生，急症提示拨打 120。回答中每个事实句要求带 `[n]`，无资料时明说"知识库暂无"。若后续用于商业场景，需先替换 Radiopaedia 条目或取得单独授权。
+
 ## 3. 已排除的数据集与原因
 
 | 数据集 | 排除原因 |
@@ -66,6 +78,7 @@ PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈�
 ## 5. 内容边界声明
 
 - 页面所有切面与高亮均为**示意模型渲染**，非真实病例影像，非分割模型推理结果。
+- 心脏学习助手基于上述公开资料检索作答，**不是医疗器械、不作诊断**；它看不到、也不接受上传影像，不能用于读片或病情判断。
 - 不含诊断、治疗、用药建议。
 - 心脏结构的解剖命名遵循研究仓库 2026-11-20 的标签纠正结论；本项目结构表独立生成，**不复用** `target_labels.py` 的别名→整数映射（该映射与纠正声明冲突）。
 
@@ -75,5 +88,6 @@ PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈�
 - [x] 补齐 §2 的版本、下载日期、包大小与文件名核对结论（`assets_raw/bp3d_manifest.json`）
 - [x] 页面可见区域确认出现 BP3D 署名原文与用途声明（2026-11-24 `vite preview` 浏览器实测：页脚两行均在，控制台无报错）
 - [x] `NOTICE.md` 与页面署名文本一致（`structures.json` 的 notice 行与本文件 §2 署名原文逐字符相等）
-- [ ] 抽查公开页面源码，确认不含 FMA ID、真实病例编号、个人材料
-- [ ] `git ls-files` 抽查，确认无影像/权重/原始包入库
+- [x] 助手资料逐条绑定可展示来源与许可（2026-11-26：OpenStax CC BY 4.0 / Radiopaedia CC BY-NC-SA 3.0 / 本站自述；检索器跳过未登记来源）
+- [ ] 抽查公开页面源码，确认不含 `QODER_PAT`、模型密钥、FMA ID、真实病例编号、个人材料
+- [ ] `git ls-files` 抽查，确认无影像/权重/原始包/.env 入库

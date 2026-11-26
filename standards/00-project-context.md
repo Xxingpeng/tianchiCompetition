@@ -15,9 +15,11 @@
   - 结构名称/同义词搜索与结构目录选择
   - 解剖信息卡（显示名、英文名、简短学习说明、一条上级关系）
   - 轴位/冠状位/矢状位三视图示意切面 + 目标结构高亮 overlay + 文字图例
-  - 目标结构的轻量 3D 网格查看（旋转、缩放）
+  - 整颗心脏 3D（9 个部件同场景,悬停报名称、点选结构、非选中半透明）
+  - 心脏学习助手：右下角问答（解剖 + CT 概念 + 本站切面讲解）,意图分流、检索来源常显、不提供医疗建议
   - 数据来源、许可与"仅用于学习展示"用途提示
 - **输入/数据**:自制的静态示意资产——`structures.json` + WebP/PNG 切面 + GLB 网格。来源为 BodyParts3D（CC BY 4.0）派生几何 + 自制左心耳。
+  - 助手知识库是 23 条改写资料（OpenStax CC BY 4.0 / Radiopaedia CC BY-NC-SA 3.0 非商业教学引用 / 本站自述）,见 `NOTICE.md` §2a。
   - **不含任何真实病例影像,不含研究模型的推理输出。**
   - 衍生资产**进 Git**（实测合计约 3.9 MB、必须随站点发布）;BP3D 原始包与解压产物（OBJ 包 142.9 MB / 解压 479.6 MB）**不进 Git**,`assets_raw/` 整体排除、只反向放行 `README.md` 与 `bp3d_manifest.json`。
   - 详细许可依据与残留风险见项目书 §6 与本文件 §5。
@@ -32,11 +34,11 @@
 | 3D 渲染 | Three.js（原生,加载 GLB） | 只有一层 3D 抽象;不同时引入 R3F/Drei |
 | 切片叠加 | Canvas 2D / 图像层合成 | 切面与 overlay 由离线资产生成,前端只合成不计算 |
 | 样式 | CSS Modules | 组件内聚,不额外引框架;若后续需要再换 Tailwind |
-| 测试 | vitest（前端）+ pytest（`tools/` 资产脚本） | 与两类代码语言匹配 |
-| 格式/静态检查 | ESLint + Prettier（前端）、ruff（Python）、`tsc --noEmit` | 对应两类代码的可机检门禁 |
-| 打包/运行 | `vite build` 静态产物,无容器、无自建服务 | 站点是纯静态,不需要 Docker |
+| 测试 | vitest（前端 + 助手纯逻辑）+ pytest（`tools/` 资产脚本） | 与两类代码语言匹配 |
+| 格式/静态检查 | ESLint + Prettier（前端）、ruff（Python）、`tsc --noEmit`、`deno check`（Function 入口） | 对应三类代码的可机检门禁;`functions/index.ts` 只由 Deno 检查 |
+| 打包/运行 | `vite build` 静态产物 + **Qoder Sites Functions（Deno）** 提供同源 `/functions/v1/app/chat` | 静态托管放不了密钥;Function 调 Qoder Cloud Agents,`QODER_PAT` 由平台注入、只在服务端读取 |
 | CI | GitHub Actions（PR 触发） | 见 §5 偏离说明:**只做 CI** |
-| CD | **Qoder Sites**（由 Qoder 的 sites 工具链发布,非 Actions runner） | 赛题硬性要求评委入口必须是 Sites 公开地址 |
+| CD | **Qoder Sites**（由 Qoder 的 sites 工具链发布,非 Actions runner） | 赛题硬性要求评委入口必须是 Sites 公开地址;发布含助手版本时 `prepare_site` 必须带 `functionDirectory: "functions"` |
 
 ## 3. 目录地图
 
@@ -47,9 +49,14 @@ tianchiCompetition/
 ├── package.json / tsconfig.json / vite.config.ts
 ├── src/                       # 前端源码
 │   ├── main.tsx / App.tsx
-│   ├── components/            # StructurePicker / InfoCard / TriView / HeartModel（整颗心脏,懒加载）
-│   ├── data/                  # 读取 structures.json 的加载与检索逻辑（纯函数,便于测试）
+│   ├── components/            # StructurePicker / InfoCard / TriView / HeartModel（懒加载）/ AssistantPanel
+│   ├── data/                  # structures.json 加载与检索、助手 SSE 客户端（纯函数,便于测试）
 │   └── types/
+├── functions/                 # Qoder Sites Functions（Deno,仅站点托管时运行）
+│   ├── index.ts               # /chat SSE + /health;限流、并发、超时、降级
+│   ├── app/                   # 意图/检索/提示词/回合/focus（由 vitest 覆盖）
+│   ├── knowledge/             # 23 条资料（TS 模块,避免 Edge 打包丢 JSON）
+│   └── cloud-agents.mjs / sse.mjs
 ├── public/
 │   ├── assets/slices/         # 示意切面与 overlay（WebP/PNG）— 进 Git
 │   ├── assets/meshes/         # GLB 网格 — 进 Git
@@ -58,7 +65,8 @@ tianchiCompetition/
 ├── assets_raw/                # BP3D 下载与解压产物 — 被 .gitignore 排除
 ├── tests/                     # vitest 用例;tools 的 pytest 放 tools/asset_pipeline/tests
 ├── .github/workflows/ci.yml   # 仅 CI
-├── NOTICE.md                  # 资产来源、生成步骤、许可与署名原文
+├── .env.example               # 本地联调模板;真实 .env 被 gitignore
+├── NOTICE.md                  # 资产与助手资料来源、生成步骤、许可与署名原文
 └── README.md
 ```
 
