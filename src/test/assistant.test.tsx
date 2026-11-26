@@ -1,0 +1,97 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { AssistantPanel } from "../components/AssistantPanel";
+import { createSseParser } from "../data/assistant";
+
+function sseResponse(frames: string): Response {
+  const encoder = new TextEncoder();
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode(frames));
+      controller.close();
+    },
+  });
+  return new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } });
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("createSseParser", () => {
+  it("跨 chunk 切分仍能还原完整帧", () => {
+    const frames: { event: string; data: string }[] = [];
+    const feed = createSseParser((frame) => frames.push(frame));
+    feed('event: meta\ndata: {"mode":"cot"}\n\nevent: del');
+    feed('ta\ndata: {"text":"心"}\n\n');
+    expect(frames).toEqual([
+      { event: "meta", data: '{"mode":"cot"}' },
+      { event: "delta", data: '{"text":"心"}' },
+    ]);
+  });
+
+  it("忽略注释行并支持 CRLF", () => {
+    const frames: { event: string; data: string }[] = [];
+    const feed = createSseParser((frame) => frames.push(frame));
+    feed(': ping\r\n\r\nevent: done\r\ndata: {"degraded":false}\r\n\r\n');
+    expect(frames).toEqual([{ event: "done", data: '{"degraded":false}' }]);
+  });
+});
+
+describe("AssistantPanel", () => {
+  it("发送示例问题后流式拼接回答并常显来源", async () => {
+    const frames = [
+      'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://openstax.org/books/x","sourceName":"OpenStax","license":"CC BY 4.0","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
+      'event: delta\ndata: {"text":"左心室要克服更高的"}\n\n',
+      'event: delta\ndata: {"text":"阻力，所以壁更厚。[1]"}\n\n',
+      'event: done\ndata: {"degraded":false}\n\n',
+    ].join("");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sseResponse(frames)));
+
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问心脏助手" }));
+    await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
+
+    expect(await screen.findByText("左心室要克服更高的阻力，所以壁更厚。[1]")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /心肌厚度/ })).toHaveAttribute(
+      "href",
+      "https://openstax.org/books/x",
+    );
+    expect(screen.getByText(/CC BY 4\.0/)).toBeInTheDocument();
+  });
+
+  it("静态回复明确标注未使用外部资料", async () => {
+    const frames = [
+      'event: meta\ndata: {"mode":"static","sources":[]}\n\n',
+      'event: delta\ndata: {"text":"这个问题超出了我的范围。"}\n\n',
+      'event: done\ndata: {"degraded":false}\n\n',
+    ].join("");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sseResponse(frames)));
+
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问心脏助手" }));
+    await user.click(screen.getByRole("button", { name: "窗宽窗位是什么？" }));
+
+    expect(await screen.findByText("这个问题超出了我的范围。")).toBeInTheDocument();
+    expect(screen.getByText("本次未使用外部资料")).toBeInTheDocument();
+  });
+
+  it("降级直答展示不可用标记", async () => {
+    const frames = [
+      'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://openstax.org/books/x","sourceName":"OpenStax","license":"CC BY 4.0","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
+      'event: delta\ndata: {"text":"AI 通道当前不可用，先给出知识库中的相关条目原文。"}\n\n',
+      'event: done\ndata: {"degraded":true}\n\n',
+    ].join("");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sseResponse(frames)));
+
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问心脏助手" }));
+    await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
+
+    expect(await screen.findByText("知识库直答 · AI 通道暂不可用")).toBeInTheDocument();
+  });
+});
