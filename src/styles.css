@@ -405,7 +405,10 @@ code {
 }
 
 .assistant-launcher {
-  padding: 0.65rem 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem 0.4rem 0.4rem;
   border-radius: 999px;
   border: 1px solid var(--accent);
   background: var(--accent);
@@ -414,6 +417,14 @@ code {
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 6px 20px rgb(11 92 173 / 35%);
+}
+
+.assistant-launcher img {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgb(255 255 255 / 55%);
 }
 
 .assistant-panel {
@@ -429,9 +440,25 @@ code {
 }
 
 .assistant-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
   padding: 0.8rem 1rem 0.6rem;
   border-bottom: 1px solid var(--line);
   background: var(--bg-soft);
+}
+
+.assistant-avatar {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.assistant-identity {
+  min-width: 0;
 }
 
 .assistant-head h2 {

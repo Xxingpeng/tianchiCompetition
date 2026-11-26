@@ -51,9 +51,10 @@ describe("AssistantPanel", () => {
 
     const user = userEvent.setup();
     render(<AssistantPanel focus={null} />);
-    await user.click(screen.getByRole("button", { name: "问问心脏助手" }));
+    await user.click(screen.getByRole("button", { name: "问问小医" }));
     await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
 
+    expect(screen.getByRole("heading", { name: "小医" })).toBeInTheDocument();
     expect(await screen.findByText("左心室要克服更高的阻力，所以壁更厚。[1]")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /心肌厚度/ })).toHaveAttribute(
       "href",
@@ -72,7 +73,7 @@ describe("AssistantPanel", () => {
 
     const user = userEvent.setup();
     render(<AssistantPanel focus={null} />);
-    await user.click(screen.getByRole("button", { name: "问问心脏助手" }));
+    await user.click(screen.getByRole("button", { name: "问问小医" }));
     await user.click(screen.getByRole("button", { name: "窗宽窗位是什么？" }));
 
     expect(await screen.findByText("这个问题超出了我的范围。")).toBeInTheDocument();
@@ -89,7 +90,7 @@ describe("AssistantPanel", () => {
 
     const user = userEvent.setup();
     render(<AssistantPanel focus={null} />);
-    await user.click(screen.getByRole("button", { name: "问问心脏助手" }));
+    await user.click(screen.getByRole("button", { name: "问问小医" }));
     await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
 
     expect(await screen.findByText("知识库直答 · AI 通道暂不可用")).toBeInTheDocument();

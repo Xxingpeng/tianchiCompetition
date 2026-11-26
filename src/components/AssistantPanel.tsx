@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import logo from "../assets/xiaoyi.webp";
 import { askAssistant, type AssistantSource } from "../data/assistant";
 import type { StructureRecord } from "../types";
 
@@ -16,7 +17,7 @@ interface Turn {
 const WELCOME: Turn = {
   id: "welcome",
   role: "assistant",
-  text: "你好，我是心脏学习助手。可以问我心脏结构、瓣膜与血流、传导系统，或者 CT 的窗宽窗位这类基础知识。每个回答都会列出所用资料的来源。",
+  text: "你好，我是小医。可以问我心脏结构、瓣膜与血流、传导系统，或者 CT 的窗宽窗位这类基础知识。每个回答都会列出所用资料的来源。",
   sources: [],
   degraded: false,
 };
@@ -135,12 +136,15 @@ export function AssistantPanel({ focus }: { focus: StructureRecord | null }) {
   return (
     <div className="assistant" onKeyDown={handleKeyDown}>
       {open && (
-        <section id="assistant-panel" className="assistant-panel" aria-label="心脏学习助手">
+        <section id="assistant-panel" className="assistant-panel" aria-label="小医 · 心脏学习助手">
           <header className="assistant-head">
-            <h2>心脏学习助手</h2>
-            <p className="assistant-sub">
-              范围：心脏解剖与 CT 基础 · 基于公开资料检索 · 不提供医疗建议
-            </p>
+            <img className="assistant-avatar" src={logo} alt="" width={40} height={40} />
+            <div className="assistant-identity">
+              <h2>小医</h2>
+              <p className="assistant-sub">
+                心脏学习助手 · 范围：心脏解剖与 CT 基础 · 基于公开资料检索 · 不提供医疗建议
+              </p>
+            </div>
           </header>
 
           <div
@@ -264,7 +268,8 @@ export function AssistantPanel({ focus }: { focus: StructureRecord | null }) {
         aria-controls={open ? "assistant-panel" : undefined}
         onClick={() => setOpen((value) => !value)}
       >
-        {open ? "收起助手" : "问问心脏助手"}
+        <img src={logo} alt="" width={24} height={24} />
+        <span>{open ? "收起小医" : "问问小医"}</span>
       </button>
     </div>
   );
