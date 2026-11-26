@@ -56,13 +56,34 @@ describe("AssistantPanel", () => {
     await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
 
     expect(screen.getByRole("heading", { name: "小医" })).toBeInTheDocument();
-    expect(await screen.findByText("左心室要克服更高的阻力，所以壁更厚。[1]")).toBeInTheDocument();
+    expect(
+      await screen.findByText("左心室要克服更高的阻力，所以壁更厚。[1]", {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /心肌厚度/ })).toHaveAttribute(
       "href",
       "https://openstax.org/books/x",
     );
     expect(screen.getByText(/CC BY 4\.0/)).toBeInTheDocument();
   });
+
+  it("整段 SSE 一次到达时仍逐字放出，不瞬间铺满", async () => {
+    const long = "左心室壁最厚，因为它要把血射入体循环。".repeat(20);
+    const frames = [
+      'event: meta\ndata: {"mode":"cot","sources":[]}\n\n',
+      `event: delta\ndata: ${JSON.stringify({ text: long })}\n\n`,
+      'event: done\ndata: {"degraded":false}\n\n',
+    ].join("");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sseResponse(frames)));
+
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
+
+    expect(await screen.findByText(/左心室壁最厚/)).toBeInTheDocument();
+    expect(screen.queryByText(long)).toBeNull();
+    expect(await screen.findByText(long, {}, { timeout: 4000 })).toBeInTheDocument();
+  }, 10000);
 
   it("来源等答案首字出现后再显示", async () => {
     const encoder = new TextEncoder();

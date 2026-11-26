@@ -38,6 +38,14 @@ function newConversationId(): string {
   }
 }
 
+function prefersReducedMotion(): boolean {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
+
 export function AssistantPanel({
   focus,
   ct,
@@ -52,6 +60,8 @@ export function AssistantPanel({
   const [turns, setTurns] = useState<Turn[]>([WELCOME]);
   const [conversationId] = useState(newConversationId);
   const abortRef = useRef<AbortController | null>(null);
+  const revealTimer = useRef<number | null>(null);
+  const stopRevealRef = useRef<(() => void) | null>(null);
   const turnSeq = useRef(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
@@ -69,7 +79,13 @@ export function AssistantPanel({
     if (log) log.scrollTop = log.scrollHeight;
   }, [turns, open]);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      stopRevealRef.current?.();
+      abortRef.current?.abort();
+    },
+    [],
+  );
 
   function update(id: string, patch: Partial<Turn>) {
     setTurns((prev) => prev.map((turn) => (turn.id === id ? { ...turn, ...patch } : turn)));
@@ -95,6 +111,46 @@ export function AssistantPanel({
     const controller = new AbortController();
     abortRef.current = controller;
     let streamed = "";
+    let pending = "";
+    let shown = "";
+    let finished = false;
+    let resolveDrain: (() => void) | null = null;
+    const drained = new Promise<void>((resolve) => {
+      resolveDrain = resolve;
+    });
+    // 网关或中间代理可能把整段 SSE 一次性交给浏览器；按积压自适应逐字放出，
+    // 让任何链路上都能看到"正在生成"的过程，而不是整段瞬现。
+    const stopReveal = () => {
+      if (revealTimer.current !== null) {
+        window.clearInterval(revealTimer.current);
+        revealTimer.current = null;
+      }
+      resolveDrain?.();
+      resolveDrain = null;
+    };
+    const reveal = () => {
+      if (pending) {
+        const take =
+          pending.length > 240
+            ? 12
+            : pending.length > 120
+              ? 6
+              : pending.length > 48
+                ? 3
+                : pending.length > 8
+                  ? 2
+                  : 1;
+        shown += pending.slice(0, take);
+        pending = pending.slice(take);
+        update(assistantId, { text: shown });
+      }
+      if (finished && !pending) stopReveal();
+    };
+    const startReveal = () => {
+      revealTimer.current ??= window.setInterval(reveal, 20);
+    };
+    stopRevealRef.current = stopReveal;
+    const smooth = !prefersReducedMotion();
     try {
       const answer = await askAssistant({
         text,
@@ -109,12 +165,23 @@ export function AssistantPanel({
         },
         onDelta: (chunk) => {
           streamed += chunk;
-          update(assistantId, { text: streamed });
+          if (!smooth) {
+            update(assistantId, { text: streamed });
+            return;
+          }
+          pending += chunk;
+          startReveal();
         },
       });
+      if (smooth) {
+        finished = true;
+        if (!pending) stopReveal();
+        await drained;
+      }
       update(assistantId, { pending: false, degraded: answer.degraded });
       setNotice("回答完成");
     } catch (error) {
+      stopReveal();
       const aborted = error instanceof DOMException && error.name === "AbortError";
       const message = aborted
         ? "（已停止）"
@@ -128,6 +195,8 @@ export function AssistantPanel({
       });
       setNotice(aborted ? "已停止" : "回答失败");
     } finally {
+      stopReveal();
+      stopRevealRef.current = null;
       abortRef.current = null;
       setBusy(false);
     }

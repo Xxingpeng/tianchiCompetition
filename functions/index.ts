@@ -26,6 +26,7 @@ const JSON_HEADERS = {
 const SSE_HEADERS = {
   "content-type": "text/event-stream; charset=utf-8",
   "cache-control": "no-store, no-transform",
+  "x-accel-buffering": "no",
   "x-content-type-options": "nosniff",
 };
 
