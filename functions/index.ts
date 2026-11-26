@@ -1,6 +1,7 @@
 // Sites Function 入口：浏览器 → 本站 Function → DashScope 兼容接口。
 // 浏览器永远拿不到模型密钥；这里只转发经过校验的问题与已检索到的资料。
 import { encodeSSE, readSSE } from "./sse.mjs";
+import { parseCt } from "./app/ct.ts";
 import { AGENT_SYSTEM, degradedAnswer } from "./app/prompt.ts";
 import { buildChatMessages, dashScopeConfig, parseDashScopeFrame } from "./app/llm.ts";
 import { heartKnowledge } from "./knowledge/heart-knowledge.ts";
@@ -194,6 +195,7 @@ interface ChatInput {
   text: string;
   conversationId: string;
   focus?: string;
+  ct?: unknown;
   history: { role: "user" | "assistant"; text: string }[];
 }
 
@@ -229,6 +231,7 @@ function parseInput(raw: string): ChatInput | { error: string } {
     conversationId,
     history,
     ...(typeof record.focus === "string" ? { focus: record.focus } : {}),
+    ...(record.ct !== undefined ? { ct: record.ct } : {}),
   };
 }
 
@@ -275,7 +278,12 @@ async function handleChat(request: Request): Promise<Response> {
 
   // 先规划一次：越界、问候与安全分流完全不碰云端，也不占用提问配额。
   const initial = planTurn(
-    { text: parsed.text, focus: parsed.focus, history: parsed.history },
+    {
+      text: parsed.text,
+      focus: parsed.focus,
+      ct: parseCt(parsed.ct),
+      history: parsed.history,
+    },
     retrieve,
   );
   if (initial.kind !== "answer") {

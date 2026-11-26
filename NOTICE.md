@@ -1,7 +1,7 @@
 # NOTICE · 资产来源、生成方式与许可判定
 
 > 本文件是作品的合规留痕。任何进入公开演示页面的第三方内容，都必须在此列出来源与许可依据。
-> 状态：**已生成（2026-11-24，BP3D 正式路线）**。`public/assets/` 现由 `assets_raw/bp3d_manifest.json` 绑定的 BodyParts3D Release 4.0 OBJ 生成，`provenance_mode = bp3d`；左心耳为自制几何，逐条来源见 `structures.json` 的 `provenance` 字段。
+> 状态：**已生成（2026-11-24，BP3D 正式路线；2026-11-26 增加伪 CT 资产）**。`public/assets/` 现由 `assets_raw/bp3d_manifest.json` 绑定的 BodyParts3D Release 4.0 OBJ 生成，`provenance_mode = bp3d`；左心耳为自制几何，逐条来源见 `structures.json` 的 `provenance` 字段。伪 CT 由同一份教学标注体素派生，边界见 §2b。
 
 ## 1. 演示资产总览
 
@@ -12,8 +12,11 @@
 | 高亮 overlay | `public/assets/slices/*_overlay.png`（27 张） | 由同一份体素渲染 | 同上 | 已生成 |
 | 3D 网格 | `public/assets/meshes/*.glb`（9 个，合计 3925.9 KiB） | 8 个由 BP3D OBJ 体素化后重提取表面；`lxa.glb` 为自制 | 见 §2 | 已生成 |
 | 左心耳网格 | `public/assets/meshes/lxa.glb`（47.5 KiB） | 本项目自制几何（BP3D 未收录该部件），按 BP3D 左心房体素包围盒贴附 | 本项目原创 | 已生成 |
+| 伪 CT 轴位底图 | `public/assets/ct/base/{层:03d}_{窗}.png`（96 层 × 2 窗 = 192 张） | 由 BP3D 派生的统一标注体素按近似 HU 渲染 | 本项目演绎作品（BP3D 派生） | 已生成 |
+| 伪 CT 结构 overlay | `public/assets/ct/overlay/{id}/{层:03d}.png`（390 张，仅非空层） | 同一份体素按结构渲染 | 同上 | 已生成 |
+| 伪 CT 逐层真值 | `public/assets/structures.json` 的 `ct` 字段 | 本项目管线生成 | 本项目原创 | 已生成 |
 
-体积实测（构建期校验门禁，阈值：单文件 2 MB / 网格合计 8 MB）：切面 64.8 KiB + GLB 3925.9 KiB + JSON 13.2 KiB ≈ **3.91 MB**。最大单文件 `myo.glb` 1816.4 KiB，占单文件阈值 91%——心室壁是唯一的厚壳部件，改大 `--grid` 或改小 `--spacing` 会先撞这条线，届时用 `--mesh-step` 抽稀而不是抬阈值。
+体积实测（构建期校验门禁，阈值：单文件 2 MB / 网格合计 8 MB）：切面 64.8 KiB + GLB 3925.9 KiB + 伪 CT 1042.6 KiB + `structures.json` 66.7 KiB = **5,222,545 B（约 4.98 MiB）**。最大单文件 `myo.glb` 1816.4 KiB，占单文件阈值 91%——心室壁是唯一的厚壳部件，改大 `--grid` 或改小 `--spacing` 会先撞这条线，届时用 `--mesh-step` 抽稀而不是抬阈值。
 
 BP3D 部件与文件名的对应（`verified: true` 表示已与下载包实际文件名逐个核对）见 `assets_raw/bp3d_manifest.json`，其中 `myo` 取 BP3D 的 *wall of ventricle*（FMA13884 / BP7815）——BP3D 没有 myocardium 独立词条，页面文案已按此说明。
 
@@ -40,6 +43,14 @@ BP3D 部件与文件名的对应（`verified: true` 表示已与下载包实际�
 | 本站自述（`site-catalog`） | 本项目自有 | 三视图取层、9 个结构的页面行为说明，与 `structures.json` 一致（有漂移测试） |
 
 边界：助手**不提供诊断、用药、手术建议**；个人症状类问题只提醒咨询医生，急症提示拨打 120。回答中每个事实句要求带 `[n]`，无资料时明说"知识库暂无"。若后续用于商业场景，需先替换 Radiopaedia 条目或取得单独授权。
+
+## 2b. 伪 CT 轴位图的生成方式与边界（2026-11-26）
+
+- **不是真实病例影像，也不是从任何 DICOM 重建的 CT**。底图只是把 §2 的 BP3D 派生统一标注体素按 `LABEL_HU`（心肌 55、左房 160、左室 180、右房 155、右室 165、升主动脉 210、肺动脉 190、肺静脉 150、左心耳 165）映射成近似 HU，再按纵隔窗（WW 350 / WL 40）与肺窗（WW 1500 / WL −600）渲染成 8 位灰度 PNG。数值只用于让不同组织在图上可分辨，**没有经过真实扫描标定，不能反推组织密度或用于任何临床判断**。
+- **逐层结构 overlay 与体素真值同源**：overlay 只覆盖该结构的体素；`structures.json` 的 `ct.slices` 记录每层可见结构及其体素数，`ct.best_slice` 记录每个结构信号最多的层。页面显示与助手回答里的“本层 N 体素”均来自这份构建期真值，不是模型估计。
+- **生成参数**：96 层（与体素深度一致）、`--ct-upscale 2`（每层 192×192）、间距 1.6 mm；共 192 张底图、390 张非空层 overlay，合计 1,067,656 B。清单里的层索引 0 起，界面显示 1 起。
+- **构建期硬校验**：`catalog.validate_ct` 与前端 `assertCt` 检查 schema、层数、窗 id、路径模式、图像尺寸、最佳层覆盖、逐层体素真值，以及 `ct.note` 是否包含“非真实病例”/“不是真实病例”。任何一项不符即失败，不发布半套 CT。
+- **交互边界**：只提供本站伪 CT 的逐层浏览与讲解，**不接受用户上传影像，不做图像识别、读片或诊断**。
 
 ## 3. 已排除的数据集与原因
 
@@ -73,11 +84,14 @@ PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈�
 "$RUFF" check tools/ && "$RUFF" format --check tools/
 ```
 
+上述两条命令现在都会同时生成伪 CT：底图 + overlay 落在 `public/assets/ct/`，清单写进 `structures.json`；默认 `--ct-upscale 2`（每层 192×192），需要更清晰可调 1–6，体积随平方增长。`--force` 会连同旧的 `ct/` 一起清掉，避免残留上一层参数的文件。
+
 依赖锁定见 `requirements-asset.txt`（numpy 2.4.6 / scipy 1.17.1 / scikit-image 0.26.0 / pillow 13.0.0）与 `requirements-dev.txt`（pytest 9.2.0 / pytest-cov 7.1.0 / ruff 0.17.6）。**不使用 trimesh**：OBJ 解析、体素化、`marching_cubes`、GLB 写出均为本项目自实现的纯 numpy 代码，无外部二进制依赖。
 
 ## 5. 内容边界声明
 
 - 页面所有切面与高亮均为**示意模型渲染**，非真实病例影像，非分割模型推理结果。
+- 伪 CT 轴位图由教学标注体素近似合成，**不是真实病例 CT、不是临床测量**，不能用于读片或病情判断；站点不接受 CT 影像上传。
 - 心脏学习助手基于上述公开资料检索作答，**不是医疗器械、不作诊断**；它看不到、也不接受上传影像，不能用于读片或病情判断。
 - 不含诊断、治疗、用药建议。
 - 心脏结构的解剖命名遵循研究仓库 2026-11-20 的标签纠正结论；本项目结构表独立生成，**不复用** `target_labels.py` 的别名→整数映射（该映射与纠正声明冲突）。
@@ -89,5 +103,6 @@ PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈�
 - [x] 页面可见区域确认出现 BP3D 署名原文与用途声明（2026-11-24 `vite preview` 浏览器实测：页脚两行均在，控制台无报错）
 - [x] `NOTICE.md` 与页面署名文本一致（`structures.json` 的 notice 行与本文件 §2 署名原文逐字符相等）
 - [x] 助手资料逐条绑定可展示来源与许可（2026-11-26：OpenStax CC BY 4.0 / Radiopaedia CC BY-NC-SA 3.0 / 本站自述；检索器跳过未登记来源）
+- [x] 伪 CT 的 note 与页面声明逐条核对（2026-11-26：`structures.json` 的 `ct.note` 含“不是真实病例影像”与“不能用于诊断”，CT 卡片可见，构建期与前端双重校验）
 - [ ] 抽查公开页面源码，确认不含模型密钥（`DASHSCOPE_API_KEY`）、FMA ID、真实病例编号、个人材料
 - [ ] `git ls-files` 抽查，确认无影像/权重/原始包/.env 入库

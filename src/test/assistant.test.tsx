@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AssistantPanel } from "../components/AssistantPanel";
 import { createSseParser } from "../data/assistant";
+import { structure } from "./fixtures";
 
 function sseResponse(frames: string): Response {
   const encoder = new TextEncoder();
@@ -104,6 +105,49 @@ describe("AssistantPanel", () => {
       stream.close();
     });
     expect(await screen.findByRole("link", { name: /心肌厚度/ })).toBeInTheDocument();
+  });
+
+  it("把当前 CT 层真值随问题发给小医", async () => {
+    const frames = [
+      'event: meta\ndata: {"mode":"cot","sources":[]}\n\n',
+      'event: delta\ndata: {"text":"本层可见左心室与心肌。"}\n\n',
+      'event: done\ndata: {"degraded":false}\n\n',
+    ].join("");
+    const fetchMock = vi.fn().mockResolvedValue(sseResponse(frames));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const user = userEvent.setup();
+    render(
+      <AssistantPanel
+        focus={structure()}
+        ct={{
+          index: 48,
+          total: 96,
+          window: "mediastinal",
+          windowName: "纵隔窗",
+          structures: [
+            { id: "lv", name: "左心室", voxels: 320 },
+            { id: "myo", name: "心肌", voxels: 280 },
+          ],
+          selected: { id: "lv", name: "左心室", voxels: 320 },
+        }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "当前 CT 这一层有哪些结构？" }));
+    expect(await screen.findByText("本层可见左心室与心肌。")).toBeInTheDocument();
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    const body = JSON.parse((init?.body as string | undefined) ?? "{}") as {
+      ct?: Record<string, unknown>;
+      focus?: string;
+    };
+    expect(body.ct).toMatchObject({
+      index: 48,
+      total: 96,
+      window: "mediastinal",
+      selected: { id: "lv", voxels: 320 },
+    });
+    expect(body.focus).toBe("lv");
   });
 
   it("静态回复明确标注未使用外部资料", async () => {

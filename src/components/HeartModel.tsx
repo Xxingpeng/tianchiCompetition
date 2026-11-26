@@ -19,7 +19,7 @@ interface SceneApi {
   applyOpacities: (selectedId: string | null) => void;
 }
 
-const VIEW_SIZE = 640;
+const VIEW_SIZE = 900;
 const NO_WEBGL = "当前环境不支持 WebGL，整体 3D 视图已停用；三视图与信息卡不受影响。";
 
 /** 探测放在渲染期：没有 WebGL 时整块区域直接不挂载，不必在 effect 里改状态。 */
@@ -276,6 +276,10 @@ export function HeartModel({ structures, selectedId, onSelect }: Props) {
               !hovered &&
               selected &&
               `已高亮 ${selected.name}，其余部件半透明。`}
+            {status.kind === "ready" &&
+              !hovered &&
+              !selected &&
+              "点击任一部件查看说明；拖拽旋转，滚轮缩放。"}
             {status.kind === "failed" && status.reason}
           </p>
           {status.kind !== "failed" && (

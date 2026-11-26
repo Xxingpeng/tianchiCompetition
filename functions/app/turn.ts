@@ -1,3 +1,4 @@
+import { describeCtSlice, wantsCtSlice, type CtSliceFact } from "./ct.ts";
 import { describeFocus, FOCUS_DETAILS, focusDetail } from "./focus.ts";
 import { assessDifficulty, classifyIntent, isOverviewQuestion, type Topic } from "./intent.ts";
 import { composeAnswerRequest, degradedAnswer, type ReasoningMode } from "./prompt.ts";
@@ -33,6 +34,7 @@ export type TurnPlan =
 export interface TurnInput {
   text: string;
   focus?: string;
+  ct?: CtSliceFact;
   history?: readonly HistoryTurn[];
 }
 
@@ -64,6 +66,35 @@ export function planTurn(input: TurnInput, retrieve: Retrieve): TurnPlan {
   const intent = classifyIntent(question);
   if (intent.kind === "meta") {
     return { kind: "static", reply: historyQuestionsReply(input.history ?? []) };
+  }
+
+  const ct = input.ct;
+  const blocked =
+    intent.kind === "static" &&
+    (intent.reply === "emergency" || intent.reply === "unsafe" || intent.reply === "empty");
+  if (ct && !blocked && wantsCtSlice(question)) {
+    const selectedTitle = ct.selected?.name;
+    const query = [selectedTitle, "CT", "轴位", ct.windowName].filter(Boolean).join(" ");
+    let { citations } = retrieve(query, "ct");
+    if (citations.length === 0) {
+      citations = retrieve("CT 轴位 纵隔窗 窗宽窗位", "ct").citations;
+    }
+    if (citations.length === 0) {
+      return { kind: "static", reply: describeCtSlice(ct) };
+    }
+    const mode: ReasoningMode = assessDifficulty(question) ? "tot" : "cot";
+    return {
+      kind: "answer",
+      topic: "ct",
+      mode,
+      citations,
+      userMessage: composeAnswerRequest({
+        question,
+        citations,
+        mode,
+        ctDetail: describeCtSlice(ct),
+      }),
+    };
   }
 
   let topic: Topic;

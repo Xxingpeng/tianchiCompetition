@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ import numpy as np
 
 from . import bp3d as bp3d_mod
 from . import catalog as catalog_mod
+from . import ct as ct_mod
 from . import fallback
 from . import render as render_mod
 from . import surface as surface_mod
@@ -56,9 +58,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     p.add_argument("--upscale", type=int, default=3, help="切片 PNG 最近邻放大倍数")
     p.add_argument(
+        "--ct-upscale", dest="ct_upscale", type=int, default=2, help="伪 CT PNG 放大倍数"
+    )
+    p.add_argument(
         "--mesh-step", dest="mesh_step", type=int, default=1, help="GLB 抽稀步长，用于压体积"
     )
-    p.add_argument("--force", action="store_true", help="清空 slices/ 与 meshes/ 后重写")
+    p.add_argument("--force", action="store_true", help="清空 slices/、meshes/ 与 ct/ 后重写")
     return p.parse_args(argv)
 
 
@@ -162,7 +167,11 @@ def build(args: argparse.Namespace) -> int:
 
     slices_dir = out / "slices"
     meshes_dir = out / "meshes"
+    ct_dir = out / "ct"
     if args.force:
+        # CT 下还有 base/ 与逐结构 overlay/ 两层目录，必须整树清掉，否则退场结构会留下孤儿图。
+        if ct_dir.is_dir():
+            shutil.rmtree(ct_dir)
         for d in (slices_dir, meshes_dir):
             if d.is_dir():
                 for stale in d.glob("*"):
@@ -217,6 +226,19 @@ def build(args: argparse.Namespace) -> int:
             )
         )
 
+    included = [s["id"] for s in structures]
+    ct_manifest = ct_mod.build_ct_assets(
+        out,
+        volume,
+        included=included,
+        spacing=spacing,
+        upscale=args.ct_upscale,
+    )
+    print(
+        f">> 伪 CT：{ct_manifest['slice_count']} 层 × "
+        f"{len(ct_manifest['windows'])} 窗，{len(ct_manifest['best_slice'])} 个结构有逐层真值"
+    )
+
     notices = _notices(mode)
     catalog = catalog_mod.build_catalog(
         structures=structures,
@@ -226,6 +248,7 @@ def build(args: argparse.Namespace) -> int:
         provenance_mode=mode,
         notices=notices,
         excluded=excluded,
+        ct=ct_manifest,
     )
     # 校验按相对路径 `assets/...` 解析，所以 root 是 out 的父目录
     root = out.parent
@@ -248,7 +271,7 @@ def _report(out, structures, mesh_sizes, excluded, problems) -> None:
         for p in problems:
             print(f"  - {p}", file=sys.stderr)
     else:
-        print("校验通过：文案、同义词、三视图底图、overlay、GLB、体素数全部齐备")
+        print("校验通过：文案、同义词、三视图、GLB、体素数与伪 CT 逐层真值全部齐备")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -259,6 +282,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     if args.grid < 32 or args.grid > 256:
         raise SystemExit("--grid 需在 32..256 之间：太小几何失真，太大白屏")
+    if args.ct_upscale < 1 or args.ct_upscale > 6:
+        raise SystemExit("--ct-upscale 需在 1..6 之间：再大只会让 PNG 白白变重")
     out = Path(args.out)
     if out.name != "assets":
         # 清单里存的是站点相对路径 assets/...，校验必须从其父目录解析；

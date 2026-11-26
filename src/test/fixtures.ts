@@ -1,5 +1,5 @@
-import { SCHEMA_VERSION } from "../types";
-import type { Catalog, StructureRecord, ViewName, ViewEntry } from "../types";
+import { CT_SCHEMA_VERSION, SCHEMA_VERSION } from "../types";
+import type { Catalog, CtManifest, CtSlice, StructureRecord, ViewName, ViewEntry } from "../types";
 
 function views(prefix: string): Record<ViewName, ViewEntry> {
   const make = (view: ViewName, name: string): ViewEntry => ({
@@ -36,6 +36,40 @@ export function structure(overrides: Partial<StructureRecord> = {}): StructureRe
   };
 }
 
+export function ctManifest(overrides: Partial<CtManifest> = {}): CtManifest {
+  const slices: CtSlice[] = Array.from({ length: 96 }, (_, index) => ({
+    index,
+    voxels: 0,
+    structures: [],
+  }));
+  slices[48] = {
+    index: 48,
+    voxels: 600,
+    structures: [
+      { id: "lv", name: "左心室", voxels: 320 },
+      { id: "myo", name: "心肌", voxels: 280 },
+    ],
+  };
+  return {
+    schema_version: CT_SCHEMA_VERSION,
+    note: "伪 CT：由教学标注体素合成，不是真实病例影像，也不能用于诊断。",
+    slice_count: 96,
+    slice_spacing_mm: 1.6,
+    upscale: 2,
+    image_size: [192, 192],
+    base_pattern: "assets/ct/base/{index:03d}_{window}.png",
+    overlay_pattern: "assets/ct/overlay/{id}/{index:03d}.png",
+    default_window: "mediastinal",
+    windows: [
+      { id: "mediastinal", name: "纵隔窗", width: 350, level: 40 },
+      { id: "lung", name: "肺窗", width: 1500, level: -600 },
+    ],
+    best_slice: { lv: 48, myo: 48 },
+    slices,
+    ...overrides,
+  };
+}
+
 export function catalog(overrides: Partial<Catalog> = {}): Catalog {
   return {
     schema_version: SCHEMA_VERSION,
@@ -60,6 +94,7 @@ export function catalog(overrides: Partial<Catalog> = {}): Catalog {
       }),
     ],
     excluded: [],
+    ct: ctManifest(),
     ...overrides,
   };
 }

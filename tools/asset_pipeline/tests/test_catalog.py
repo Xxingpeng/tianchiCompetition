@@ -10,6 +10,7 @@ import pytest
 from PIL import Image
 
 from tools.asset_pipeline import catalog as c
+from tools.asset_pipeline import ct
 from tools.asset_pipeline.meta import BY_ID
 
 LV = BY_ID["lv"]
@@ -216,3 +217,73 @@ def test_summarize_sizes_groups_by_extension(tmp_path):
     touch_assets(tmp_path)
     sizes = c.summarize_sizes(tmp_path)
     assert sizes["png"] > 0 and sizes["glb"] == 6
+
+
+def ct_fixture(tmp_path):
+    volume = np.zeros((12, 12, 12), np.int16)
+    volume[4:8, 4:8, 2:6] = 3
+    volume[4:6, 4:6, 6:10] = 3  # 上层更细，保证最密层唯一
+    volume[3:4, 4:8, 2:10] = 1
+    manifest = ct.build_ct_assets(tmp_path / "assets", volume, included=("lv", "myo"), upscale=1)
+    rows = good_structures()
+    cat = c.build_catalog(
+        structures=rows,
+        shape=(12, 12, 12),
+        spacing=3.5,
+        origin=[-21.0] * 3,
+        provenance_mode="mixed",
+        notices=["示意结构模型，非真实病例影像。", "BodyParts3D, © DBCLS"],
+        excluded=[],
+        ct=manifest,
+    )
+    return cat, rows, manifest
+
+
+def check_ct(cat, rows, tmp_path):
+    return c.validate_catalog(cat, rows, mesh_map(), cat["notices"], tmp_path)
+
+
+def test_valid_ct_catalog_passes(tmp_path):
+    touch_assets(tmp_path)
+    cat, rows, _ = ct_fixture(tmp_path)
+    assert cat["ct"]["slice_count"] == 12
+    assert check_ct(cat, rows, tmp_path) == []
+
+
+def test_ct_missing_assets_and_bad_best_slice_are_reported(tmp_path):
+    touch_assets(tmp_path)
+    cat, rows, manifest = ct_fixture(tmp_path)
+    (tmp_path / "assets" / "ct" / "base" / "000_lung.png").unlink()
+    (tmp_path / "assets" / "ct" / "overlay" / "lv" / "005.png").unlink()
+    manifest["best_slice"]["lv"] = 7
+    manifest["note"] = "真实病例影像"
+    problems = check_ct(cat, rows, tmp_path)
+    assert any("底图未落盘" in p for p in problems)
+    assert any("overlay 未落盘" in p for p in problems)
+    assert any("不是最密层" in p for p in problems)
+    assert any("非真实病例" in p for p in problems)
+
+
+def test_ct_slice_count_and_window_guard(tmp_path):
+    touch_assets(tmp_path)
+    cat, rows, manifest = ct_fixture(tmp_path)
+    manifest["slice_count"] = 11
+    manifest["default_window"] = "bone"
+    manifest["windows"].append({"id": "lung", "name": "重复", "width": 1, "level": 0})
+    problems = check_ct(cat, rows, tmp_path)
+    assert any("slice_count" in p for p in problems)
+    assert any("default_window" in p for p in problems)
+    assert any("id lung 重复" in p for p in problems)
+
+
+def test_ct_truth_must_cover_every_structure(tmp_path):
+    touch_assets(tmp_path)
+    cat, rows, manifest = ct_fixture(tmp_path)
+    manifest["best_slice"].pop("myo")
+    problems = check_ct(cat, rows, tmp_path)
+    assert any("myo" in p and "best_slice" in p for p in problems)
+
+
+def test_catalog_without_ct_stays_valid(tmp_path):
+    touch_assets(tmp_path)
+    assert run_check(good_structures(), tmp_path) == []

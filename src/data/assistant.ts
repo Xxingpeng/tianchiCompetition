@@ -1,3 +1,5 @@
+import type { CtContext } from "./ct";
+
 export interface AssistantSource {
   n: number;
   title: string;
@@ -17,6 +19,7 @@ export interface AskInput {
   text: string;
   conversationId: string;
   focus?: string;
+  ct?: CtContext;
   history: { role: "user" | "assistant"; text: string }[];
   signal?: AbortSignal;
   onMeta?: (sources: AssistantSource[], mode: string) => void;
@@ -97,6 +100,7 @@ export async function askAssistant(input: AskInput): Promise<AssistantAnswer> {
       text: input.text,
       conversationId: input.conversationId,
       focus: input.focus ?? "",
+      ct: input.ct,
       history: input.history,
     }),
     signal: input.signal,

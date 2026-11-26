@@ -98,6 +98,81 @@ describe("planTurn", () => {
     );
   });
 
+  it("问当前 CT 层时注入逐层真值，并照常带资料", () => {
+    const plan = planTurn(
+      {
+        text: "这一层有哪些结构？",
+        focus: "lv",
+        ct: {
+          index: 48,
+          total: 96,
+          window: "mediastinal",
+          windowName: "纵隔窗",
+          structures: [
+            { id: "lv", name: "左心室", voxels: 320 },
+            { id: "myo", name: "心肌", voxels: 280 },
+          ],
+          selected: { id: "lv", name: "左心室", voxels: 320 },
+        },
+      },
+      retrieve,
+    );
+    expect(plan.kind).toBe("answer");
+    if (plan.kind !== "answer") return;
+    expect(plan.topic).toBe("ct");
+    expect(plan.userMessage).toContain("[当前 CT 轴位]");
+    expect(plan.userMessage).toContain("第 49/96 层");
+    expect(plan.userMessage).toContain("左心室 320 体素");
+    expect(plan.userMessage).toContain("[资料 1]");
+    expect(plan.citations.length).toBeGreaterThan(0);
+    expect(plan.userMessage).not.toContain("[当前页面]");
+  });
+
+  it("没有 CT 上下文或问的是三视图高亮时不注入 CT 事实", () => {
+    const withoutCt = planTurn({ text: "这一层有哪些结构" }, retrieve);
+    if (withoutCt.kind === "answer") expect(withoutCt.userMessage).not.toContain("[当前 CT 轴位]");
+
+    const triView = planTurn(
+      {
+        text: "这个高亮是什么",
+        focus: "lv",
+        ct: {
+          index: 48,
+          total: 96,
+          window: "mediastinal",
+          windowName: "纵隔窗",
+          structures: [{ id: "lv", name: "左心室", voxels: 320 }],
+          selected: { id: "lv", name: "左心室", voxels: 320 },
+        },
+      },
+      retrieve,
+    );
+    expect(triView.kind).toBe("answer");
+    if (triView.kind === "answer") {
+      expect(triView.topic).toBe("view");
+      expect(triView.userMessage).toContain("[当前切面]");
+      expect(triView.userMessage).not.toContain("[当前 CT 轴位]");
+    }
+  });
+
+  it("CT 上下文不会污染泛问，也不会绕过安全分流", () => {
+    const ct = {
+      index: 48,
+      total: 96,
+      window: "mediastinal" as const,
+      windowName: "纵隔窗",
+      structures: [{ id: "lv", name: "左心室", voxels: 320 }],
+      selected: { id: "lv", name: "左心室", voxels: 320 },
+    };
+    const overview = planTurn({ text: "心脏有哪些结构", focus: "lv", ct }, retrieve);
+    expect(overview.kind).toBe("answer");
+    if (overview.kind === "answer") expect(overview.userMessage).not.toContain("[当前 CT 轴位]");
+
+    const unsafe = planTurn({ text: "这一层能看出我胸痛的原因吗", ct }, retrieve);
+    expect(unsafe.kind).toBe("static");
+    if (unsafe.kind === "static") expect(unsafe.reply).not.toContain("第 49");
+  });
+
   it("问刚才问了哪些问题时从对话历史回答", () => {
     const plan = planTurn(
       {

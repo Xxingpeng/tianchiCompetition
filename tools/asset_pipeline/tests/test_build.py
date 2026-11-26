@@ -34,6 +34,13 @@ def test_procedural_build_passes_its_own_validation(tmp_path):
             assert (out.parent / s["views"][view]["base"]).is_file()
             assert (out.parent / s["views"][view]["overlay"]).is_file()
     assert any("示意" in n for n in cat["notices"])
+    ct = cat["ct"]
+    assert ct["slice_count"] == 40
+    assert ct["best_slice"], "伪 CT 必须为每个可用结构记录最密轴位层"
+    assert set(ct["best_slice"]) == {s["id"] for s in cat["structures"]}
+    base = out.parent / "assets" / "ct" / "base" / "000_mediastinal.png"
+    assert base.is_file()
+    assert any(row["structures"] for row in ct["slices"])
 
 
 def test_auto_falls_back_when_obj_dir_is_empty(tmp_path):

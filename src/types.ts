@@ -1,6 +1,7 @@
 /** `public/assets/structures.json` 的运行时类型，与 Python 侧 catalog.py 的 schema_version 对齐。 */
 
 export const SCHEMA_VERSION = 1;
+export const CT_SCHEMA_VERSION = 1;
 
 export const VIEW_NAMES = ["axial", "coronal", "sagittal"] as const;
 
@@ -39,6 +40,43 @@ export interface ExcludedRecord {
 
 export type ProvenanceMode = "bp3d" | "procedural_fallback" | "mixed";
 
+export interface CtWindow {
+  id: string;
+  name: string;
+  /** 窗宽 HU */
+  width: number;
+  /** 窗位 HU */
+  level: number;
+}
+
+export interface CtSliceEntry {
+  id: string;
+  name: string;
+  voxels: number;
+}
+
+export interface CtSlice {
+  index: number;
+  voxels: number;
+  structures: CtSliceEntry[];
+}
+
+/** 伪 CT 轴位堆栈：底图按窗预设出图，overlay 按结构出图，逐层体素数是构建期真值。 */
+export interface CtManifest {
+  schema_version: number;
+  note: string;
+  slice_count: number;
+  slice_spacing_mm: number;
+  upscale: number;
+  image_size: [number, number];
+  base_pattern: string;
+  overlay_pattern: string;
+  default_window: string;
+  windows: CtWindow[];
+  best_slice: Record<string, number>;
+  slices: CtSlice[];
+}
+
 export interface Catalog {
   schema_version: number;
   provenance_mode: ProvenanceMode;
@@ -52,4 +90,6 @@ export interface Catalog {
   notices: string[];
   structures: StructureRecord[];
   excluded: ExcludedRecord[];
+  /** 缺失时不显示 CT 阅览器；正式构建必须带上。 */
+  ct?: CtManifest;
 }

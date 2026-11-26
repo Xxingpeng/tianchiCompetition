@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import logo from "../assets/xiaoyi.webp";
 import { askAssistant, type AssistantSource } from "../data/assistant";
+import type { CtContext } from "../data/ct";
 import type { StructureRecord } from "../types";
 
 interface Turn {
@@ -37,7 +38,13 @@ function newConversationId(): string {
   }
 }
 
-export function AssistantPanel({ focus }: { focus: StructureRecord | null }) {
+export function AssistantPanel({
+  focus,
+  ct,
+}: {
+  focus: StructureRecord | null;
+  ct?: CtContext | null;
+}) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -93,6 +100,7 @@ export function AssistantPanel({ focus }: { focus: StructureRecord | null }) {
         text,
         conversationId,
         focus: focus?.id,
+        ct: ct ?? undefined,
         history,
         signal: controller.signal,
         onMeta: (sources, mode) => {
@@ -214,17 +222,19 @@ export function AssistantPanel({ focus }: { focus: StructureRecord | null }) {
 
           {turns.length <= 1 && (
             <div className="assistant-chips" aria-label="示例问题">
-              {SUGGESTIONS.map((question) => (
-                <button
-                  key={question}
-                  type="button"
-                  className="chip"
-                  disabled={busy}
-                  onClick={() => void submit(question)}
-                >
-                  {question}
-                </button>
-              ))}
+              {(ct ? [...SUGGESTIONS, "当前 CT 这一层有哪些结构？"] : SUGGESTIONS).map(
+                (question) => (
+                  <button
+                    key={question}
+                    type="button"
+                    className="chip"
+                    disabled={busy}
+                    onClick={() => void submit(question)}
+                  >
+                    {question}
+                  </button>
+                ),
+              )}
             </div>
           )}
 

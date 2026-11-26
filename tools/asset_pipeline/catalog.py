@@ -12,6 +12,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from . import ct as ct_mod
+
 SCHEMA_VERSION = 1
 VIEWS = ("axial", "coronal", "sagittal")
 PROVENANCE_MODES = ("bp3d", "procedural_fallback", "mixed")
@@ -56,10 +58,11 @@ def build_catalog(
     provenance_mode: str,
     notices: list[str],
     excluded: list[dict[str, str]],
+    ct: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if provenance_mode not in PROVENANCE_MODES:
         raise ValueError(f"provenance_mode {provenance_mode!r} 非法")
-    return {
+    catalog: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "provenance_mode": provenance_mode,
         "grid": {
@@ -73,6 +76,171 @@ def build_catalog(
         "structures": structures,
         "excluded": excluded,
     }
+    if ct is not None:
+        catalog["ct"] = ct
+    return catalog
+
+
+def _pattern_path(pattern: Any, **values: object) -> str:
+    if not isinstance(pattern, str) or not pattern:
+        return ""
+    try:
+        return pattern.format(**values)
+    except (KeyError, IndexError, ValueError):
+        return ""
+
+
+def validate_ct(
+    catalog: dict[str, Any],
+    structures: list[dict[str, Any]],
+    root: Path,
+) -> list[str]:
+    """伪 CT 清单与逐层真值的一致性检查；返回问题清单。"""
+    ct = catalog.get("ct")
+    if not isinstance(ct, dict):
+        return ["ct 清单缺失或不是对象"]
+    problems: list[str] = []
+    if ct.get("schema_version") != ct_mod.CT_SCHEMA_VERSION:
+        problems.append(f"ct.schema_version 应为 {ct_mod.CT_SCHEMA_VERSION}")
+
+    note = str(ct.get("note", ""))
+    if not note:
+        problems.append("ct.note 为空：必须声明伪 CT 的用途边界")
+    elif "非真实病例" not in note and "不是真实病例" not in note:
+        problems.append("ct.note 缺少「非真实病例」声明")
+
+    grid = catalog.get("grid") or {}
+    shape = grid.get("shape") if isinstance(grid, dict) else None
+    if (
+        not isinstance(shape, list)
+        or len(shape) != 3
+        or not all(isinstance(v, int) and v > 0 for v in shape)
+    ):
+        return [*problems, "grid.shape 非法，无法核对 CT 切面数"]
+    depth = int(shape[2])
+    if int(ct.get("slice_count", 0)) != depth:
+        problems.append(f"ct.slice_count {ct.get('slice_count')!r} 与体素深度 {depth} 不符")
+    upscale = ct.get("upscale")
+    if not isinstance(upscale, int) or upscale < 1:
+        problems.append(f"ct.upscale {upscale!r} 应为 >=1 的整数")
+        upscale = 1
+    size = ct.get("image_size")
+    expected_size = [int(shape[0]) * upscale, int(shape[1]) * upscale]
+    if size != expected_size:
+        problems.append(f"ct.image_size {size!r} 应为 {expected_size}")
+
+    windows = ct.get("windows")
+    window_ids: list[str] = []
+    if not isinstance(windows, list) or not windows:
+        problems.append("ct.windows 为空，至少需要一个窗预设")
+    else:
+        for i, window in enumerate(windows):
+            if not isinstance(window, dict):
+                problems.append(f"ct.windows[{i}] 不是对象")
+                continue
+            wid = str(window.get("id", ""))
+            if not wid:
+                problems.append(f"ct.windows[{i}] 缺少 id")
+            elif wid in window_ids:
+                problems.append(f"ct.windows[{i}] id {wid} 重复")
+            else:
+                window_ids.append(wid)
+            if not str(window.get("name", "")).strip():
+                problems.append(f"ct.windows[{i}] 缺少 name")
+            for key in ("width", "level"):
+                value = window.get(key)
+                if not isinstance(value, (int, float)) or isinstance(value, bool):
+                    problems.append(f"ct.windows[{i}].{key} 不是数字")
+                elif key == "width" and float(value) <= 0:
+                    problems.append(f"ct.windows[{i}].width 必须为正")
+    default_window = str(ct.get("default_window", ""))
+    if window_ids and default_window not in window_ids:
+        problems.append(f"ct.default_window {default_window!r} 不在 windows 里")
+
+    base_pattern = ct.get("base_pattern")
+    overlay_pattern = ct.get("overlay_pattern")
+    for key, pattern, needed in (
+        ("base_pattern", base_pattern, ("{index", "{window}")),
+        ("overlay_pattern", overlay_pattern, ("{index", "{id}")),
+    ):
+        if not isinstance(pattern, str) or not all(token in pattern for token in needed):
+            problems.append(f"ct.{key} 必须同时包含占位符 {list(needed)}")
+
+    by_id = {str(s.get("id")): s for s in structures}
+    best = ct.get("best_slice")
+    if not isinstance(best, dict):
+        problems.append("ct.best_slice 不是对象")
+        best = {}
+    for sid in by_id:
+        k = best.get(sid)
+        if not isinstance(k, int) or not 0 <= k < depth:
+            problems.append(f"结构 {sid}：ct.best_slice 缺失或越界 {k!r}")
+
+    slices = ct.get("slices")
+    if not isinstance(slices, list) or len(slices) != depth:
+        problems.append(f"ct.slices 应有 {depth} 层，实际 {len(slices or [])}")
+        slices = []
+    counts: dict[str, dict[int, int]] = {sid: {} for sid in by_id}
+    for i, row in enumerate(slices):
+        if not isinstance(row, dict):
+            problems.append(f"ct.slices[{i}] 不是对象")
+            continue
+        if row.get("index") != i:
+            problems.append(f"ct.slices[{i}].index 应为 {i}，实际 {row.get('index')!r}")
+        voxels = row.get("voxels")
+        if not isinstance(voxels, int) or voxels < 0:
+            problems.append(f"ct.slices[{i}].voxels 应为非负整数")
+        for window in window_ids:
+            rel = _pattern_path(base_pattern, index=i, window=window)
+            if not rel:
+                problems.append(f"ct.slices[{i}] 无法生成 {window} 底图路径")
+            elif not (root / rel).is_file():
+                problems.append(f"ct 底图未落盘 {rel}")
+        entries = row.get("structures")
+        if not isinstance(entries, list):
+            problems.append(f"ct.slices[{i}].structures 不是数组")
+            continue
+        seen: set[str] = set()
+        for entry in entries:
+            if not isinstance(entry, dict):
+                problems.append(f"ct.slices[{i}] 含非对象结构记录")
+                continue
+            sid = str(entry.get("id", ""))
+            if sid not in by_id:
+                problems.append(f"ct.slices[{i}] 含目录外结构 {sid!r}")
+                continue
+            if sid in seen:
+                problems.append(f"ct.slices[{i}] 结构 {sid} 重复")
+            seen.add(sid)
+            name = entry.get("name")
+            if name != by_id[sid].get("name"):
+                problems.append(f"ct.slices[{i}]/{sid} 名称与目录不一致")
+            count = entry.get("voxels")
+            if not isinstance(count, int) or count <= 0:
+                problems.append(f"ct.slices[{i}]/{sid} 体素数应为正整数")
+                continue
+            counts[sid][i] = count
+            rel = _pattern_path(overlay_pattern, id=sid, index=i)
+            if not rel:
+                problems.append(f"ct.slices[{i}]/{sid} 无法生成 overlay 路径")
+            elif not (root / rel).is_file():
+                problems.append(f"ct overlay 未落盘 {rel}")
+
+    for sid, per_slice in counts.items():
+        if not per_slice:
+            problems.append(f"结构 {sid}：ct 逐层真值从未出现，overlay 全空")
+            continue
+        k = best.get(sid)
+        if isinstance(k, int) and k in per_slice:
+            peak = max(per_slice.values())
+            if per_slice[k] != peak:
+                problems.append(
+                    f"结构 {sid}：ct.best_slice {k} 不是最密层（该层 {per_slice[k]}，峰值 {peak}）"
+                )
+
+    if ct_mod.manifest_has_forbidden_text(ct):
+        problems.append("ct 清单含不允许公开的字样（真实病例/模型推理）")
+    return problems
 
 
 def validate_catalog(
@@ -152,6 +320,9 @@ def validate_catalog(
                     problems.append(f"{where}/{view}：{kind} 未落盘 {rel}")
             if int(entry.get("slice_voxels", 0)) <= 0:
                 problems.append(f"{where}/{view}：该层面目标体素数为 0，overlay 会是空的")
+
+    if "ct" in catalog:
+        problems.extend(validate_ct(catalog, structures, root))
 
     total = sum(mesh_sizes.values())
     if total > MAX_TOTAL_MESH_BYTES:
