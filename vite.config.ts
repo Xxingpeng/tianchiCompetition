@@ -13,6 +13,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // 本地联调 Function：deno run --allow-net --allow-env functions/index.ts（8000），
+    // 保留原路径与 Host，Function 的同源校验才能通过。
+    proxy: { "/functions/v1/app": "http://127.0.0.1:8000" },
   },
   test: {
     environment: "jsdom",

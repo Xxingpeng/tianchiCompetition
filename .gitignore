@@ -77,6 +77,7 @@ wandb/
 *.log
 scratch/
 tmp/
+deno.lock
 
 # ---------- 说明：以下演示资产【必须】入库，故不被上面规则排除 ----------
 # public/assets/structures.json

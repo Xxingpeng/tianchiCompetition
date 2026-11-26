@@ -6,7 +6,8 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "coverage/**", "node_modules/**", "public/**"] },
+  // 入口跑在 Deno 里、由平台独立校验；Node 侧的 tsc/eslint 不覆盖它。
+  { ignores: ["dist/**", "coverage/**", "node_modules/**", "public/**", "functions/index.ts"] },
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
