@@ -41,7 +41,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("左室", "left ventricle", "LV", "左心室腔"),
         description="四个心腔中壁最厚、腔最长的一个，位于心脏左下方，收缩时把血送入主动脉。",
         parent="心腔",
-        color="#d33d51",
+        color="#bf4d5c",
     ),
     StructureMeta(
         id="myo",
@@ -51,7 +51,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("左心室心肌", "心室壁", "myocardium", "LV myocardium"),
         description="构成心室壁的肌肉层。左心室壁明显厚于右心室，因为它要对抗更高的后负荷。",
         parent="心壁",
-        color="#b5651d",
+        color="#a06a42",
     ),
     StructureMeta(
         id="rv",
@@ -61,7 +61,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("右室", "right ventricle", "RV", "右心室腔"),
         description="位于心脏最靠前的一面，壁薄、腔呈新月形包在左心室右侧，把血泵入肺动脉。",
         parent="心腔",
-        color="#2f7ed8",
+        color="#4a7fb5",
     ),
     StructureMeta(
         id="la",
@@ -71,7 +71,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("左房", "left atrium", "LA", "左心房腔"),
         description="位置最靠后的心腔，接收四条肺静脉回流的血，再经二尖口送入左心室。",
         parent="心腔",
-        color="#7a5bd6",
+        color="#7d6aa8",
     ),
     StructureMeta(
         id="ra",
@@ -81,7 +81,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("右房", "right atrium", "RA", "右心房腔"),
         description="接收上下腔静脉回流的血，位于心脏右上方，与右心室以三尖口相通。",
         parent="心腔",
-        color="#1f9c8f",
+        color="#4f8f86",
     ),
     StructureMeta(
         id="aorta",
@@ -91,7 +91,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("升主动脉", "ascending aorta", "AAo", "主动脉升部"),
         description="自主动脉口向上的一小段，发出左右冠状动脉后移行为主动脉弓。",
         parent="主动脉",
-        color="#c9302c",
+        color="#b04a44",
     ),
     StructureMeta(
         id="pa",
@@ -101,7 +101,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("肺动脉", "pulmonary trunk", "pulmonary artery", "PA"),
         description="起自右心室，向左后上方走行后分为左右肺动脉，是把血送进肺的动脉。",
         parent="肺动脉",
-        color="#4a6fd6",
+        color="#5d76ad",
     ),
     StructureMeta(
         id="pv",
@@ -111,7 +111,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("肺静脉", "pulmonary vein", "PV"),
         description="通常左右各两条，开口于左心房后壁，把已换气的血回流入左心。",
         parent="肺静脉",
-        color="#6aa84f",
+        color="#7d9b62",
     ),
     StructureMeta(
         id="lxa",
@@ -121,7 +121,7 @@ STRUCTURES: tuple[StructureMeta, ...] = (
         aliases=("左心耳", "left auricle", "left atrial appendage", "LAA"),
         description="左心房向前突出的耳状盲端，表面有梳状肌，是心房壁最薄处之一。",
         parent="左心房",
-        color="#8e6bd0",
+        color="#8a76a8",
     ),
 )
 

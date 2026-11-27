@@ -1,13 +1,15 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { AssistantPanel } from "./components/AssistantPanel";
+import { CirculationDemo } from "./components/CirculationDemo";
 import { CtViewer } from "./components/CtViewer";
 import { InfoCard } from "./components/InfoCard";
-import { StructurePicker } from "./components/StructurePicker";
 import { TriView } from "./components/TriView";
 import { CatalogError, loadCatalog, selectableStructures } from "./data/catalog";
 import { buildCtContext } from "./data/ct";
 import type { Catalog, StructureRecord } from "./types";
 import "./styles.css";
+import "./circulation.css";
 
 // Three.js 有 600 多 KB，只有真正看 3D 时才需要，所以按需加载，首屏 JS 保持在 200 多 KB。
 const HeartModel = lazy(() =>
@@ -48,7 +50,6 @@ export function App() {
       </a>
       <header className="site-header">
         <h1>解剖智绘</h1>
-        <p className="tagline">点击心脏上的结构，查看说明与切面，再进入逐层 CT。</p>
       </header>
 
       <main id="main" className="scene-main">
@@ -74,15 +75,13 @@ export function App() {
       <footer className="site-footer">
         {state.kind === "ready" && (
           <ul className="notices">
-            {state.catalog.notices.map((notice) => (
-              <li key={notice}>{notice}</li>
-            ))}
+            {state.catalog.notices
+              .filter((notice) => !notice.includes("BodyParts3D"))
+              .map((notice) => (
+                <li key={notice}>{notice}</li>
+              ))}
           </ul>
         )}
-        <p className="source-note">
-          资产由 <code>tools/asset_pipeline</code> 离线生成；来源与许可见仓库根{" "}
-          <code>NOTICE.md</code>。
-        </p>
       </footer>
     </div>
   );
@@ -91,21 +90,45 @@ export function App() {
 function Browser({ catalog }: { catalog: Catalog }) {
   const structures = useMemo(() => selectableStructures(catalog), [catalog]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [catalogOpen, setCatalogOpen] = useState(false);
-  const [triOpen, setTriOpen] = useState(false);
+  const [everSelected, setEverSelected] = useState(false);
+  const [triOpen, setTriOpen] = useState(true);
   const [ctOpen, setCtOpen] = useState(false);
+  const [circOpen, setCircOpen] = useState(false);
   const ctCloseRef = useRef<HTMLButtonElement>(null);
   const lastFocusRef = useRef<HTMLElement | null>(null);
   const selected = structures.find((s) => s.id === selectedId) ?? null;
   const ct = catalog.ct;
+  // 授权说明挪到展签底部，像美术馆的「藏品来源」；页脚只留用途声明。
+  const attribution = catalog.notices.find((notice) => notice.includes("BodyParts3D")) ?? null;
   const [ctIndex, setCtIndex] = useState(() => {
     const first = structures[0]?.id;
     return ct && first ? (ct.best_slice[first] ?? 0) : 0;
   });
   const [ctWindowId, setCtWindowId] = useState(() => ct?.default_window ?? "mediastinal");
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantWidth, setAssistantWidth] = useState<number | null>(null);
+  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
+  const [dockQuery, setDockQuery] = useState("");
+  const [turn, setTurn] = useState<{ id: string; token: number } | null>(null);
+  const turnTokenRef = useRef(0);
+  const composingRef = useRef(false);
 
-  function selectStructure(id: string, keepCtLayer = false): void {
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // 小心与信息卡并排：宽屏时把信息卡让到小心左侧；放不下时收回信息卡，避免互相遮挡。
+  // 除小心自身宽度外，还要留出信息卡（24rem）和一块可看的心脏（约 30rem）。
+  const assistantShift = assistantOpen && (assistantWidth ?? 480) + 860 <= viewportWidth;
+
+  function selectStructure(id: string, keepCtLayer = false, syncQuery = true): void {
     setSelectedId(id);
+    setEverSelected(true);
+    const picked = structures.find((structure) => structure.id === id);
+    // 从名称搜索选中时保留用户输入，避免把刚打进框里的字覆盖成编号。
+    if (picked && syncQuery) setDockQuery(String(picked.label));
     if (!keepCtLayer && ct) {
       const best = ct.best_slice[id];
       if (typeof best === "number") setCtIndex(best);
@@ -121,10 +144,43 @@ function Browser({ catalog }: { catalog: Catalog }) {
     setCtOpen(true);
   }
 
+  /** 从展签或搜索框点选：除了选中，还让 3D 把该部件转到正面并打光。 */
+  function selectFromIndex(id: string, syncQuery = true): void {
+    turnTokenRef.current += 1;
+    setTurn({ id, token: turnTokenRef.current });
+    selectStructure(id, false, syncQuery);
+  }
+
+  /** 横线搜索框：单个数字按冻结编号直选，其余按中文名/英文名包含匹配。 */
+  function searchDock(value: string): void {
+    setDockQuery(value);
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    if (/^\d$/.test(trimmed)) {
+      const match = structures.find((structure) => structure.label === Number(trimmed));
+      if (match) selectFromIndex(match.id, false);
+      return;
+    }
+    const needle = trimmed.toLowerCase();
+    const exact = structures.find(
+      (structure) =>
+        structure.name.toLowerCase() === needle || structure.en_name.toLowerCase() === needle,
+    );
+    const match =
+      exact ??
+      structures.find(
+        (structure) =>
+          structure.name.toLowerCase().includes(needle) ||
+          structure.en_name.toLowerCase().includes(needle),
+      );
+    if (match) selectFromIndex(match.id, false);
+  }
+
   function closeDetail(): void {
     setSelectedId(null);
+    setDockQuery("");
     setCtOpen(false);
-    setTriOpen(false);
+    setTriOpen(true);
   }
 
   const ctContext = useMemo(
@@ -158,7 +214,16 @@ function Browser({ catalog }: { catalog: Catalog }) {
   }, [ctOpen]);
 
   return (
-    <div className={`scene-shell${selected ? " has-detail" : ""}${ctOpen ? " ct-open" : ""}`}>
+    <div
+      className={`scene-shell${selected ? " has-detail" : ""}${ctOpen ? " ct-open" : ""}${
+        assistantOpen ? " assistant-open" : ""
+      }${assistantOpen ? (assistantShift ? " assistant-shift" : " assistant-hide") : ""}`}
+      style={
+        {
+          "--assistant-live-width": `${assistantWidth ?? 480}px`,
+        } as CSSProperties
+      }
+    >
       <section className="scene-heart" aria-label="心脏三维模型">
         <Suspense
           fallback={
@@ -171,65 +236,61 @@ function Browser({ catalog }: { catalog: Catalog }) {
           <HeartModel
             structures={structures}
             selectedId={selectedId}
+            hintDismissed={everSelected}
+            turn={turn}
             onSelect={(structure) => selectStructure(structure.id)}
           />
         </Suspense>
       </section>
 
-      <aside className="scene-dock" aria-label="结构检索与目录">
-        <StructurePicker
-          structures={structures}
-          selected={selected}
-          onSelect={(structure) => selectStructure(structure.id)}
+      <aside className="scene-dock placard" aria-labelledby="placard-heading">
+        <h2 id="placard-heading" className="visually-hidden">
+          结构索引
+        </h2>
+        <input
+          className="placard-search"
+          type="search"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="如：左心室 / left ventricle / LV"
+          aria-label="按编号或名称查找结构"
+          value={dockQuery}
+          onCompositionStart={() => {
+            composingRef.current = true;
+          }}
+          onCompositionEnd={(event) => {
+            composingRef.current = false;
+            searchDock(event.currentTarget.value);
+          }}
+          onChange={(event) => {
+            if (composingRef.current) setDockQuery(event.target.value);
+            else searchDock(event.target.value);
+          }}
         />
-
-        <section aria-labelledby="catalog-heading" className="catalog">
-          <div className="catalog-head">
-            <h2 id="catalog-heading">已收录 {structures.length} 个结构</h2>
-            <button
-              type="button"
-              className="catalog-toggle"
-              aria-expanded={catalogOpen}
-              aria-controls={catalogOpen ? "catalog-list" : undefined}
-              onClick={() => setCatalogOpen((open) => !open)}
-            >
-              {catalogOpen ? "收起目录" : "展开目录"}
-            </button>
-          </div>
-          {catalogOpen && (
-            <>
-              <ul id="catalog-list" className="structure-list">
-                {structures.map((s) => (
-                  <li key={s.id}>
-                    <StructureButton
-                      structure={s}
-                      active={s.id === selectedId}
-                      onPick={(id) => selectStructure(id)}
-                    />
-                  </li>
-                ))}
-              </ul>
-              {catalog.excluded.length > 0 && (
-                <p className="excluded">
-                  未纳入：{catalog.excluded.map((e) => `${e.id}（${e.reason}）`).join("；")}
-                </p>
-              )}
-            </>
-          )}
-        </section>
+        <ul className="placard-index">
+          {structures.map((s) => (
+            <li key={s.id}>
+              <PlacardRow
+                structure={s}
+                active={s.id === selectedId}
+                onPick={(id) => selectFromIndex(id)}
+              />
+            </li>
+          ))}
+        </ul>
+        {catalog.excluded.length > 0 && (
+          <p className="placard-note">
+            未纳入：{catalog.excluded.map((e) => `${e.id}（${e.reason}）`).join("；")}
+          </p>
+        )}
+        {attribution && <p className="placard-source">{attribution}</p>}
       </aside>
-
-      {!selected && (
-        <p className="scene-hint" role="status">
-          点击心脏上的任一结构，查看它的说明；也可以搜索或展开目录。
-        </p>
-      )}
 
       {!selected && (
         <div className="scene-actions">
           <button
             type="button"
-            className="ct-cta"
+            className="ct-cta ct-primary"
             aria-controls={ctOpen ? "ct-drawer" : undefined}
             aria-expanded={ctOpen}
             onClick={openCt}
@@ -239,6 +300,15 @@ function Browser({ catalog }: { catalog: Catalog }) {
             <span className="ct-cta-sub">
               {ct ? `${ct.slice_count} 层 · 纵隔窗 / 肺窗` : "CT 资产未载入"}
             </span>
+          </button>
+          <button
+            type="button"
+            className="ct-cta circulation-cta"
+            aria-haspopup="dialog"
+            onClick={() => setCircOpen(true)}
+          >
+            <span>看血液循环</span>
+            <span className="ct-cta-sub">肺循环 + 体循环 · 含氧血去向</span>
           </button>
         </div>
       )}
@@ -275,6 +345,14 @@ function Browser({ catalog }: { catalog: Catalog }) {
             >
               <span>看 CT</span>
               <span className="ct-cta-sub">从 {selected.name} 最密层开始</span>
+            </button>
+            <button
+              type="button"
+              className="circ-link"
+              aria-haspopup="dialog"
+              onClick={() => setCircOpen(true)}
+            >
+              看血液循环 <span>肺循环 + 体循环</span>
             </button>
           </div>
 
@@ -339,12 +417,20 @@ function Browser({ catalog }: { catalog: Catalog }) {
         </>
       )}
 
-      <AssistantPanel focus={selected} ct={ctOpen ? ctContext : null} />
+      <AssistantPanel
+        focus={selected}
+        ct={ctOpen ? ctContext : null}
+        structureCount={structures.length}
+        onOpenChange={setAssistantOpen}
+        onWidthChange={setAssistantWidth}
+      />
+
+      {circOpen && <CirculationDemo onClose={() => setCircOpen(false)} />}
     </div>
   );
 }
 
-function StructureButton({
+function PlacardRow({
   structure,
   active,
   onPick,
@@ -356,14 +442,18 @@ function StructureButton({
   return (
     <button
       type="button"
-      className="structure-button"
+      className="placard-row"
       aria-pressed={active}
       onClick={() => onPick(structure.id)}
+      style={{ "--row-color": structure.color } as CSSProperties}
     >
-      <span className="swatch" style={{ backgroundColor: structure.color }} aria-hidden="true" />
-      <span className="structure-name">{structure.name}</span>
-      <span className="en-name">{structure.en_name}</span>
-      <span className="provenance">{structure.provenance}</span>
+      <span className="placard-no" aria-hidden="true">
+        {structure.label}
+      </span>
+      <span className="placard-cn">{structure.name}</span>
+      <span className="placard-latin" lang="en">
+        {structure.en_name}
+      </span>
     </button>
   );
 }

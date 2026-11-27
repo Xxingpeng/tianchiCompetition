@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AssistantPanel } from "../components/AssistantPanel";
@@ -18,6 +18,7 @@ function sseResponse(frames: string): Response {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  localStorage.clear();
 });
 
 describe("createSseParser", () => {
@@ -43,7 +44,7 @@ describe("createSseParser", () => {
 describe("AssistantPanel", () => {
   it("发送示例问题后流式拼接回答并常显来源", async () => {
     const frames = [
-      'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://openstax.org/books/x","sourceName":"OpenStax","license":"CC BY 4.0","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
+      'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://www.pmph.com","sourceName":"人民卫生出版社《系统解剖学》","license":"版权保留 · 仅作事实引用","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
       'event: delta\ndata: {"text":"左心室要克服更高的"}\n\n',
       'event: delta\ndata: {"text":"阻力，所以壁更厚。[1]"}\n\n',
       'event: done\ndata: {"degraded":false}\n\n',
@@ -52,19 +53,19 @@ describe("AssistantPanel", () => {
 
     const user = userEvent.setup();
     render(<AssistantPanel focus={null} />);
-    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
     await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
 
-    expect(screen.getByRole("heading", { name: "小医" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "小心" })).toBeInTheDocument();
     expect(
       await screen.findByText("左心室要克服更高的阻力，所以壁更厚。[1]", {}, { timeout: 3000 }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /心肌厚度/ })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: /心肌厚度/ })).toHaveAttribute(
       "href",
-      "https://openstax.org/books/x",
+      "https://www.pmph.com",
     );
-    expect(screen.getByText(/CC BY 4\.0/)).toBeInTheDocument();
-  });
+    expect(screen.getByText(/版权保留/)).toBeInTheDocument();
+  }, 10000);
 
   it("整段 SSE 一次到达时仍逐字放出，不瞬间铺满", async () => {
     const long = "左心室壁最厚，因为它要把血射入体循环。".repeat(20);
@@ -77,7 +78,7 @@ describe("AssistantPanel", () => {
 
     const user = userEvent.setup();
     render(<AssistantPanel focus={null} />);
-    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
     await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
 
     expect(await screen.findByText(/左心室壁最厚/)).toBeInTheDocument();
@@ -98,7 +99,7 @@ describe("AssistantPanel", () => {
 
       const user = userEvent.setup();
       render(<AssistantPanel focus={null} />);
-      await user.click(screen.getByRole("button", { name: "问问小医" }));
+      await user.click(screen.getByRole("button", { name: "问问小心" }));
       await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
 
       expect(await screen.findByText(long, {}, { timeout: 3000 })).toBeInTheDocument();
@@ -107,7 +108,7 @@ describe("AssistantPanel", () => {
     }
   }, 10000);
 
-  it("来源等答案首字出现后再显示", async () => {
+  it("来源等整段回答流完后再逐条出现", async () => {
     const encoder = new TextEncoder();
     let controller: ReadableStreamDefaultController<Uint8Array> | null = null;
     const body = new ReadableStream<Uint8Array>({
@@ -127,7 +128,7 @@ describe("AssistantPanel", () => {
 
     const user = userEvent.setup();
     render(<AssistantPanel focus={null} />);
-    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
     await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
     if (!controller) throw new Error("流未建立");
     const stream: ReadableStreamDefaultController<Uint8Array> = controller;
@@ -135,7 +136,7 @@ describe("AssistantPanel", () => {
     act(() => {
       stream.enqueue(
         encoder.encode(
-          'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://openstax.org/books/x","sourceName":"OpenStax","license":"CC BY 4.0","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
+          'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://www.pmph.com","sourceName":"人民卫生出版社《系统解剖学》","license":"版权保留 · 仅作事实引用","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
         ),
       );
     });
@@ -144,13 +145,119 @@ describe("AssistantPanel", () => {
 
     act(() => {
       stream.enqueue(encoder.encode('event: delta\ndata: {"text":"左心室先出场。"}\n\n'));
+    });
+    expect(await screen.findByText("左心室先出场。")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /心肌厚度/ })).toBeNull();
+
+    act(() => {
       stream.enqueue(encoder.encode('event: done\ndata: {"degraded":false}\n\n'));
       stream.close();
     });
     expect(await screen.findByRole("link", { name: /心肌厚度/ })).toBeInTheDocument();
   });
 
-  it("把当前 CT 层真值随问题发给小医", async () => {
+  it("入场气泡先出现，点击小心后收起并打开面板", async () => {
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    expect(screen.getByText("让我们一起保护我们的心脏，无聊可以点点我")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
+
+    expect(screen.queryByText("让我们一起保护我们的心脏，无聊可以点点我")).toBeNull();
+    expect(screen.getByRole("region", { name: "小心 · 心脏学习助手" })).toBeInTheDocument();
+  });
+
+  it("入场气泡过一会儿自动消失", () => {
+    vi.useFakeTimers();
+    try {
+      render(<AssistantPanel focus={null} />);
+      expect(screen.getByText("让我们一起保护我们的心脏，无聊可以点点我")).toBeInTheDocument();
+      act(() => {
+        vi.advanceTimersByTime(7200);
+      });
+      expect(screen.queryByText("让我们一起保护我们的心脏，无聊可以点点我")).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("入场气泡可以点叉提前关掉，不会打开面板", async () => {
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "关掉这条提示" }));
+    expect(screen.queryByText("让我们一起保护我们的心脏，无聊可以点点我")).toBeNull();
+    expect(screen.queryByRole("region", { name: "小心 · 心脏学习助手" })).toBeNull();
+  });
+
+  it("可以拖动小心并记住位置，拖动不会误开面板", () => {
+    const { unmount } = render(<AssistantPanel focus={null} />);
+    const button = screen.getByRole("button", { name: "问问小心" });
+    fireEvent.pointerDown(button, { button: 0, pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(button, { pointerId: 1, clientX: 160, clientY: 60 });
+    expect(button).toHaveClass("is-dragging");
+    expect(button.style.getPropertyValue("--assistant-lean")).not.toBe("");
+    fireEvent.pointerUp(button, { pointerId: 1, clientX: 160, clientY: 60 });
+    expect(button).not.toHaveClass("is-dragging");
+
+    const host = button.parentElement!;
+    expect(host.style.transform).toBe("translate(60px, -40px)");
+    expect(localStorage.getItem("anatomy-sketch-assistant-offset")).toBe(
+      JSON.stringify({ dx: 60, dy: -40 }),
+    );
+
+    fireEvent.click(button);
+    expect(screen.queryByRole("region", { name: "小心 · 心脏学习助手" })).toBeNull();
+    fireEvent.click(button);
+    expect(screen.getByRole("region", { name: "小心 · 心脏学习助手" })).toBeInTheDocument();
+
+    unmount();
+    render(<AssistantPanel focus={null} />);
+    const again = screen.getByRole("button", { name: "问问小心" });
+    expect(again.parentElement!.style.transform).toBe("translate(60px, -40px)");
+  });
+
+  it("点击打开面板时小心点头回应，随后恢复待机", () => {
+    vi.useFakeTimers();
+    try {
+      render(<AssistantPanel focus={null} />);
+      const button = screen.getByRole("button", { name: "问问小心" });
+      fireEvent.click(button);
+      expect(button).toHaveClass("is-nodding");
+      act(() => {
+        vi.advanceTimersByTime(600);
+      });
+      expect(button).not.toHaveClass("is-nodding");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("久置后滑到屏幕下缘只露头，点击先还原再打开面板", () => {
+    vi.useFakeTimers();
+    try {
+      render(<AssistantPanel focus={null} />);
+      const button = screen.getByRole("button", { name: "问问小心" });
+      expect(button).not.toHaveClass("is-peeking");
+      act(() => {
+        vi.advanceTimersByTime(45000);
+      });
+      expect(button).toHaveClass("is-peeking");
+      expect(button.style.getPropertyValue("--assistant-peek")).not.toBe("");
+
+      fireEvent.click(button);
+      expect(button).not.toHaveClass("is-peeking");
+      expect(screen.queryByRole("region", { name: "小心 · 心脏学习助手" })).toBeNull();
+
+      act(() => {
+        vi.advanceTimersByTime(520);
+      });
+      expect(screen.getByRole("region", { name: "小心 · 心脏学习助手" })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("把当前 CT 层真值随问题发给小心", async () => {
     const frames = [
       'event: meta\ndata: {"mode":"cot","sources":[]}\n\n',
       'event: delta\ndata: {"text":"本层可见左心室与心肌。"}\n\n',
@@ -176,7 +283,7 @@ describe("AssistantPanel", () => {
         }}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
     await user.click(screen.getByRole("button", { name: "当前 CT 这一层有哪些结构？" }));
     expect(await screen.findByText("本层可见左心室与心肌。")).toBeInTheDocument();
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
@@ -205,7 +312,7 @@ describe("AssistantPanel", () => {
 
     const user = userEvent.setup();
     render(<AssistantPanel focus={null} />);
-    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
     await user.click(screen.getByRole("button", { name: "窗宽窗位是什么？" }));
 
     expect(await screen.findByText("这个问题超出了我的范围。")).toBeInTheDocument();
@@ -214,17 +321,89 @@ describe("AssistantPanel", () => {
 
   it("降级直答展示不可用标记", async () => {
     const frames = [
-      'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://openstax.org/books/x","sourceName":"OpenStax","license":"CC BY 4.0","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
-      'event: delta\ndata: {"text":"AI 通道当前不可用，先给出知识库中的相关条目原文。"}\n\n',
+      'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://www.pmph.com","sourceName":"人民卫生出版社《系统解剖学》","license":"版权保留 · 仅作事实引用","snippet":"左心室心肌明显厚于右心室。"}]}\n\n',
+      'event: delta\ndata: {"text":"AI 通道当前不可用，先给出站内资料的相关条目原文。"}\n\n',
       'event: done\ndata: {"degraded":true}\n\n',
     ].join("");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sseResponse(frames)));
 
     const user = userEvent.setup();
     render(<AssistantPanel focus={null} />);
-    await user.click(screen.getByRole("button", { name: "问问小医" }));
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
     await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
 
-    expect(await screen.findByText("知识库直答 · AI 通道暂不可用")).toBeInTheDocument();
+    expect(await screen.findByText("资料摘录 · AI 暂不可用")).toBeInTheDocument();
+  });
+
+  it("面板宽度可用键盘调整并在重开后保持", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
+    const handle = screen.getByRole("separator", { name: /调整小心面板宽度/ });
+    expect(handle).toHaveAttribute("aria-valuenow", "480");
+
+    act(() => {
+      handle.focus();
+    });
+    await user.keyboard("{ArrowLeft}");
+    expect(handle).toHaveAttribute("aria-valuenow", "512");
+    expect(localStorage.getItem("anatomy-sketch-assistant-width")).toBe("512");
+
+    unmount();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
+    expect(screen.getByRole("separator", { name: /调整小心面板宽度/ })).toHaveAttribute(
+      "aria-valuenow",
+      "512",
+    );
+    expect(
+      document.getElementById("assistant-panel")?.style.getPropertyValue("--assistant-width"),
+    ).toBe("512px");
+  });
+
+  it("面板高度可用键盘调整并在重开后保持", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
+    const handle = screen.getByRole("separator", { name: /调整小心面板高度/ });
+    expect(handle).toHaveAttribute("aria-orientation", "horizontal");
+    expect(handle).toHaveAttribute("aria-valuenow", "544");
+
+    act(() => {
+      handle.focus();
+    });
+    await user.keyboard("{ArrowDown}");
+    expect(handle).toHaveAttribute("aria-valuenow", "520");
+    expect(localStorage.getItem("anatomy-sketch-assistant-height")).toBe("520");
+
+    unmount();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
+    expect(screen.getByRole("separator", { name: /调整小心面板高度/ })).toHaveAttribute(
+      "aria-valuenow",
+      "520",
+    );
+    expect(
+      document.getElementById("assistant-panel")?.style.getPropertyValue("--assistant-height"),
+    ).toBe("520px");
+  });
+
+  it("多条来源在回答完成时全部列出", async () => {
+    const frames = [
+      'event: meta\ndata: {"mode":"cot","sources":[{"n":1,"title":"心肌厚度","url":"https://www.pmph.com","sourceName":"人民卫生出版社《系统解剖学》","license":"版权保留 · 仅作事实引用","snippet":"左心室心肌明显厚于右心室。"},{"n":2,"title":"心动周期","url":"https://www.pmph.com","sourceName":"人民卫生出版社《生理学》","license":"版权保留 · 仅作事实引用","snippet":"心动周期分为收缩期与舒张期。"}]}\n\n',
+      'event: delta\ndata: {"text":"左心室壁更厚。"}\n\n',
+      'event: done\ndata: {"degraded":false}\n\n',
+    ].join("");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sseResponse(frames)));
+
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
+    await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
+
+    expect(await screen.findByRole("link", { name: /心肌厚度/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("link", { name: /心动周期/ }, { timeout: 3000 }),
+    ).toBeInTheDocument();
   });
 });

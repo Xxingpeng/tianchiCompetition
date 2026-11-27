@@ -98,33 +98,49 @@ function encodeChatBody(value: unknown): string {
   });
 }
 
+// 面向用户的错误只用中文短句；上游/网关的英文报文一律不透传。
+const STATUS_FALLBACK: Record<number, string> = {
+  400: "问题格式不正确，请修改后重试。",
+  413: "问题或请求太大，请精简后重试。",
+  429: "提问太频繁了，请过几分钟再试。",
+};
+const CJK = /[\u4e00-\u9fff]/;
+
+async function failureMessage(response: Response): Promise<string> {
+  try {
+    const payload: unknown = await response.json();
+    const record = (payload ?? {}) as { message?: unknown };
+    // 只接受站内 Function 给出的中文提示，其余（网关/上游英文）按状态码兜底。
+    if (typeof record.message === "string" && CJK.test(record.message)) return record.message;
+  } catch {
+    // 非 JSON 错误响应按状态码兜底。
+  }
+  return STATUS_FALLBACK[response.status] ?? "助手暂时不可用，请稍后再试。";
+}
+
 // 浏览器侧只认本站 Function 的 SSE 协议；任何解析失败都当作回答不可用，不猜内容。
 export async function askAssistant(input: AskInput): Promise<AssistantAnswer> {
-  const response = await fetch("/functions/v1/app/chat", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "content-type": "application/json", accept: "text/event-stream" },
-    body: encodeChatBody({
-      text: input.text,
-      conversationId: input.conversationId,
-      focus: input.focus ?? "",
-      ct: input.ct,
-      history: input.history,
-    }),
-    signal: input.signal,
-  });
-
-  if (!response.ok) {
-    let message = `助手暂时不可用（HTTP ${response.status}），请稍后再试。`;
-    try {
-      const payload: unknown = await response.json();
-      const record = payload as { message?: unknown };
-      if (typeof record.message === "string") message = record.message;
-    } catch {
-      // 非 JSON 错误响应保留状态码提示。
-    }
-    throw new AssistantError(message);
+  let response: Response;
+  try {
+    response = await fetch("/functions/v1/app/chat", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json", accept: "text/event-stream" },
+      body: encodeChatBody({
+        text: input.text,
+        conversationId: input.conversationId,
+        focus: input.focus ?? "",
+        ct: input.ct,
+        history: input.history,
+      }),
+      signal: input.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new AssistantError("网络连接失败，请检查网络后重试。");
   }
+
+  if (!response.ok) throw new AssistantError(await failureMessage(response));
   if (!response.body) throw new AssistantError("回答通道没有返回内容。");
 
   const answer: AssistantAnswer = { text: "", sources: [], degraded: false };
@@ -161,6 +177,9 @@ export async function askAssistant(input: AskInput): Promise<AssistantAnswer> {
       parse(decoder.decode(value, { stream: true }));
     }
     parse(decoder.decode(), true);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    throw new AssistantError("回答传输中断，请重试。");
   } finally {
     reader.releaseLock();
   }

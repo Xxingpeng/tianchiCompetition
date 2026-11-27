@@ -8,9 +8,11 @@ export interface SourceMeta {
   publisher: string;
 }
 
+export type ChunkTopic = Topic | "disease";
+
 export interface KnowledgeChunk {
   id: string;
-  topic: Topic;
+  topic: ChunkTopic;
   title: string;
   source: string;
   section?: string;
@@ -43,8 +45,9 @@ export interface RetrievalResult {
 
 const K1 = 1.2;
 const B = 0.75;
-const ANATOMY_TOPICS: ReadonlySet<Topic> = new Set(["anatomy"]);
-const CT_TOPICS: ReadonlySet<Topic> = new Set(["ct", "anatomy"]);
+// 疾病条目只讲概念与风险，和心腔、瓣膜一样随解剖题放行；意图分类仍是 anatomy。
+const ANATOMY_TOPICS: ReadonlySet<ChunkTopic> = new Set(["anatomy", "disease"]);
+const CT_TOPICS: ReadonlySet<ChunkTopic> = new Set(["ct", "anatomy", "disease"]);
 
 interface IndexedChunk {
   chunk: KnowledgeChunk;
@@ -111,7 +114,7 @@ export function createRetriever(
   options: { k?: number; minScore?: number } = {},
 ): (query: string, topic?: Topic) => RetrievalResult {
   const k = options.k ?? 4;
-  // 语料只有 23 条，2.1 分以下基本只命中"心脏/心室"这类通用词；宁可少给资料，
+  // 语料 31 条，2.1 分以下基本只命中"心脏/心室"这类通用词；宁可少给资料，
   // 也不让无关来源稀释引用可信度，真要没命中就走"资料不足"的诚实回复。
   const minScore = options.minScore ?? 2.1;
   const docs: IndexedChunk[] = [];
@@ -129,7 +132,7 @@ export function createRetriever(
   const averageLength = docs.reduce((sum, doc) => sum + doc.length, 0) / Math.max(total, 1);
 
   return (query: string, topic?: Topic) => {
-    // 意图已判定主题时按主题收窄候选：解剖题不再混进站内目录/CT 条目，
+    // 意图已判定主题时按主题收窄候选：解剖/疾病题不再混进站内目录/CT 条目，
     // CT 题仍保留解剖条目作为看图基础。重量级排序不变。
     const allowed = topic === "ct" ? CT_TOPICS : topic ? ANATOMY_TOPICS : undefined;
     const queryTokens = [...new Set(tokenize(query))].filter(
@@ -153,6 +156,17 @@ export function createRetriever(
     }
     scored.sort((a, b) => b.score - a.score);
     const top = scored.slice(0, k).filter((item) => item.score >= minScore);
+    // CT 题按主题收窄后，纯 CT 条目可能占满名额；固定留一个位置给最相关的解剖条目，
+    // 保证回答仍能落到"看上某个结构"的解剖基础上。
+    if (topic === "ct" && top.length > 0 && !top.some((item) => item.chunk.topic === "anatomy")) {
+      const anatomy = scored.find(
+        (item) => item.chunk.topic === "anatomy" && item.score >= minScore,
+      );
+      if (anatomy) {
+        if (top.length >= k) top.pop();
+        top.push(anatomy);
+      }
+    }
     const citations = top.map<Citation>((item, index) => {
       const meta = kb.sources[item.chunk.source];
       return {

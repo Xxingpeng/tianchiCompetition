@@ -56,8 +56,20 @@ function anchor(title: string | undefined, question: string): string {
   return normalize(question).includes(normalize(title)) ? question : `${title} ${question}`;
 }
 
-// 上级分类词用于泛问；单查"心脏有哪些结构"命中不了心腔、瓣膜等具体条目。
-const OVERVIEW_QUERY = "心壁 瓣膜 大血管 传导系统 心腔";
+// 泛问按分类各取一条代表资料；拼成单条查询时"传导系统"会被心电图条目抢走。
+const OVERVIEW_ASPECTS = ["心壁", "瓣膜", "大血管", "传导系统"];
+
+function overviewCitations(retrieve: Retrieve): Citation[] {
+  const picked: Citation[] = [];
+  const seen = new Set<string>();
+  for (const aspect of OVERVIEW_ASPECTS) {
+    const hit = retrieve(aspect, "anatomy").citations.find((citation) => !seen.has(citation.id));
+    if (!hit) continue;
+    seen.add(hit.id);
+    picked.push({ ...hit, n: picked.length + 1 });
+  }
+  return picked;
+}
 
 export function planTurn(input: TurnInput, retrieve: Retrieve): TurnPlan {
   const question = input.text.trim();
@@ -119,7 +131,7 @@ export function planTurn(input: TurnInput, retrieve: Retrieve): TurnPlan {
       citations = retrieve(detail.description, "anatomy").citations;
     }
     if (citations.length === 0) {
-      return { kind: "insufficient", reply: insufficientReply(question) };
+      return { kind: "insufficient", reply: insufficientReply() };
     }
     const mode: ReasoningMode = assessDifficulty(question) ? "tot" : "cot";
     return {
@@ -138,16 +150,13 @@ export function planTurn(input: TurnInput, retrieve: Retrieve): TurnPlan {
 
   const wantsFocus = asksAboutFocus(question, topic);
   const selectedTitle = wantsFocus ? focusTitle(input.focus) : undefined;
-  // 泛问用一组上级分类词检索；只有指代当前结构时才把结构名并进查询。
-  const query =
+  // 只有指代当前结构时才把结构名并进查询，泛指时不让选中项污染检索。
+  const citations =
     topic === "anatomy" && isOverviewQuestion(question)
-      ? OVERVIEW_QUERY
-      : wantsFocus
-        ? anchor(selectedTitle, question)
-        : question;
-  const { citations } = retrieve(query, topic);
+      ? overviewCitations(retrieve)
+      : retrieve(wantsFocus ? anchor(selectedTitle, question) : question, topic).citations;
   if (citations.length === 0) {
-    return { kind: "insufficient", reply: insufficientReply(question) };
+    return { kind: "insufficient", reply: insufficientReply() };
   }
   const mode: ReasoningMode = assessDifficulty(question) ? "tot" : "cot";
   return {

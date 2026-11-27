@@ -4,7 +4,7 @@ import type { StaticReply } from "./intent.ts";
 // 静态回复不经过模型：问候、站内用法、越界与安全分流都零 token 开销。
 const REPLIES: Record<Exclude<StaticReply, "empty">, string> = {
   greeting:
-    "你好，我是小医。可以问我心脏的结构、瓣膜与血流、传导系统，或者 CT 的窗宽窗位这类基础知识。想从哪个结构开始？",
+    "你好，我是小心。可以问我心脏的结构、瓣膜与血流、传导系统，或者 CT 的窗宽窗位这类基础知识。想从哪个结构开始？",
   help: "用法：在左侧搜索或列表里选结构，右侧整颗心脏可拖拽旋转、点选部件，三视图和详情会同步。我的回答范围限于心脏解剖与 CT 阅片基础，例如「左心室为什么壁厚」「窗宽窗位是什么」。回答里的 [1][2] 对应下方列出的来源。本站模型是教学示意，不是真实病例。",
   off_topic:
     "这个问题超出了我的范围。我只讲心脏解剖和 CT 阅片的基础知识，比如心腔、瓣膜、血液循环、窗宽窗位。要不要换个相关的问题？",
@@ -45,7 +45,6 @@ export function historyQuestionsReply(history: readonly HistoryTurn[]): string {
   return `这段对话里你问过：\n${lines.join("\n")}\n\n我只保留最近几轮问题，刷新页面后对话记录会清空。`;
 }
 
-export function insufficientReply(question: string): string {
-  const quoted = truncate(question, 24);
-  return `暂时没有找到可靠资料来回答「${quoted}」。我现在覆盖：心脏位置与心包、心壁三层、四个心腔与瓣膜、腱索与乳头肌、大血管、冠脉循环、传导系统、心动周期，以及 CT 的 HU、窗宽窗位、增强与剂量。可以换个问法，或直接点左侧结构看三视图。`;
+export function insufficientReply(): string {
+  return `这个问题我暂时讲不了。我目前能讲：心脏位置与心包、心壁三层、四个心腔与瓣膜、腱索与乳头肌、大血管、冠脉循环、传导系统、心动周期，以及 CT 的 HU、窗宽窗位、增强与剂量；也可以直接点左侧结构看三视图。`;
 }

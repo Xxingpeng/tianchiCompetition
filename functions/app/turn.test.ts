@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { heartKnowledge as kbJson } from "../knowledge/heart-knowledge.ts";
 import { createRetriever } from "./retrieval.ts";
-import { degradedAnswer } from "./prompt.ts";
+import { AGENT_SYSTEM, degradedAnswer } from "./prompt.ts";
 import { focusTitle, planTurn } from "./turn.ts";
 
 const kb = kbJson;
@@ -80,6 +80,22 @@ describe("planTurn", () => {
         "心脏传导系统",
       ]),
     );
+  });
+
+  it("疾病概念问题带国内资料，但不主动播报当前结构", () => {
+    const plan = planTurn({ text: "高血压为什么伤心脏", focus: "lv" }, retrieve);
+    expect(plan.kind).toBe("answer");
+    if (plan.kind !== "answer") return;
+    expect(plan.citations.map((citation) => citation.id)).toContain("disease-hypertension-heart");
+    expect(plan.userMessage).toContain("[资料 1]");
+    expect(plan.userMessage).not.toContain("[当前页面]");
+  });
+
+  it("问高血压病因时命中原发病因条目", () => {
+    const plan = planTurn({ text: "人为什么会得高血压" }, retrieve);
+    expect(plan.kind).toBe("answer");
+    if (plan.kind !== "answer") return;
+    expect(plan.citations.map((citation) => citation.id)).toContain("disease-hypertension-causes");
   });
 
   it("漏字的泛问（心脏有什结构）仍覆盖五类资料", () => {
@@ -215,5 +231,13 @@ describe("degradedAnswer", () => {
 
   it("没有资料时给重试与替代路径", () => {
     expect(degradedAnswer([])).toContain("稍后重试");
+  });
+});
+
+describe("AGENT_SYSTEM", () => {
+  it("不让模型在正文里播报知识缺口或建议换问法", () => {
+    expect(AGENT_SYSTEM).not.toContain("知识库暂无");
+    expect(AGENT_SYSTEM).not.toContain("换个问法");
+    expect(AGENT_SYSTEM).toContain("不说明缺少什么");
   });
 });

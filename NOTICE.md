@@ -1,7 +1,7 @@
 # NOTICE · 资产来源、生成方式与许可判定
 
 > 本文件是作品的合规留痕。任何进入公开演示页面的第三方内容，都必须在此列出来源与许可依据。
-> 状态：**已生成（2026-11-24，BP3D 正式路线；2026-11-26 增加伪 CT 资产）**。`public/assets/` 现由 `assets_raw/bp3d_manifest.json` 绑定的 BodyParts3D Release 4.0 OBJ 生成，`provenance_mode = bp3d`；左心耳为自制几何，逐条来源见 `structures.json` 的 `provenance` 字段。伪 CT 由同一份教学标注体素派生，边界见 §2b。
+> 状态：**已生成（2026-11-24，BP3D 正式路线；2026-11-26 增加伪 CT 资产与国内教材/指南条目，并将助手来源全部境内化）**。`public/assets/` 现由 `assets_raw/bp3d_manifest.json` 绑定的 BodyParts3D Release 4.0 OBJ 生成，`provenance_mode = bp3d`；左心耳为自制几何，逐条来源见 `structures.json` 的 `provenance` 字段。伪 CT 由同一份教学标注体素派生，边界见 §2b。
 
 ## 1. 演示资产总览
 
@@ -12,11 +12,12 @@
 | 高亮 overlay | `public/assets/slices/*_overlay.png`（27 张） | 由同一份体素渲染 | 同上 | 已生成 |
 | 3D 网格 | `public/assets/meshes/*.glb`（9 个，合计 3925.9 KiB） | 8 个由 BP3D OBJ 体素化后重提取表面；`lxa.glb` 为自制 | 见 §2 | 已生成 |
 | 左心耳网格 | `public/assets/meshes/lxa.glb`（47.5 KiB） | 本项目自制几何（BP3D 未收录该部件），按 BP3D 左心房体素包围盒贴附 | 本项目原创 | 已生成 |
+| 循环演示 3D 心脏 | `public/assets/circulation/*.glb`（19 个，合计 2,252,672 B）+ `manifest.json` | 由 BP3D OBJ 平滑抽取（四腔、心肌、上下腔静脉、肺动静脉、主动脉、乳头肌、冠状动脉与冠状静脉窦；下腔静脉在 z=1145 处裁剪）；瓣膜为 Three.js 程序化几何，不含在本表 | 本项目演绎作品（BP3D 派生） | 已生成 |
 | 伪 CT 轴位底图 | `public/assets/ct/base/{层:03d}_{窗}.png`（96 层 × 2 窗 = 192 张） | 由 BP3D 派生的统一标注体素按近似 HU 渲染 | 本项目演绎作品（BP3D 派生） | 已生成 |
 | 伪 CT 结构 overlay | `public/assets/ct/overlay/{id}/{层:03d}.png`（390 张，仅非空层） | 同一份体素按结构渲染 | 同上 | 已生成 |
 | 伪 CT 逐层真值 | `public/assets/structures.json` 的 `ct` 字段 | 本项目管线生成 | 本项目原创 | 已生成 |
 
-体积实测（构建期校验门禁，阈值：单文件 2 MB / 网格合计 8 MB）：切面 64.8 KiB + GLB 3925.9 KiB + 伪 CT 1042.6 KiB + `structures.json` 66.7 KiB = **5,222,545 B（约 4.98 MiB）**。最大单文件 `myo.glb` 1816.4 KiB，占单文件阈值 91%——心室壁是唯一的厚壳部件，改大 `--grid` 或改小 `--spacing` 会先撞这条线，届时用 `--mesh-step` 抽稀而不是抬阈值。
+体积实测（构建期校验门禁，阈值：单文件 2 MB / 网格合计 8 MB）：切面 64.8 KiB + GLB 3925.9 KiB + 循环演示心脏 2,252,672 B + 伪 CT 1042.6 KiB + `structures.json` 66.7 KiB + 循环清单 9.6 KiB = **7,484,999 B（约 7.14 MiB）**。最大单文件 `myo.glb` 1816.4 KiB，占单文件阈值 91%（循环演示最大 `ventricle-wall.glb` 933.2 KiB）——心室壁是唯一的厚壳部件，改大 `--grid` 或改小 `--spacing` 会先撞这条线，届时用 `--mesh-step` 抽稀而不是抬阈值。
 
 BP3D 部件与文件名的对应（`verified: true` 表示已与下载包实际文件名逐个核对）见 `assets_raw/bp3d_manifest.json`，其中 `myo` 取 BP3D 的 *wall of ventricle*（FMA13884 / BP7815）——BP3D 没有 myocardium 独立词条，页面文案已按此说明。
 
@@ -34,15 +35,15 @@ BP3D 部件与文件名的对应（`verified: true` 表示已与下载包实际�
 
 ## 2a. 心脏学习助手知识来源（2026-11-26）
 
-助手的检索语料是 `functions/knowledge/heart-knowledge.ts` 中 **23 条**中文改写资料，不整段复制原文；每条资料在界面上随回答常显来源名称、出版方、许可与链接。来源只有三类：
+助手的检索语料是 `functions/knowledge/heart-knowledge.ts` 中 **32 条**中文改写资料，不整段复制原文；每条资料在界面上随回答常显来源名称、出版方、许可与链接。**全部来源链接均为国内可访问站点**（pmph.com / cmaph.org / yantai.gov.cn / 本站域名），不引用境外站点。来源分三类：
 
 | 来源 | 许可 | 用法 |
 |---|---|---|
-| OpenStax《Anatomy and Physiology 2e》§19.1 Heart Anatomy / §19.3 Cardiac Muscle and Electrical Activity，https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy | **CC BY 4.0** | 心脏解剖、传导系统与心动周期的事实基础；已改写为中文短条目，界面展示书名、章节、出版方与许可，满足署名要求 |
-| Radiopaedia "Computed Tomography" 条目，https://radiopaedia.org/articles/computed-tomography | **CC BY-NC-SA 3.0** | 仅 CT 概念（窗宽窗位、增强、剂量、CT vs MRI）的非商业教学引用；未复制图像，未整段转载 |
+| 人卫《系统解剖学》《生理学》《诊断学》（第9版）、《医学影像学》（第8版）、《内科学》（第9版），https://www.pmph.com | **版权保留** | 心脏解剖、传导系统与心动周期、心音与听诊区、心电图波形、CT 阅片基础、冠心病概念的事实引用；条目为按国内教材通用表述改写的中文摘要，未转载原文；链接指向出版社官网，书目页与版次发布前复核 |
+| 《中国高血压防治指南（2024年修订版）》、《心房颤动诊断和治疗中国指南》（2023）、《中国心力衰竭诊断和治疗指南2023》，https://www.cmaph.org；高血压指南另有政府公开页 https://www.yantai.gov.cn/art/2025/7/1/art_66786_3274344.html | **版权保留** | 高血压、房颤、心衰的概念、机制与风险摘要；未转载原文；指南链接指向发布机构/政府公开页，具体期刊条目页发布前复核 |
 | 本站自述（`site-catalog`） | 本项目自有 | 三视图取层、9 个结构的页面行为说明，与 `structures.json` 一致（有漂移测试） |
 
-边界：助手**不提供诊断、用药、手术建议**；个人症状类问题只提醒咨询医生，急症提示拨打 120。回答中每个事实句要求带 `[n]`，无资料时明说"知识库暂无"。若后续用于商业场景，需先替换 Radiopaedia 条目或取得单独授权。
+边界：助手**不提供诊断、用药、手术、预后或预防建议**；疾病条目只讲概念、机制与风险，个人症状类问题只提醒咨询医生，急症提示拨打 120。回答中每个事实句要求带 `[n]`；无资料时由服务端直接说明暂时讲不了、不调用模型，回答不播报知识缺口、不建议换问法。教材/指南条目仅为事实引用，不作为开放许可素材再分发；教材链接指向出版社官网而非具体页码，版次与书目页发布前复核。
 
 ## 2b. 伪 CT 轴位图的生成方式与边界（2026-11-26）
 
@@ -93,7 +94,7 @@ PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈�
 - 页面所有切面与高亮均为**示意模型渲染**，非真实病例影像，非分割模型推理结果。
 - 伪 CT 轴位图由教学标注体素近似合成，**不是真实病例 CT、不是临床测量**，不能用于读片或病情判断；站点不接受 CT 影像上传。
 - 心脏学习助手基于上述公开资料检索作答，**不是医疗器械、不作诊断**；它看不到、也不接受上传影像，不能用于读片或病情判断。
-- 不含诊断、治疗、用药建议。
+- 不含诊断、治疗、用药、预后或预防建议；疾病条目只做概念、机制与风险科普。
 - 心脏结构的解剖命名遵循研究仓库 2026-11-20 的标签纠正结论；本项目结构表独立生成，**不复用** `target_labels.py` 的别名→整数映射（该映射与纠正声明冲突）。
 
 ## 6. 发布前检查清单
@@ -102,7 +103,8 @@ PYTHONIOENCODING=utf-8 "$PY" -m pytest    # 用例 + 覆盖率阈值 80%（阈�
 - [x] 补齐 §2 的版本、下载日期、包大小与文件名核对结论（`assets_raw/bp3d_manifest.json`）
 - [x] 页面可见区域确认出现 BP3D 署名原文与用途声明（2026-11-24 `vite preview` 浏览器实测：页脚两行均在，控制台无报错）
 - [x] `NOTICE.md` 与页面署名文本一致（`structures.json` 的 notice 行与本文件 §2 署名原文逐字符相等）
-- [x] 助手资料逐条绑定可展示来源与许可（2026-11-26：OpenStax CC BY 4.0 / Radiopaedia CC BY-NC-SA 3.0 / 本站自述；检索器跳过未登记来源）
+- [x] 助手资料逐条绑定可展示来源与许可（2026-11-26：32 条；人卫教材与国内指南版权保留事实引用 / 本站自述；**来源全部境内化并移除 OpenStax、Radiopaedia**，检索器跳过未登记来源）
+- [ ] 发布前复核国内指南链接与教材版次（高血压指南当前链到政府公开页，房颤/心衰链到中华医学会杂志社首页）
 - [x] 伪 CT 的 note 与页面声明逐条核对（2026-11-26：`structures.json` 的 `ct.note` 含“不是真实病例影像”与“不能用于诊断”，CT 卡片可见，构建期与前端双重校验）
 - [ ] 抽查公开页面源码，确认不含模型密钥（`DASHSCOPE_API_KEY`）、FMA ID、真实病例编号、个人材料
 - [ ] `git ls-files` 抽查，确认无影像/权重/原始包/.env 入库

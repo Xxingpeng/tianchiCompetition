@@ -1,0 +1,775 @@
+/* 血液循环演示：全屏浮层 + Three.js 心脏剖面 */
+.scene-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.circulation-cta {
+  border-color: rgb(255 255 255 / 22%);
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+}
+
+.circulation-cta:hover {
+  border-color: rgb(255 255 255 / 40%);
+  background: rgb(255 255 255 / 6%);
+}
+
+.circ-link {
+  width: 100%;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgb(255 255 255 / 4%);
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.circ-link span {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.circ-link:hover {
+  border-color: rgb(120 175 255 / 55%);
+  color: var(--ink);
+}
+
+.circulation {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(64rem 46rem at 52% 44%, rgb(28 74 132 / 42%), transparent 70%),
+    radial-gradient(44rem 32rem at 78% 6%, rgb(10 34 62 / 48%), transparent 66%), #03070d;
+  animation: circ-fade 220ms ease both;
+}
+
+@keyframes circ-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.circ-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem clamp(1rem, 3vw, 2.2rem) 0.75rem;
+  border-bottom: 1px solid var(--line);
+  background: rgb(4 6 10 / 55%);
+  backdrop-filter: blur(14px);
+}
+
+.circ-head h2 {
+  margin: 0.15rem 0 0;
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  letter-spacing: 0.01em;
+}
+
+.circ-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem 0.4rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.circ-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.circ-esc {
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  color: var(--ink-muted);
+  font-size: 0.65rem;
+}
+
+.circ-main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.circ-figure {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  background-color: #051a30;
+  background-image:
+    radial-gradient(120% 90% at 46% 40%, #123c63 0%, #0b2c4c 48%, #051a30 100%),
+    repeating-linear-gradient(0deg, rgb(150 200 255 / 4%) 0 1px, transparent 1px 76px),
+    repeating-linear-gradient(90deg, rgb(150 200 255 / 4%) 0 1px, transparent 1px 76px);
+}
+
+.circ-figure::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 46% 40%, transparent 62%, rgb(2 8 20 / 55%));
+}
+
+/* 3D 场景 */
+.heart-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.heart-scene-host {
+  position: absolute;
+  inset: 0;
+}
+
+.heart-scene-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heart-scene-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.heart-scene-status {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: max-content;
+  max-width: min(26rem, 82%);
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: rgb(5 10 18 / 84%);
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(10px);
+}
+
+.heart-scene-status.is-error {
+  border-color: rgb(255 120 130 / 35%);
+  color: #ffc5c9;
+}
+
+.heart-scene-fallback {
+  display: grid;
+  place-items: center;
+}
+
+.hc-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.16rem 0.46rem;
+  border: 1px solid rgb(150 195 255 / 22%);
+  border-radius: 999px;
+  background: rgb(3 10 20 / 76%);
+  color: #e9f3ff;
+  font-size: 0.66rem;
+  line-height: 1.3;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 38%);
+}
+
+.hc-label::before {
+  content: "";
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 50%;
+  background: #9fc4ff;
+  box-shadow: 0 0 7px currentColor;
+}
+
+.hc-label.is-chamber::before {
+  background: #ff98a1;
+}
+
+.hc-label.is-valve {
+  border-color: rgb(255 155 165 / 32%);
+  color: #ffe4e7;
+}
+
+.hc-label.is-valve::before {
+  background: #ffd0d4;
+}
+
+.hc-label.is-organ {
+  border-color: rgb(140 230 180 / 24%);
+  color: #dbffec;
+}
+
+.hc-label.is-organ::before {
+  background: #8fe0b0;
+}
+
+.hc-label.is-minor {
+  opacity: 0.82;
+}
+
+/* 剖面刀与视角 */
+.hc-toolbar {
+  position: absolute;
+  top: 1rem;
+  left: clamp(1rem, 3vw, 2.2rem);
+  z-index: 4;
+  display: grid;
+  gap: 0.55rem;
+  width: min(19rem, 36vw);
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: rgb(4 9 17 / 76%);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+  backdrop-filter: blur(12px);
+}
+
+.hc-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.hc-toolbar-label {
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.hc-focus {
+  display: inline-flex;
+  padding: 0.12rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 4%);
+}
+
+.hc-focus button {
+  padding: 0.24rem 0.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.hc-focus button[aria-pressed="true"] {
+  background: rgb(255 255 255 / 13%);
+  color: var(--ink);
+}
+
+.hc-cut-btn {
+  margin-left: auto;
+  padding: 0.26rem 0.6rem;
+  border: 1px solid rgb(120 175 255 / 30%);
+  border-radius: 999px;
+  background: rgb(120 175 255 / 12%);
+  color: #dceaff;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.hc-cut-btn:hover {
+  border-color: rgb(150 200 255 / 60%);
+}
+
+.hc-knife {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hc-knife input {
+  flex: 1;
+  min-width: 0;
+  accent-color: #ff6b78;
+}
+
+.hc-knife-value {
+  min-width: 2.4rem;
+  color: var(--ink);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.hc-toolbar-hint {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.64rem;
+  opacity: 0.72;
+}
+
+.circ-legend {
+  position: absolute;
+  top: 1rem;
+  right: clamp(1rem, 3vw, 2.2rem);
+  z-index: 4;
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  background: rgb(5 8 12 / 72%);
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+
+.circ-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.circ-legend i {
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgb(255 255 255 / 22%);
+}
+
+.circ-copy {
+  position: absolute;
+  bottom: 1.1rem;
+  left: clamp(1rem, 3vw, 2.2rem);
+  z-index: 4;
+  width: min(27rem, 36vw);
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: linear-gradient(160deg, rgb(12 17 24 / 88%), rgb(5 8 12 / 82%));
+  box-shadow: 0 18px 50px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(14px);
+}
+
+.circ-step {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+
+.circ-copy h3 {
+  margin: 0.25rem 0 0.4rem;
+  font-size: 1.02rem;
+  line-height: 1.4;
+}
+
+.circ-copy p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+.hc-valves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.7rem;
+  margin: 0.55rem 0 0.35rem;
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+}
+
+.hc-valves span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hc-valves i {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: #ff8a93;
+  box-shadow: 0 0 8px rgb(255 110 120 / 75%);
+}
+
+.hc-valves .is-open i {
+  background: #69d59a;
+  box-shadow: 0 0 8px rgb(105 213 154 / 75%);
+}
+
+.hc-valves .is-opening i {
+  background: #ffd166;
+  box-shadow: 0 0 8px rgb(255 209 102 / 70%);
+}
+
+.ch-cycle {
+  display: flex;
+  gap: 3px;
+  margin: 0.15rem 0 0.25rem;
+}
+
+.ch-cycle span {
+  height: 4px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+  transition: background 200ms ease;
+}
+
+.ch-cycle span.is-on {
+  background: linear-gradient(90deg, #6fa8ff, #ff6b78);
+  box-shadow: 0 0 8px rgb(255 120 130 / 45%);
+}
+
+.hc-path {
+  margin: 0.45rem 0 0 !important;
+  color: var(--ink-muted);
+  font-size: 0.72rem !important;
+  line-height: 1.55 !important;
+}
+
+.hc-path strong {
+  margin-right: 0.35rem;
+  color: #ffc2c8;
+  font-weight: 600;
+}
+
+.hc-cut-hint {
+  margin: 0.4rem 0 0 !important;
+  padding-left: 0.55rem;
+  border-left: 2px solid rgb(120 175 255 / 45%);
+  color: #cfe2ff !important;
+  font-size: 0.7rem !important;
+  line-height: 1.55 !important;
+}
+
+.circ-foot {
+  position: relative;
+  z-index: 2;
+  padding: 0.55rem clamp(1rem, 3vw, 2.2rem) 0.75rem;
+  border-top: 1px solid var(--line);
+  background: rgb(4 6 10 / 75%);
+  backdrop-filter: blur(14px);
+}
+
+.circ-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.circ-steps button {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.76rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.circ-steps button span {
+  color: rgb(255 255 255 / 32%);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.circ-steps button:hover {
+  background: rgb(255 255 255 / 5%);
+  color: var(--ink);
+}
+
+.circ-steps button[aria-current="step"] {
+  border-color: rgb(255 255 255 / 14%);
+  background: rgb(255 255 255 / 8%);
+  color: var(--ink);
+}
+
+.circ-steps button[aria-current="step"] span {
+  color: var(--accent);
+}
+
+.circ-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.4rem;
+}
+
+.circ-play {
+  padding: 0.42rem 1.1rem;
+  border: 1px solid rgb(99 215 255 / 45%);
+  border-radius: 999px;
+  background: rgb(99 215 255 / 14%);
+  color: #d7f5ff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.circ-play:hover {
+  background: rgb(99 215 255 / 22%);
+}
+
+.circ-replay {
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.circ-replay:hover {
+  border-color: rgb(255 255 255 / 28%);
+  color: var(--ink);
+}
+
+.circ-speeds {
+  display: inline-flex;
+  padding: 0.15rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 4%);
+}
+
+.circ-speeds button {
+  padding: 0.3rem 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.circ-speeds button[aria-pressed="true"] {
+  background: rgb(255 255 255 / 12%);
+  color: var(--ink);
+}
+
+.circ-note {
+  max-width: 32rem;
+  margin: 0 0 0 auto;
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+  opacity: 0.75;
+}
+
+@media (max-width: 60rem) {
+  .circ-main {
+    flex-direction: column;
+  }
+
+  .circ-figure {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .hc-toolbar {
+    top: 0.55rem;
+    right: 0.7rem;
+    left: 0.7rem;
+    width: auto;
+    gap: 0.4rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .hc-toolbar-hint {
+    display: none;
+  }
+
+  .hc-label {
+    font-size: 0.6rem;
+    padding: 0.12rem 0.36rem;
+  }
+
+  .circ-legend {
+    top: 4.65rem;
+    right: 0.7rem;
+    bottom: auto;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.62rem;
+  }
+
+  .circ-copy {
+    position: static;
+    order: 2;
+    width: auto;
+    margin: 0 0.75rem 0.6rem;
+    padding: 0.65rem 0.8rem;
+  }
+
+  .circ-copy h3 {
+    margin: 0.15rem 0 0.25rem;
+    font-size: 0.92rem;
+  }
+
+  .circ-copy p {
+    font-size: 0.74rem;
+    line-height: 1.55;
+  }
+
+  .hc-valves {
+    margin: 0.35rem 0 0.25rem;
+    font-size: 0.66rem;
+  }
+
+  .hc-path {
+    font-size: 0.68rem !important;
+  }
+
+  .circ-head {
+    padding: 0.6rem 0.8rem;
+  }
+
+  .circ-head .eyebrow {
+    display: none;
+  }
+
+  .circ-head h2 {
+    font-size: 1rem;
+  }
+
+  .circ-close {
+    padding: 0.3rem 0.55rem 0.3rem 0.75rem;
+    font-size: 0.72rem;
+  }
+
+  .circ-foot {
+    padding: 0.45rem 0.7rem 0.9rem;
+  }
+
+  .circ-steps {
+    gap: 0.15rem;
+  }
+
+  .circ-steps button {
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.3rem 0.2rem;
+    font-size: 0.64rem;
+  }
+
+  .circ-steps button span {
+    display: none;
+  }
+
+  .circ-controls {
+    margin-top: 0.3rem;
+  }
+
+  .circ-note {
+    width: 100%;
+    margin: 0.2rem 0 0;
+    font-size: 0.62rem;
+  }
+
+  .scene-actions {
+    right: 0.75rem;
+    left: 0.75rem;
+    bottom: 3.9rem;
+    justify-content: center;
+    transform: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .circ-legend {
+    font-size: 0.58rem;
+  }
+
+  .hc-toolbar-row {
+    gap: 0.3rem;
+  }
+
+  .hc-focus button {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.66rem;
+  }
+
+  .hc-cut-btn {
+    padding: 0.22rem 0.5rem;
+    font-size: 0.66rem;
+  }
+
+  .hc-toolbar-label {
+    font-size: 0.62rem;
+  }
+
+  .hc-knife-value {
+    min-width: 2rem;
+    font-size: 0.64rem;
+  }
+}
+
+@media (max-width: 22rem) {
+  .circ-copy p {
+    display: none;
+  }
+
+  .circ-copy .hc-path,
+  .circ-copy .hc-cut-hint {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .circulation {
+    animation: none;
+  }
+}

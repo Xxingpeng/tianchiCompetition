@@ -29,7 +29,7 @@ export function InfoCard({ structure }: Props) {
         <dd>{structure.provenance}</dd>
 
         <dt>体素数</dt>
-        <dd>{structure.stats.voxels.toLocaleString("zh-CN")}</dd>
+        <dd className="num">{structure.stats.voxels.toLocaleString("zh-CN")}</dd>
       </dl>
     </section>
   );

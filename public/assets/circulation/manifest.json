@@ -1,0 +1,596 @@
+{
+  "schemaVersion": 1,
+  "note": "BP3D 平滑网格，世界毫米坐标；仅用于解剖示意教学，不是真实病例影像。",
+  "source": "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International",
+  "bounds": [
+    [
+      -37.13,
+      -176.61,
+      1164.69
+    ],
+    [
+      79.13,
+      -53.51,
+      1293.58
+    ]
+  ],
+  "parts": [
+    {
+      "id": "ventricle-wall",
+      "file": "circulation/ventricle-wall.glb",
+      "group": "ventricle",
+      "color": "#c47474",
+      "bounds": [
+        [
+          -23.04,
+          -176.61,
+          1174.21
+        ],
+        [
+          79.13,
+          -83.09,
+          1265.96
+        ]
+      ],
+      "vertices": 18706,
+      "faces": 37442
+    },
+    {
+      "id": "atrium-wall-left",
+      "file": "circulation/atrium-wall-left.glb",
+      "group": "left-atrium",
+      "color": "#c47474",
+      "bounds": [
+        [
+          -22.96,
+          -151.24,
+          1199.37
+        ],
+        [
+          63.3,
+          -70.02,
+          1272.42
+        ]
+      ],
+      "vertices": 3766,
+      "faces": 7544
+    },
+    {
+      "id": "atrium-wall-right",
+      "file": "circulation/atrium-wall-right.glb",
+      "group": "right-atrium",
+      "color": "#c47474",
+      "bounds": [
+        [
+          -36.32,
+          -162.64,
+          1183.01
+        ],
+        [
+          6.76,
+          -96.36,
+          1279.69
+        ]
+      ],
+      "vertices": 8890,
+      "faces": 17784
+    },
+    {
+      "id": "lv",
+      "file": "circulation/lv.glb",
+      "group": "left-ventricle",
+      "color": "#7e3a40",
+      "bounds": [
+        [
+          6.49,
+          -158.5,
+          1184.04
+        ],
+        [
+          70.04,
+          -86.39,
+          1251.45
+        ]
+      ],
+      "vertices": 3446,
+      "faces": 6888
+    },
+    {
+      "id": "rv",
+      "file": "circulation/rv.glb",
+      "group": "right-ventricle",
+      "color": "#7e3a40",
+      "bounds": [
+        [
+          -18.84,
+          -173.35,
+          1179.54
+        ],
+        [
+          52.66,
+          -115.15,
+          1260.02
+        ]
+      ],
+      "vertices": 3838,
+      "faces": 7672
+    },
+    {
+      "id": "la",
+      "file": "circulation/la.glb",
+      "group": "left-atrium",
+      "color": "#7e3a40",
+      "bounds": [
+        [
+          -20.28,
+          -126.82,
+          1206.48
+        ],
+        [
+          48.28,
+          -70.93,
+          1268.3
+        ]
+      ],
+      "vertices": 2130,
+      "faces": 4256
+    },
+    {
+      "id": "ra",
+      "file": "circulation/ra.glb",
+      "group": "right-atrium",
+      "color": "#7e3a40",
+      "bounds": [
+        [
+          -34.23,
+          -153.56,
+          1185.31
+        ],
+        [
+          3.19,
+          -92.43,
+          1277.53
+        ]
+      ],
+      "vertices": 4490,
+      "faces": 8976
+    },
+    {
+      "id": "papillary-left",
+      "file": "circulation/papillary-left.glb",
+      "group": "left-ventricle",
+      "color": "#c47474",
+      "bounds": [
+        [
+          46.46,
+          -146.91,
+          1188.46
+        ],
+        [
+          74.39,
+          -104.83,
+          1218.21
+        ]
+      ],
+      "vertices": 1562,
+      "faces": 3120
+    },
+    {
+      "id": "papillary-right",
+      "file": "circulation/papillary-right.glb",
+      "group": "right-ventricle",
+      "color": "#c47474",
+      "bounds": [
+        [
+          7.15,
+          -172.69,
+          1178.51
+        ],
+        [
+          47.19,
+          -128.23,
+          1240.17
+        ]
+      ],
+      "vertices": 4842,
+      "faces": 9672
+    },
+    {
+      "id": "aorta",
+      "file": "circulation/aorta.glb",
+      "group": "vessel",
+      "color": "#cf6a5c",
+      "bounds": [
+        [
+          -6.82,
+          -137.48,
+          1234.12
+        ],
+        [
+          28.88,
+          -106.78,
+          1281.9
+        ]
+      ],
+      "vertices": 2847,
+      "faces": 5584
+    },
+    {
+      "id": "pulmonary-trunk",
+      "file": "circulation/pulmonary-trunk.glb",
+      "group": "vessel",
+      "color": "#7d94c4",
+      "bounds": [
+        [
+          11.31,
+          -159.1,
+          1256.57
+        ],
+        [
+          42.06,
+          -116.51,
+          1293.58
+        ]
+      ],
+      "vertices": 10225,
+      "faces": 20384
+    },
+    {
+      "id": "svc",
+      "file": "circulation/svc.glb",
+      "group": "vessel",
+      "color": "#7d94c4",
+      "bounds": [
+        [
+          -26.67,
+          -126.6,
+          1274.81
+        ],
+        [
+          -4.09,
+          -103.58,
+          1289.2
+        ]
+      ],
+      "vertices": 810,
+      "faces": 1476
+    },
+    {
+      "id": "ivc",
+      "file": "circulation/ivc.glb",
+      "group": "vessel",
+      "color": "#7d94c4",
+      "bounds": [
+        [
+          -26.83,
+          -126.56,
+          1164.69
+        ],
+        [
+          -3.97,
+          -103.59,
+          1190.53
+        ]
+      ],
+      "vertices": 1903,
+      "faces": 3616
+    },
+    {
+      "id": "pv-left-superior",
+      "file": "circulation/pv-left-superior.glb",
+      "group": "vessel",
+      "color": "#cf6a5c",
+      "bounds": [
+        [
+          34.79,
+          -99.59,
+          1251.46
+        ],
+        [
+          55.14,
+          -82.15,
+          1273.19
+        ]
+      ],
+      "vertices": 830,
+      "faces": 1656
+    },
+    {
+      "id": "pv-right-superior",
+      "file": "circulation/pv-right-superior.glb",
+      "group": "vessel",
+      "color": "#cf6a5c",
+      "bounds": [
+        [
+          -37.13,
+          -106.52,
+          1234.95
+        ],
+        [
+          -14.0,
+          -88.38,
+          1261.76
+        ]
+      ],
+      "vertices": 650,
+      "faces": 1296
+    },
+    {
+      "id": "pv-left-inferior",
+      "file": "circulation/pv-left-inferior.glb",
+      "group": "vessel",
+      "color": "#cf6a5c",
+      "bounds": [
+        [
+          42.67,
+          -78.03,
+          1201.55
+        ],
+        [
+          56.03,
+          -53.51,
+          1229.5
+        ]
+      ],
+      "vertices": 622,
+      "faces": 1240
+    },
+    {
+      "id": "pv-right-inferior",
+      "file": "circulation/pv-right-inferior.glb",
+      "group": "vessel",
+      "color": "#cf6a5c",
+      "bounds": [
+        [
+          -33.71,
+          -89.03,
+          1211.33
+        ],
+        [
+          -6.35,
+          -76.05,
+          1228.91
+        ]
+      ],
+      "vertices": 394,
+      "faces": 784
+    },
+    {
+      "id": "coronary-arteries",
+      "file": "circulation/coronary-arteries.glb",
+      "group": "coronary",
+      "color": "#a34a4e",
+      "bounds": [
+        [
+          -21.75,
+          -168.01,
+          1175.88
+        ],
+        [
+          65.57,
+          -86.98,
+          1261.07
+        ]
+      ],
+      "vertices": 5225,
+      "faces": 10048
+    },
+    {
+      "id": "coronary-sinus",
+      "file": "circulation/coronary-sinus.glb",
+      "group": "coronary",
+      "color": "#5f7099",
+      "bounds": [
+        [
+          -5.52,
+          -115.56,
+          1197.5
+        ],
+        [
+          43.27,
+          -81.11,
+          1216.68
+        ]
+      ],
+      "vertices": 331,
+      "faces": 624
+    }
+  ],
+  "chambers": {
+    "lv": [
+      38.27,
+      -122.44,
+      1217.74
+    ],
+    "rv": [
+      16.91,
+      -144.25,
+      1219.78
+    ],
+    "la": [
+      14.0,
+      -98.88,
+      1237.39
+    ],
+    "ra": [
+      -15.52,
+      -122.99,
+      1231.42
+    ]
+  },
+  "valves": [
+    {
+      "id": "mitral",
+      "name": "二尖瓣",
+      "kind": "av",
+      "side": "left",
+      "center": [
+        27.34,
+        -111.84,
+        1226.58
+      ],
+      "normal": [
+        0.62,
+        -0.6,
+        -0.5
+      ],
+      "radius": 16.0,
+      "leaflets": 2
+    },
+    {
+      "id": "tricuspid",
+      "name": "三尖瓣",
+      "kind": "av",
+      "side": "right",
+      "center": [
+        2.32,
+        -134.68,
+        1225.02
+      ],
+      "normal": [
+        0.8,
+        -0.53,
+        -0.29
+      ],
+      "radius": 18.0,
+      "leaflets": 3
+    },
+    {
+      "id": "aortic",
+      "name": "主动脉瓣",
+      "kind": "semilunar",
+      "side": "left",
+      "center": [
+        23.29,
+        -122.27,
+        1239.89
+      ],
+      "normal": [
+        -0.56,
+        0.01,
+        0.83
+      ],
+      "radius": 10.0,
+      "leaflets": 3
+    },
+    {
+      "id": "pulmonary",
+      "name": "肺动脉瓣",
+      "kind": "semilunar",
+      "side": "right",
+      "center": [
+        22.29,
+        -140.7,
+        1250.19
+      ],
+      "normal": [
+        0.17,
+        0.11,
+        0.98
+      ],
+      "radius": 11.0,
+      "leaflets": 1
+    }
+  ],
+  "ports": {
+    "svc": [
+      -15.38,
+      -115.09,
+      1289.2
+    ],
+    "ivc": [
+      -15.4,
+      -115.08,
+      1164.69
+    ],
+    "aorta": [
+      11.03,
+      -122.13,
+      1281.9
+    ],
+    "pa": [
+      26.69,
+      -137.8,
+      1293.58
+    ],
+    "pv-left-superior": [
+      55.14,
+      -96.36,
+      1267.8
+    ],
+    "pv-right-superior": [
+      -37.13,
+      -101.78,
+      1255.6
+    ],
+    "pv-left-inferior": [
+      56.03,
+      -55.6,
+      1203.27
+    ],
+    "pv-right-inferior": [
+      -33.71,
+      -79.74,
+      1214.12
+    ]
+  },
+  "stumps": [
+    {
+      "part": "aorta",
+      "center": [
+        5.6,
+        -123.13,
+        1281.52
+      ],
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "radius": 13.58
+    },
+    {
+      "part": "pulmonary-trunk",
+      "center": [
+        25.69,
+        -117.77,
+        1293.09
+      ],
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "radius": 4.78
+    },
+    {
+      "part": "svc",
+      "center": [
+        -15.56,
+        -115.44,
+        1289.0
+      ],
+      "normal": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "radius": 11.13
+    },
+    {
+      "part": "ivc",
+      "center": [
+        -16.13,
+        -116.29,
+        1165.0
+      ],
+      "normal": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "radius": 12.53
+    }
+  ],
+  "totalBytes": 3632632
+}

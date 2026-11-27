@@ -32,6 +32,16 @@ describe("classifyIntent", () => {
     expect(classifyIntent("房颤是什么")).toMatchObject({ kind: "answer", topic: "anatomy" });
   });
 
+  it("高血压、心电图等国内条目相关词也进入解剖范围", () => {
+    expect(classifyIntent("高血压是什么")).toMatchObject({ kind: "answer", topic: "anatomy" });
+    expect(classifyIntent("心电图P波代表什么")).toMatchObject({ kind: "answer", topic: "anatomy" });
+    expect(classifyIntent("动脉粥样硬化是怎么回事")).toMatchObject({
+      kind: "answer",
+      topic: "anatomy",
+    });
+    expect(classifyIntent("射血分数是什么")).toMatchObject({ kind: "answer", topic: "anatomy" });
+  });
+
   it("无关话题被挡住", () => {
     expect(classifyIntent("帮我写一段 Python 脚本")).toEqual({
       kind: "static",
