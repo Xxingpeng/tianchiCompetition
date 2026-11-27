@@ -74,9 +74,10 @@ describe("页面骨架", () => {
       "aria-pressed",
       "true",
     );
-    // 三视图默认展开，收起后才隐藏三张示意图
+    // 三视图默认展开，收起后才隐藏三张示意图（只数三视图自己的 figure，3D 兜底图另算）
     expect(screen.getByRole("heading", { name: "最密层切面预览" })).toBeInTheDocument();
-    expect(screen.getAllByRole("figure")).toHaveLength(3);
+    const triView = screen.getByRole("region", { name: "最密层切面预览" });
+    expect(within(triView).getAllByRole("figure")).toHaveLength(3);
     const triToggle = screen.getByRole("button", { name: /三视图示意切面/ });
     expect(triToggle).toHaveAttribute("aria-expanded", "true");
     fireEvent.click(triToggle);
