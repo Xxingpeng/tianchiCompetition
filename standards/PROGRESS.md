@@ -10,6 +10,7 @@
 
 > **命名记录**:2026-11-27 起助手由「小医」更名为「小心」;本文件下方历史条目中的「小医」均指同一角色,不再逐一改写。
 
+- **GitHub 上传（2026-11-27）**:提交 `bae5c96`（四向久置探头 + 后端请求/限流/流式防护 + 助手待机/会话稳定性）已推送 `origin/feature/1-anatomy-sketch-demo`;工作树干净,未合并 PR、未发布站点。
 - **全量门禁（2026-11-27，上传前）**:`npm run check` 全绿（prettier/eslint/tsc、Vitest **168 用例 / 19 文件**）；`vite build` 成功（首屏 `index-CBfoJBZu.js` 274.06 kB / gzip 87.18、CSS 40.50 kB）；`deno check` 通过；Ruff 格式/检查通过；pytest **113 passed / 88.05%**。当前待上传内容为四向久置探头 + 审查修复模块 1/2。
 - **审查修复模块 2 · 助手稳定性（2026-11-27，本地未提交）**:会话 ID 改为严格 UUID 校验，损坏的 `sessionStorage` 值自动重建；久置计时增加悬停/焦点保护与 `visibilitychange` 重挂，鼠标停留或页面隐藏不再误探头；流式中断保留已生成文字并提示重试，不追加降级回答；面板调宽手柄补指针 ID 校验。组件测试新增 4 枚回归，连同后端助手共 **30 枚**通过，prettier/eslint/tsc 全绿。
 - **审查修复模块 1 · 后端防护（2026-11-27，本地未提交）**:请求体改为 `ReadableStream` 按字节累计，超过 12 KB 立即取消，不再先整段 `request.text()`；限流抽为可测 `RateLimiter`，优先 `x-real-ip`、转发链取最右值，桶数硬上限 4096 并淘汰最旧 IP；上游流式中途失败时只发 `ai_stream_interrupted`，不再把完整降级回答接在半截回答后；`.env.example` 删除生产代码不读取的 `DASHSCOPE_BASE_URL`。新增 8 枚后端单测，prettier/eslint/`deno check` 全绿。
