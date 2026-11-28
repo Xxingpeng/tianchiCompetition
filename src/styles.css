@@ -745,9 +745,9 @@ code {
   transition: translate 620ms cubic-bezier(0.33, 1.15, 0.64, 1);
 }
 
-/* 久置后滑到视口下缘只露头；点击或拖动时还原。 */
+/* 久置后朝最近的一侧缩到视口外，只留一小截；点击或拖动时还原。 */
 .assistant-launcher.is-peeking {
-  translate: 0 var(--assistant-peek, 0px);
+  translate: var(--assistant-peek-x, 0px) var(--assistant-peek, 0px);
 }
 
 .assistant-launcher:active {

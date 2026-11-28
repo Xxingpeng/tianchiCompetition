@@ -16,9 +16,24 @@ function sseResponse(frames: string): Response {
   return new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } });
 }
 
+function mockRightLauncherRect(button: HTMLElement) {
+  vi.spyOn(button, "getBoundingClientRect").mockReturnValue({
+    top: 300,
+    left: 900,
+    right: 1000,
+    bottom: 450,
+    width: 100,
+    height: 150,
+    x: 900,
+    y: 300,
+    toJSON: () => ({}),
+  });
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   localStorage.clear();
+  sessionStorage.clear();
 });
 
 describe("createSseParser", () => {
@@ -232,17 +247,22 @@ describe("AssistantPanel", () => {
     }
   });
 
-  it("久置后滑到屏幕下缘只露头，点击先还原再打开面板", () => {
+  it("久置后朝最近的边缘缩出去，点击先还原再打开面板", () => {
     vi.useFakeTimers();
     try {
       render(<AssistantPanel focus={null} />);
       const button = screen.getByRole("button", { name: "问问小心" });
+      mockRightLauncherRect(button);
       expect(button).not.toHaveClass("is-peeking");
       act(() => {
         vi.advanceTimersByTime(45000);
       });
+      const visible = Math.max(28, Math.round(100 * 0.36));
       expect(button).toHaveClass("is-peeking");
-      expect(button.style.getPropertyValue("--assistant-peek")).not.toBe("");
+      expect(button.style.getPropertyValue("--assistant-peek-x")).toBe(
+        `${window.innerWidth - 900 - visible}px`,
+      );
+      expect(button.style.getPropertyValue("--assistant-peek")).toBe("0px");
 
       fireEvent.click(button);
       expect(button).not.toHaveClass("is-peeking");
@@ -256,6 +276,84 @@ describe("AssistantPanel", () => {
       vi.useRealTimers();
     }
   });
+
+  it("鼠标停留在小心上时不会触发久置探头", () => {
+    vi.useFakeTimers();
+    try {
+      render(<AssistantPanel focus={null} />);
+      const button = screen.getByRole("button", { name: "问问小心" });
+      mockRightLauncherRect(button);
+      fireEvent.pointerEnter(button);
+      act(() => {
+        vi.advanceTimersByTime(45000);
+      });
+      expect(button).not.toHaveClass("is-peeking");
+
+      fireEvent.pointerLeave(button);
+      act(() => {
+        vi.advanceTimersByTime(45000);
+      });
+      expect(button).toHaveClass("is-peeking");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("页面从隐藏回到前台后会重新开始久置计时", () => {
+    vi.useFakeTimers();
+    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    try {
+      render(<AssistantPanel focus={null} />);
+      const button = screen.getByRole("button", { name: "问问小心" });
+      mockRightLauncherRect(button);
+      act(() => {
+        vi.advanceTimersByTime(45000);
+      });
+      expect(button).not.toHaveClass("is-peeking");
+
+      hidden.mockReturnValue(false);
+      act(() => {
+        document.dispatchEvent(new Event("visibilitychange"));
+        vi.advanceTimersByTime(45000);
+      });
+      expect(button).toHaveClass("is-peeking");
+    } finally {
+      hidden.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it("会话存储中的损坏 ID 会自动重建为严格 UUID", () => {
+    sessionStorage.setItem("anatomy-sketch-assistant-id", "a".repeat(36));
+    render(<AssistantPanel focus={null} />);
+    expect(sessionStorage.getItem("anatomy-sketch-assistant-id")).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+
+  it("流式中断时保留已收到文字并提示重试，不追加降级回答", async () => {
+    const frames = [
+      'event: meta\ndata: {"mode":"cot","sources":[]}\n\n',
+      'event: delta\ndata: {"text":"已经生成的一半回答。"}\n\n',
+      'event: error\ndata: {"code":"ai_stream_interrupted"}\n\n',
+      'event: done\ndata: {"degraded":false,"interrupted":true}\n\n',
+    ].join("");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sseResponse(frames)));
+
+    const user = userEvent.setup();
+    render(<AssistantPanel focus={null} />);
+    await user.click(screen.getByRole("button", { name: "问问小心" }));
+    await user.click(screen.getByRole("button", { name: "左心室为什么比右心室壁厚？" }));
+
+    expect(
+      await screen.findByText(
+        /已经生成的一半回答。\s*回答生成中断，请重试。/,
+        {},
+        { timeout: 3000 },
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("资料摘录 · AI 暂不可用")).toBeNull();
+  }, 10000);
 
   it("把当前 CT 层真值随问题发给小心", async () => {
     const frames = [

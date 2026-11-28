@@ -12,6 +12,7 @@ import xiaoxinFace from "../assets/xiaoxin-face.webp";
 import xiaoxinSit from "../assets/xiaoxin.webp";
 import { askAssistant, type AssistantSource } from "../data/assistant";
 import type { CtContext } from "../data/ct";
+import { peekFor } from "../data/peek";
 import type { StructureRecord } from "../types";
 
 interface Turn {
@@ -46,13 +47,15 @@ const SUGGESTIONS = [
   "心动周期分几个时相？",
 ];
 
+const CONVERSATION_ID_KEY = "anatomy-sketch-assistant-id";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function newConversationId(): string {
   try {
-    const key = "anatomy-sketch-assistant-id";
-    const existing = sessionStorage.getItem(key);
-    if (existing && /^[0-9a-f-]{36}$/i.test(existing)) return existing;
+    const existing = sessionStorage.getItem(CONVERSATION_ID_KEY);
+    if (existing && UUID_RE.test(existing)) return existing;
     const created = crypto.randomUUID();
-    sessionStorage.setItem(key, created);
+    sessionStorage.setItem(CONVERSATION_ID_KEY, created);
     return created;
   } catch {
     return crypto.randomUUID();
@@ -183,7 +186,7 @@ export function AssistantPanel({
   const [dragging, setDragging] = useState(false);
   const [nodding, setNodding] = useState(false);
   const [peeking, setPeeking] = useState(false);
-  const [peekShift, setPeekShift] = useState(0);
+  const [peekShift, setPeekShift] = useState({ x: 0, y: 0 });
   const [idleStamp, setIdleStamp] = useState(0);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -198,6 +201,7 @@ export function AssistantPanel({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
+  const hoveredRef = useRef(false);
   const panelRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState<Offset>(savedOffset);
@@ -217,7 +221,7 @@ export function AssistantPanel({
   const wasOpen = useRef(false);
   const [panelWidth, setPanelWidth] = useState<number | null>(savedPanelWidth);
   const widthRef = useRef<number | null>(panelWidth);
-  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const resizeRef = useRef<{ pointerId: number; startX: number; startWidth: number } | null>(null);
   const [panelHeight, setPanelHeight] = useState<number | null>(savedPanelHeight);
   const heightRef = useRef<number | null>(panelHeight);
   const heightResizeRef = useRef<{
@@ -310,21 +314,39 @@ export function AssistantPanel({
     return () => window.clearTimeout(timer);
   }, [tipOpen]);
 
-  // 长时间没被搭理时，小心按当前位置滑到视口下缘，只露头等用户来点。
+  // 长时间没被搭理时，小心朝距当前位置最近的一侧缩到视口外，只留一小截等用户来点。
   useEffect(() => {
     if (open || dragging || peeking) return;
-    const timer = window.setTimeout(() => {
+    let timer: number | null = null;
+    const arm = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = null;
       if (document.hidden) return;
-      const el = launcherRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const visible = Math.max(28, Math.round(rect.height * 0.36));
-      const shift = Math.round(window.innerHeight - rect.top - visible);
-      if (shift <= 0) return;
-      setPeekShift(shift);
-      setPeeking(true);
-    }, IDLE_PEEK_MS);
-    return () => window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        timer = null;
+        const el = launcherRef.current;
+        if (!el || hoveredRef.current || document.activeElement === el) return;
+        const rect = el.getBoundingClientRect();
+        const peek = peekFor(rect, { width: window.innerWidth, height: window.innerHeight });
+        if (!peek) return;
+        setPeekShift({ x: peek.x, y: peek.y });
+        setPeeking(true);
+      }, IDLE_PEEK_MS);
+    };
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (timer !== null) window.clearTimeout(timer);
+        timer = null;
+      } else {
+        arm();
+      }
+    };
+    arm();
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [open, dragging, peeking, idleStamp]);
 
   useEffect(() => {
@@ -489,6 +511,7 @@ export function AssistantPanel({
     if (event.button !== 0 || !panelRef.current) return;
     event.preventDefault();
     resizeRef.current = {
+      pointerId: event.pointerId,
       startX: event.clientX,
       startWidth: panelRef.current.getBoundingClientRect().width,
     };
@@ -501,12 +524,12 @@ export function AssistantPanel({
 
   function moveResize(event: PointerEvent<HTMLDivElement>) {
     const start = resizeRef.current;
-    if (!start) return;
+    if (start?.pointerId !== event.pointerId) return;
     applyPanelWidth(start.startWidth + (start.startX - event.clientX));
   }
 
   function endResize(event: PointerEvent<HTMLDivElement>) {
-    if (!resizeRef.current) return;
+    if (resizeRef.current?.pointerId !== event.pointerId) return;
     resizeRef.current = null;
     try {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -979,12 +1002,31 @@ export function AssistantPanel({
         className={`assistant-launcher${dragging ? " is-dragging" : ""}${nodding ? " is-nodding" : ""}${
           peeking ? " is-peeking" : ""
         }`}
-        style={peeking ? ({ "--assistant-peek": `${peekShift}px` } as CSSProperties) : undefined}
+        style={
+          peeking
+            ? ({
+                "--assistant-peek-x": `${peekShift.x}px`,
+                "--assistant-peek": `${peekShift.y}px`,
+              } as CSSProperties)
+            : undefined
+        }
         aria-expanded={open}
         aria-controls={open ? "assistant-panel" : undefined}
         onPointerDown={startDrag}
-        onPointerEnter={noteActivity}
-        onPointerMove={moveDrag}
+        onPointerEnter={() => {
+          hoveredRef.current = true;
+          noteActivity();
+        }}
+        onPointerLeave={() => {
+          hoveredRef.current = false;
+          noteActivity();
+        }}
+        onPointerMove={(event) => {
+          noteActivity();
+          moveDrag(event);
+        }}
+        onFocus={noteActivity}
+        onBlur={noteActivity}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onClick={() => {

@@ -2,6 +2,8 @@
 // 浏览器永远拿不到模型密钥；这里只转发经过校验的问题与已检索到的资料。
 import { encodeSSE, readSSE } from "./sse.mjs";
 import { parseCt } from "./app/ct.ts";
+import { readRequestBody, requestClientIp } from "./app/http.ts";
+import { RateLimiter } from "./app/rate-limit.ts";
 import { AGENT_SYSTEM, degradedAnswer } from "./app/prompt.ts";
 import { buildChatMessages, dashScopeConfig, parseDashScopeFrame } from "./app/llm.ts";
 import { heartKnowledge } from "./knowledge/heart-knowledge.ts";
@@ -9,7 +11,6 @@ import { createRetriever } from "./app/retrieval.ts";
 import { truncate } from "./app/text.ts";
 import { FOCUS_TITLES, planTurn } from "./app/turn.ts";
 
-const MAX_BODY_BYTES = 12 * 1024;
 const MAX_QUESTION_CHARS = 400;
 const STREAM_LIFETIME_MS = 90 * 1000;
 const UPSTREAM_TIMEOUT_MS = 45 * 1000;
@@ -17,6 +18,7 @@ const MAX_ANSWER_CHARS = 6000;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT = 10;
 const DAILY_LIMIT = 800;
+const MAX_RATE_BUCKETS = 4096;
 const MAX_CONCURRENT_AI = 3;
 
 const JSON_HEADERS = {
@@ -35,9 +37,12 @@ const retrieve = createRetriever(kb);
 const readEnv = (name: string) => globalThis.Deno?.env.get(name);
 
 const busyConversations = new Set<string>();
-const rateBuckets = new Map<string, number[]>();
-let dailyKey = "";
-let dailyCount = 0;
+const rateLimiter = new RateLimiter({
+  windowMs: RATE_WINDOW_MS,
+  limit: RATE_LIMIT,
+  dailyLimit: DAILY_LIMIT,
+  maxBuckets: MAX_RATE_BUCKETS,
+});
 let activeAi = 0;
 
 function json(body: Record<string, unknown>, status = 200): Response {
@@ -97,33 +102,13 @@ async function upstreamFailureReason(response: Response, keyShape: string): Prom
   return `http_${response.status}_${kind}_${keyShape}`;
 }
 
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const day = new Date(now).toISOString().slice(0, 10);
-  if (day !== dailyKey) {
-    dailyKey = day;
-    dailyCount = 0;
-  }
-  if (dailyCount >= DAILY_LIMIT) return true;
-  const recent = (rateBuckets.get(ip) ?? []).filter((stamp) => now - stamp < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) {
-    rateBuckets.set(ip, recent);
-    return true;
-  }
-  recent.push(now);
-  rateBuckets.set(ip, recent);
-  if (rateBuckets.size > 4096) {
-    for (const [key, list] of rateBuckets) {
-      if (list.every((stamp) => now - stamp >= RATE_WINDOW_MS)) rateBuckets.delete(key);
-    }
-  }
-  dailyCount += 1;
-  return false;
-}
-
 interface Sink {
   send: (event: string, data: unknown) => void;
   signal: AbortSignal;
+}
+
+interface StreamState {
+  sent: boolean;
 }
 
 // 失败诊断只写私有函数日志：HTTP 状态、错误类型与 base URL 的协议+路径，
@@ -149,6 +134,7 @@ async function runAnswer(
   plan: { userMessage: string },
   history: ChatInput["history"],
   sink: Sink,
+  state: StreamState,
 ): Promise<boolean> {
   const config = dashScopeConfig(readEnv);
   if (!config) {
@@ -188,7 +174,6 @@ async function runAnswer(
       throw new AiChannelError("ai_service_unavailable", "no_body");
     }
 
-    let streamed = false;
     let written = 0;
     for await (const frame of readSSE(response.body, {
       signal: upstream.signal,
@@ -201,10 +186,10 @@ async function runAnswer(
       if (room <= 0) break;
       const text = parsed.text.length > room ? parsed.text.slice(0, room) : parsed.text;
       written += text.length;
+      state.sent = true;
       sink.send("delta", { text });
-      streamed = true;
     }
-    return streamed;
+    return state.sent;
   } catch (error) {
     if (error instanceof AiChannelError) throw error;
     const message = error instanceof Error ? `${error.name}: ${error.message}` : "unknown";
@@ -310,28 +295,21 @@ function parseInput(raw: string): ChatInput | { error: string } {
   };
 }
 
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  const first = forwarded?.split(",")[0]?.trim();
-  return first || request.headers.get("x-real-ip") || "unknown";
-}
-
 async function handleChat(request: Request): Promise<Response> {
   // 同源写请求由 Sites Gateway 在转发前校验（无/跨站 Origin 直接 sites_gateway_origin_forbidden），
   // 这里不再比较 host：网关转发时内部 URL 的 host 与公开域名不同，重复校验会误杀合法页面请求。
-  const declared = Number(request.headers.get("content-length") ?? "0");
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    return json({ ok: false, code: "request_too_large", message: "请求体过大。" }, 413);
+  const body = await readRequestBody(request);
+  if (!body.ok) {
+    if (body.reason === "too_large") {
+      return json({ ok: false, code: "request_too_large", message: "请求体过大。" }, 413);
+    }
+    return json({ ok: false, code: "invalid_request", message: "请求体读取失败。" }, 400);
   }
-  const raw = await request.text();
-  if (raw.length > MAX_BODY_BYTES) {
-    return json({ ok: false, code: "request_too_large", message: "请求体过大。" }, 413);
-  }
-  const parsed = parseInput(raw);
+  const parsed = parseInput(body.text);
   if ("error" in parsed)
     return json({ ok: false, code: "invalid_request", message: parsed.error }, 400);
 
-  const ip = clientIp(request);
+  const ip = requestClientIp(request);
 
   // 先规划一次：越界、问候与安全分流完全不碰云端，也不占用提问配额。
   const initial = planTurn(
@@ -351,7 +329,7 @@ async function handleChat(request: Request): Promise<Response> {
     });
   }
 
-  if (rateLimited(ip)) {
+  if (!rateLimiter.allow(ip)) {
     return json(
       { ok: false, code: "rate_limited", message: "提问太频繁了，请过几分钟再试。" },
       429,
@@ -378,6 +356,7 @@ async function handleChat(request: Request): Promise<Response> {
       busyConversations.delete(parsed.conversationId);
       activeAi = Math.max(0, activeAi - 1);
     };
+    const streamState: StreamState = { sent: false };
     try {
       sink.send("meta", {
         mode: initial.mode,
@@ -394,17 +373,24 @@ async function handleChat(request: Request): Promise<Response> {
 
       let answered = false;
       try {
-        answered = await runAnswer(initial, parsed.history, sink);
+        answered = await runAnswer(initial, parsed.history, sink, streamState);
       } catch (error) {
         const failure = safeFailure(error);
         sink.send(
           "status",
           failure.reason ? { code: failure.code, reason: failure.reason } : { code: failure.code },
         );
+        if (streamState.sent) {
+          sink.send("error", { code: "ai_stream_interrupted" });
+        } else {
+          sink.send("delta", { text: degradedAnswer(initial.citations) });
+        }
         answered = false;
       }
-      if (!answered) sink.send("delta", { text: degradedAnswer(initial.citations) });
-      sink.send("done", { degraded: !answered });
+      sink.send("done", {
+        degraded: !answered && !streamState.sent,
+        interrupted: !answered && streamState.sent,
+      });
     } finally {
       release();
     }
