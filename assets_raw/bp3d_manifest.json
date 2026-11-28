@@ -1,0 +1,34 @@
+{
+  "_说明": [
+    "把页面结构 id 对应到 assets_raw/bodyparts3d/ 下的 BP3D OBJ 文件名。",
+    "文件名核对依据：isa_BP3D_4.0_obj_99.zip 的 element file id（isa_element_parts.txt），",
+    "组织名对照依据：isa_parts_list_e.txt（FMA concept id -> BP 表示 id -> 英文名）。",
+    "obj 留空 = BP3D 未收录该部件，build 会用自制几何补上并如实标注 provenance。",
+    "cast_axis 可选 0/1/2，对应投射方向 左右/前后/上下；沿该轴极薄的部件可换轴补体素。"
+  ],
+  "source": {
+    "database": "BodyParts3D",
+    "release": "4.0",
+    "archive": "isa_BP3D_4.0_obj_99.zip",
+    "archive_url": "https://dbarchive.biosciencedbc.jp/data/bodyparts3d/LATEST/isa_BP3D_4.0_obj_99.zip",
+    "archive_bytes": 142903898,
+    "downloaded_at": "2026-11-24",
+    "license": "CC BY 4.0 International",
+    "license_evidence": "README_e.html §3 License（2025-02-25 更新）：Creative Commons Attribution 4.0 International，允许再分发与演绎作品",
+    "attribution": "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International",
+    "coordinate_note": "实测 BP3D 轴向与本项目 [左右, 前后, 上下] 同号（+左/+后/+上），单位 mm，无需轴翻转"
+  },
+  "obj_dir": "bodyparts3d",
+  "license_notice": "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International",
+  "structures": [
+    {"id": "myo", "obj": "myo_FJ2428.obj", "fma": "FMA13884", "bp": "BP7815", "term": "wall of ventricle", "verified": true, "cast_axis": 2, "_note": "BP3D 无 myocardium 词条，取 wall of ventricle（心室壁）作为心肌示意；实测 7 条边界边，属发布网格针孔"},
+    {"id": "la", "obj": "la_FJ2425.obj", "fma": "FMA9465", "bp": "BP8719", "term": "cavity of left atrium", "verified": true, "cast_axis": 0},
+    {"id": "lv", "obj": "lv_FJ2422.obj", "fma": "FMA9466", "bp": "BP8928", "term": "cavity of left ventricle", "verified": true, "cast_axis": 0},
+    {"id": "ra", "obj": "ra_FJ2424.obj", "fma": "FMA11359", "bp": "BP8677", "term": "cavity of right atrium", "verified": true, "cast_axis": 0},
+    {"id": "rv", "obj": "rv_FJ2423.obj", "fma": "FMA9291", "bp": "BP9227", "term": "cavity of right ventricle", "verified": true, "cast_axis": 1, "_note": "新月形，沿轴 1 投射更稳"},
+    {"id": "aorta", "obj": "aorta_FJ3413.obj", "fma": "FMA3736", "bp": "BP10329", "term": "ascending aorta", "verified": true, "cast_axis": 2},
+    {"id": "pa", "obj": "pa_FJ2966.obj", "fma": "FMA8612", "bp": "BP8690", "term": "pulmonary trunk", "verified": true, "cast_axis": 2},
+    {"id": "pv", "obj": "pv_FJ3031.obj", "fma": "FMA8648", "bp": "BP8139", "term": "trunk of pulmonary vein", "verified": true, "cast_axis": 0, "_note": "取肺静脉干；BP3D 的 84 个段级肺静脉分支不逐个纳入"},
+    {"id": "lxa", "obj": "", "fma": null, "bp": null, "term": "auricle of left atrium", "verified": false, "cast_axis": 0, "_note": "BP3D 未收录左心耳（isa_parts_list_e.txt 无 auricle/左心耳词条），用自制几何按 BP3D 左心房位置贴附"}
+  ]
+}

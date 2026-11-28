@@ -1,0 +1,3024 @@
+{
+  "schema_version": 1,
+  "provenance_mode": "bp3d",
+  "grid": {
+    "shape": [
+      96,
+      96,
+      96
+    ],
+    "spacing_mm": [
+      1.6,
+      1.6,
+      1.6
+    ],
+    "origin_mm": [
+      -76.80000000000001,
+      -76.80000000000001,
+      -76.80000000000001
+    ],
+    "axis_order": [
+      "左右",
+      "前后",
+      "上下"
+    ],
+    "axis_note": "V[i0,i1,i2]：i0 右→左，i1 前→后，i2 下→上"
+  },
+  "notices": [
+    "示意结构模型，非真实病例影像，亦非分割模型推理结果；仅用于解剖学习展示，不含诊断或治疗建议。",
+    "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International"
+  ],
+  "structures": [
+    {
+      "id": "lv",
+      "label": 3,
+      "name": "左心室",
+      "en_name": "Left ventricle",
+      "aliases": [
+        "左室",
+        "left ventricle",
+        "LV",
+        "左心室腔"
+      ],
+      "description": "四个心腔中壁最厚、腔最长的一个，位于心脏左下方，收缩时把血送入主动脉。",
+      "parent": "心腔",
+      "color": "#bf4d5c",
+      "mesh": "assets/meshes/lv.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/lv_axial_base.png",
+          "overlay": "assets/slices/lv_axial_overlay.png",
+          "slice_index": 30,
+          "slice_voxels": 1225
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/lv_coronal_base.png",
+          "overlay": "assets/slices/lv_coronal_overlay.png",
+          "slice_index": 52,
+          "slice_voxels": 1271
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/lv_sagittal_base.png",
+          "overlay": "assets/slices/lv_sagittal_overlay.png",
+          "slice_index": 69,
+          "slice_voxels": 1274
+        }
+      },
+      "provenance": "BP3D / lv_FJ2422.obj",
+      "stats": {
+        "voxels": 35662,
+        "centroid_slice_index": [
+          30,
+          52,
+          69
+        ]
+      }
+    },
+    {
+      "id": "myo",
+      "label": 1,
+      "name": "心肌",
+      "en_name": "Myocardium",
+      "aliases": [
+        "左心室心肌",
+        "心室壁",
+        "myocardium",
+        "LV myocardium"
+      ],
+      "description": "构成心室壁的肌肉层。左心室壁明显厚于右心室，因为它要对抗更高的后负荷。",
+      "parent": "心壁",
+      "color": "#a06a42",
+      "mesh": "assets/meshes/myo.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/myo_axial_base.png",
+          "overlay": "assets/slices/myo_axial_overlay.png",
+          "slice_index": 13,
+          "slice_voxels": 1386
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/myo_coronal_base.png",
+          "overlay": "assets/slices/myo_coronal_overlay.png",
+          "slice_index": 41,
+          "slice_voxels": 1381
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/myo_sagittal_base.png",
+          "overlay": "assets/slices/myo_sagittal_overlay.png",
+          "slice_index": 63,
+          "slice_voxels": 1448
+        }
+      },
+      "provenance": "BP3D / myo_FJ2428.obj",
+      "stats": {
+        "voxels": 60361,
+        "centroid_slice_index": [
+          13,
+          41,
+          63
+        ]
+      }
+    },
+    {
+      "id": "rv",
+      "label": 5,
+      "name": "右心室",
+      "en_name": "Right ventricle",
+      "aliases": [
+        "右室",
+        "right ventricle",
+        "RV",
+        "右心室腔"
+      ],
+      "description": "位于心脏最靠前的一面，壁薄、腔呈新月形包在左心室右侧，把血泵入肺动脉。",
+      "parent": "心腔",
+      "color": "#4a7fb5",
+      "mesh": "assets/meshes/rv.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/rv_axial_base.png",
+          "overlay": "assets/slices/rv_axial_overlay.png",
+          "slice_index": 30,
+          "slice_voxels": 1189
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/rv_coronal_base.png",
+          "overlay": "assets/slices/rv_coronal_overlay.png",
+          "slice_index": 27,
+          "slice_voxels": 1755
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/rv_sagittal_base.png",
+          "overlay": "assets/slices/rv_sagittal_overlay.png",
+          "slice_index": 44,
+          "slice_voxels": 1386
+        }
+      },
+      "provenance": "BP3D / rv_FJ2423.obj",
+      "stats": {
+        "voxels": 44080,
+        "centroid_slice_index": [
+          30,
+          27,
+          44
+        ]
+      }
+    },
+    {
+      "id": "la",
+      "label": 2,
+      "name": "左心房",
+      "en_name": "Left atrium",
+      "aliases": [
+        "左房",
+        "left atrium",
+        "LA",
+        "左心房腔"
+      ],
+      "description": "位置最靠后的心腔，接收四条肺静脉回流的血，再经二尖口送入左心室。",
+      "parent": "心腔",
+      "color": "#7d6aa8",
+      "mesh": "assets/meshes/la.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/la_axial_base.png",
+          "overlay": "assets/slices/la_axial_overlay.png",
+          "slice_index": 46,
+          "slice_voxels": 686
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/la_coronal_base.png",
+          "overlay": "assets/slices/la_coronal_overlay.png",
+          "slice_index": 74,
+          "slice_voxels": 1191
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/la_sagittal_base.png",
+          "overlay": "assets/slices/la_sagittal_overlay.png",
+          "slice_index": 40,
+          "slice_voxels": 734
+        }
+      },
+      "provenance": "BP3D / la_FJ2425.obj",
+      "stats": {
+        "voxels": 19583,
+        "centroid_slice_index": [
+          46,
+          74,
+          40
+        ]
+      }
+    },
+    {
+      "id": "ra",
+      "label": 4,
+      "name": "右心房",
+      "en_name": "Right atrium",
+      "aliases": [
+        "右房",
+        "right atrium",
+        "RA",
+        "右心房腔"
+      ],
+      "description": "接收上下腔静脉回流的血，位于心脏右上方，与右心室以三尖口相通。",
+      "parent": "心腔",
+      "color": "#4f8f86",
+      "mesh": "assets/meshes/ra.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/ra_axial_base.png",
+          "overlay": "assets/slices/ra_axial_overlay.png",
+          "slice_index": 53,
+          "slice_voxels": 767
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/ra_coronal_base.png",
+          "overlay": "assets/slices/ra_coronal_overlay.png",
+          "slice_index": 58,
+          "slice_voxels": 1441
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/ra_sagittal_base.png",
+          "overlay": "assets/slices/ra_sagittal_overlay.png",
+          "slice_index": 19,
+          "slice_voxels": 1808
+        }
+      },
+      "provenance": "BP3D / ra_FJ2424.obj",
+      "stats": {
+        "voxels": 31909,
+        "centroid_slice_index": [
+          53,
+          58,
+          19
+        ]
+      }
+    },
+    {
+      "id": "aorta",
+      "label": 6,
+      "name": "升主动脉",
+      "en_name": "Ascending aorta",
+      "aliases": [
+        "升主动脉",
+        "ascending aorta",
+        "AAo",
+        "主动脉升部"
+      ],
+      "description": "自主动脉口向上的一小段，发出左右冠状动脉后移行为主动脉弓。",
+      "parent": "主动脉",
+      "color": "#b04a44",
+      "mesh": "assets/meshes/aorta.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/aorta_axial_base.png",
+          "overlay": "assets/slices/aorta_axial_overlay.png",
+          "slice_index": 59,
+          "slice_voxels": 285
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/aorta_coronal_base.png",
+          "overlay": "assets/slices/aorta_coronal_overlay.png",
+          "slice_index": 50,
+          "slice_voxels": 575
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/aorta_sagittal_base.png",
+          "overlay": "assets/slices/aorta_sagittal_overlay.png",
+          "slice_index": 41,
+          "slice_voxels": 540
+        }
+      },
+      "provenance": "BP3D / aorta_FJ3413.obj",
+      "stats": {
+        "voxels": 8061,
+        "centroid_slice_index": [
+          59,
+          50,
+          41
+        ]
+      }
+    },
+    {
+      "id": "pa",
+      "label": 7,
+      "name": "肺动脉干",
+      "en_name": "Pulmonary trunk",
+      "aliases": [
+        "肺动脉",
+        "pulmonary trunk",
+        "pulmonary artery",
+        "PA"
+      ],
+      "description": "起自右心室，向左后上方走行后分为左右肺动脉，是把血送进肺的动脉。",
+      "parent": "肺动脉",
+      "color": "#5d76ad",
+      "mesh": "assets/meshes/pa.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/pa_axial_base.png",
+          "overlay": "assets/slices/pa_axial_overlay.png",
+          "slice_index": 74,
+          "slice_voxels": 421
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/pa_coronal_base.png",
+          "overlay": "assets/slices/pa_coronal_overlay.png",
+          "slice_index": 43,
+          "slice_voxels": 338
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/pa_sagittal_base.png",
+          "overlay": "assets/slices/pa_sagittal_overlay.png",
+          "slice_index": 55,
+          "slice_voxels": 490
+        }
+      },
+      "provenance": "BP3D / pa_FJ2966.obj",
+      "stats": {
+        "voxels": 7218,
+        "centroid_slice_index": [
+          74,
+          43,
+          55
+        ]
+      }
+    },
+    {
+      "id": "pv",
+      "label": 8,
+      "name": "肺静脉",
+      "en_name": "Pulmonary veins",
+      "aliases": [
+        "肺静脉",
+        "pulmonary vein",
+        "PV"
+      ],
+      "description": "通常左右各两条，开口于左心房后壁，把已换气的血回流入左心。",
+      "parent": "肺静脉",
+      "color": "#7d9b62",
+      "mesh": "assets/meshes/pv.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/pv_axial_base.png",
+          "overlay": "assets/slices/pv_axial_overlay.png",
+          "slice_index": 67,
+          "slice_voxels": 16
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/pv_coronal_base.png",
+          "overlay": "assets/slices/pv_coronal_overlay.png",
+          "slice_index": 60,
+          "slice_voxels": 81
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/pv_sagittal_base.png",
+          "overlay": "assets/slices/pv_sagittal_overlay.png",
+          "slice_index": 9,
+          "slice_voxels": 58
+        }
+      },
+      "provenance": "BP3D / pv_FJ3031.obj",
+      "stats": {
+        "voxels": 313,
+        "centroid_slice_index": [
+          67,
+          60,
+          9
+        ]
+      }
+    },
+    {
+      "id": "lxa",
+      "label": 9,
+      "name": "左心耳",
+      "en_name": "Left auricle",
+      "aliases": [
+        "左心耳",
+        "left auricle",
+        "left atrial appendage",
+        "LAA"
+      ],
+      "description": "左心房向前突出的耳状盲端，表面有梳状肌，是心房壁最薄处之一。",
+      "parent": "左心房",
+      "color": "#8a76a8",
+      "mesh": "assets/meshes/lxa.glb",
+      "views": {
+        "axial": {
+          "view_name": "轴位",
+          "base": "assets/slices/lxa_axial_base.png",
+          "overlay": "assets/slices/lxa_axial_overlay.png",
+          "slice_index": 75,
+          "slice_voxels": 174
+        },
+        "coronal": {
+          "view_name": "冠状位",
+          "base": "assets/slices/lxa_coronal_base.png",
+          "overlay": "assets/slices/lxa_coronal_overlay.png",
+          "slice_index": 75,
+          "slice_voxels": 176
+        },
+        "sagittal": {
+          "view_name": "矢状位",
+          "base": "assets/slices/lxa_sagittal_base.png",
+          "overlay": "assets/slices/lxa_sagittal_overlay.png",
+          "slice_index": 41,
+          "slice_voxels": 146
+        }
+      },
+      "provenance": "自制几何（BP3D 未收录 lxa），按 BP3D la 体素包围盒贴附",
+      "stats": {
+        "voxels": 1616,
+        "centroid_slice_index": [
+          75,
+          75,
+          41
+        ]
+      }
+    }
+  ],
+  "excluded": [],
+  "ct": {
+    "schema_version": 1,
+    "note": "伪 CT：由本站教学标注体素按组织 HU 近似合成，不是真实病例影像，也不能用于诊断；逐层结构体素数为构建期真值。",
+    "slice_count": 96,
+    "slice_spacing_mm": 1.6,
+    "upscale": 2,
+    "image_size": [
+      192,
+      192
+    ],
+    "base_pattern": "assets/ct/base/{index:03d}_{window}.png",
+    "overlay_pattern": "assets/ct/overlay/{id}/{index:03d}.png",
+    "default_window": "mediastinal",
+    "windows": [
+      {
+        "id": "mediastinal",
+        "name": "纵隔窗",
+        "width": 350,
+        "level": 40
+      },
+      {
+        "id": "lung",
+        "name": "肺窗",
+        "width": 1500,
+        "level": -600
+      }
+    ],
+    "best_slice": {
+      "lv": 30,
+      "myo": 13,
+      "rv": 30,
+      "la": 46,
+      "ra": 53,
+      "aorta": 59,
+      "pa": 74,
+      "pv": 67,
+      "lxa": 75
+    },
+    "slices": [
+      {
+        "index": 0,
+        "voxels": 0,
+        "structures": []
+      },
+      {
+        "index": 1,
+        "voxels": 0,
+        "structures": []
+      },
+      {
+        "index": 2,
+        "voxels": 0,
+        "structures": []
+      },
+      {
+        "index": 3,
+        "voxels": 0,
+        "structures": []
+      },
+      {
+        "index": 4,
+        "voxels": 77,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 77
+          }
+        ]
+      },
+      {
+        "index": 5,
+        "voxels": 270,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 270
+          }
+        ]
+      },
+      {
+        "index": 6,
+        "voxels": 613,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 613
+          }
+        ]
+      },
+      {
+        "index": 7,
+        "voxels": 923,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 923
+          }
+        ]
+      },
+      {
+        "index": 8,
+        "voxels": 1172,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1119
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 53
+          }
+        ]
+      },
+      {
+        "index": 9,
+        "voxels": 1402,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1239
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 163
+          }
+        ]
+      },
+      {
+        "index": 10,
+        "voxels": 1607,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1336
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 271
+          }
+        ]
+      },
+      {
+        "index": 11,
+        "voxels": 1783,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 47
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1372
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 364
+          }
+        ]
+      },
+      {
+        "index": 12,
+        "voxels": 2024,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 152
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1376
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 443
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 53
+          }
+        ]
+      },
+      {
+        "index": 13,
+        "voxels": 2375,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 252
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1386
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 512
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 225
+          }
+        ]
+      },
+      {
+        "index": 14,
+        "voxels": 2553,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 349
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1380
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 578
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 246
+          }
+        ]
+      },
+      {
+        "index": 15,
+        "voxels": 2733,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 454
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1371
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 645
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 263
+          }
+        ]
+      },
+      {
+        "index": 16,
+        "voxels": 2903,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 551
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1368
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 710
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 274
+          }
+        ]
+      },
+      {
+        "index": 17,
+        "voxels": 3034,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 625
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1363
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 770
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 276
+          }
+        ]
+      },
+      {
+        "index": 18,
+        "voxels": 3188,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 707
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1368
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 833
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 280
+          }
+        ]
+      },
+      {
+        "index": 19,
+        "voxels": 3297,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 786
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1339
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 885
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 287
+          }
+        ]
+      },
+      {
+        "index": 20,
+        "voxels": 3406,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 855
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1317
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 941
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 293
+          }
+        ]
+      },
+      {
+        "index": 21,
+        "voxels": 3499,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 920
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1298
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 988
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 293
+          }
+        ]
+      },
+      {
+        "index": 22,
+        "voxels": 3576,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 967
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1288
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1026
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 295
+          }
+        ]
+      },
+      {
+        "index": 23,
+        "voxels": 3655,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1008
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1279
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1065
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 303
+          }
+        ]
+      },
+      {
+        "index": 24,
+        "voxels": 3713,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1061
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1249
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1092
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 311
+          }
+        ]
+      },
+      {
+        "index": 25,
+        "voxels": 3747,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1107
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1199
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1113
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 328
+          }
+        ]
+      },
+      {
+        "index": 26,
+        "voxels": 3774,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1152
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1150
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1133
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 339
+          }
+        ]
+      },
+      {
+        "index": 27,
+        "voxels": 3807,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1188
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1107
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1151
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 7
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 354
+          }
+        ]
+      },
+      {
+        "index": 28,
+        "voxels": 3877,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1209
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1084
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1164
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 41
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 379
+          }
+        ]
+      },
+      {
+        "index": 29,
+        "voxels": 3936,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1214
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1070
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1174
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 77
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 401
+          }
+        ]
+      },
+      {
+        "index": 30,
+        "voxels": 3986,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1225
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1043
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1189
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 112
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 417
+          }
+        ]
+      },
+      {
+        "index": 31,
+        "voxels": 4029,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1225
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1026
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1185
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 145
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 448
+          }
+        ]
+      },
+      {
+        "index": 32,
+        "voxels": 4064,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1225
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1014
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1175
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 171
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 479
+          }
+        ]
+      },
+      {
+        "index": 33,
+        "voxels": 4107,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1212
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1001
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1169
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 212
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 513
+          }
+        ]
+      },
+      {
+        "index": 34,
+        "voxels": 4109,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1190
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 984
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1160
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 242
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 533
+          }
+        ]
+      },
+      {
+        "index": 35,
+        "voxels": 4152,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1172
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 998
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1148
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 278
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 556
+          }
+        ]
+      },
+      {
+        "index": 36,
+        "voxels": 4148,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1145
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 980
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1135
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 312
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 576
+          }
+        ]
+      },
+      {
+        "index": 37,
+        "voxels": 4164,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1119
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 983
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1112
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 355
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 595
+          }
+        ]
+      },
+      {
+        "index": 38,
+        "voxels": 4162,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1079
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 984
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1096
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 391
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 612
+          }
+        ]
+      },
+      {
+        "index": 39,
+        "voxels": 4179,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1051
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 982
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1080
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 434
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 632
+          }
+        ]
+      },
+      {
+        "index": 40,
+        "voxels": 4185,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 1012
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 984
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1065
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 479
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 645
+          }
+        ]
+      },
+      {
+        "index": 41,
+        "voxels": 4187,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 976
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 981
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1035
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 527
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 668
+          }
+        ]
+      },
+      {
+        "index": 42,
+        "voxels": 4190,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 928
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 987
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 1015
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 577
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 683
+          }
+        ]
+      },
+      {
+        "index": 43,
+        "voxels": 4172,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 889
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 978
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 985
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 625
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 695
+          }
+        ]
+      },
+      {
+        "index": 44,
+        "voxels": 4131,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 841
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 979
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 955
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 649
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 707
+          }
+        ]
+      },
+      {
+        "index": 45,
+        "voxels": 4077,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 801
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 968
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 920
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 673
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 715
+          }
+        ]
+      },
+      {
+        "index": 46,
+        "voxels": 4006,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 755
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 970
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 875
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 686
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 720
+          }
+        ]
+      },
+      {
+        "index": 47,
+        "voxels": 3910,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 683
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1000
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 810
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 676
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 730
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 11
+          }
+        ]
+      },
+      {
+        "index": 48,
+        "voxels": 3826,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 579
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1034
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 760
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 660
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 734
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 59
+          }
+        ]
+      },
+      {
+        "index": 49,
+        "voxels": 3741,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 496
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1035
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 715
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 652
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 739
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 104
+          }
+        ]
+      },
+      {
+        "index": 50,
+        "voxels": 3624,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 414
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1018
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 669
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 630
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 747
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 146
+          }
+        ]
+      },
+      {
+        "index": 51,
+        "voxels": 3519,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 335
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 1010
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 620
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 622
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 756
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 176
+          }
+        ]
+      },
+      {
+        "index": 52,
+        "voxels": 3420,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 263
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 985
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 587
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 622
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 762
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 201
+          }
+        ]
+      },
+      {
+        "index": 53,
+        "voxels": 3312,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 173
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 967
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 552
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 627
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 767
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 226
+          }
+        ]
+      },
+      {
+        "index": 54,
+        "voxels": 3207,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 91
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 960
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 518
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 632
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 763
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 243
+          }
+        ]
+      },
+      {
+        "index": 55,
+        "voxels": 3106,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 62
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 911
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 482
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 635
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 757
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 259
+          }
+        ]
+      },
+      {
+        "index": 56,
+        "voxels": 2968,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 49
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 827
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 446
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 643
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 736
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 267
+          }
+        ]
+      },
+      {
+        "index": 57,
+        "voxels": 2848,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 37
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 756
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 416
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 649
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 713
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 277
+          }
+        ]
+      },
+      {
+        "index": 58,
+        "voxels": 2701,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 24
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 664
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 393
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 653
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 687
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 280
+          }
+        ]
+      },
+      {
+        "index": 59,
+        "voxels": 2541,
+        "structures": [
+          {
+            "id": "lv",
+            "name": "左心室",
+            "voxels": 7
+          },
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 558
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 382
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 650
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 659
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 285
+          }
+        ]
+      },
+      {
+        "index": 60,
+        "voxels": 2363,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 446
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 373
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 633
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 629
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 282
+          }
+        ]
+      },
+      {
+        "index": 61,
+        "voxels": 2180,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 355
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 348
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 596
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 599
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 282
+          }
+        ]
+      },
+      {
+        "index": 62,
+        "voxels": 2058,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 300
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 311
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 590
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 570
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 281
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 6
+          }
+        ]
+      },
+      {
+        "index": 63,
+        "voxels": 1926,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 253
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 230
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 608
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 543
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 279
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 13
+          }
+        ]
+      },
+      {
+        "index": 64,
+        "voxels": 1679,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 191
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 82
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 564
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 511
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 275
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 42
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 14
+          }
+        ]
+      },
+      {
+        "index": 65,
+        "voxels": 1505,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 123
+          },
+          {
+            "id": "rv",
+            "name": "右心室",
+            "voxels": 13
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 479
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 476
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 276
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 123
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 15
+          }
+        ]
+      },
+      {
+        "index": 66,
+        "voxels": 1346,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 79
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 345
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 433
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 272
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 202
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 15
+          }
+        ]
+      },
+      {
+        "index": 67,
+        "voxels": 1155,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 55
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 188
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 361
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 264
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 271
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 16
+          }
+        ]
+      },
+      {
+        "index": 68,
+        "voxels": 1091,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 35
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 102
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 340
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 260
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 332
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 15
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 7
+          }
+        ]
+      },
+      {
+        "index": 69,
+        "voxels": 1099,
+        "structures": [
+          {
+            "id": "myo",
+            "name": "心肌",
+            "voxels": 16
+          },
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 75
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 317
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 255
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 369
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 14
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 53
+          }
+        ]
+      },
+      {
+        "index": 70,
+        "voxels": 1078,
+        "structures": [
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 45
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 296
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 253
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 378
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 16
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 90
+          }
+        ]
+      },
+      {
+        "index": 71,
+        "voxels": 1070,
+        "structures": [
+          {
+            "id": "la",
+            "name": "左心房",
+            "voxels": 14
+          },
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 279
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 248
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 392
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 13
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 124
+          }
+        ]
+      },
+      {
+        "index": 72,
+        "voxels": 1087,
+        "structures": [
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 265
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 245
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 412
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 14
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 151
+          }
+        ]
+      },
+      {
+        "index": 73,
+        "voxels": 1088,
+        "structures": [
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 252
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 240
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 419
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 11
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 166
+          }
+        ]
+      },
+      {
+        "index": 74,
+        "voxels": 1082,
+        "structures": [
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 244
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 234
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 421
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 11
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 172
+          }
+        ]
+      },
+      {
+        "index": 75,
+        "voxels": 1064,
+        "structures": [
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 233
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 231
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 414
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 12
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 174
+          }
+        ]
+      },
+      {
+        "index": 76,
+        "voxels": 1033,
+        "structures": [
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 222
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 227
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 406
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 10
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 168
+          }
+        ]
+      },
+      {
+        "index": 77,
+        "voxels": 1000,
+        "structures": [
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 215
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 224
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 392
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 10
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 159
+          }
+        ]
+      },
+      {
+        "index": 78,
+        "voxels": 930,
+        "structures": [
+          {
+            "id": "ra",
+            "name": "右心房",
+            "voxels": 180
+          },
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 226
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 378
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 10
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 136
+          }
+        ]
+      },
+      {
+        "index": 79,
+        "voxels": 709,
+        "structures": [
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 229
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 356
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 11
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 113
+          }
+        ]
+      },
+      {
+        "index": 80,
+        "voxels": 643,
+        "structures": [
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 228
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 331
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 10
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 74
+          }
+        ]
+      },
+      {
+        "index": 81,
+        "voxels": 560,
+        "structures": [
+          {
+            "id": "aorta",
+            "name": "升主动脉",
+            "voxels": 216
+          },
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 305
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 10
+          },
+          {
+            "id": "lxa",
+            "name": "左心耳",
+            "voxels": 29
+          }
+        ]
+      },
+      {
+        "index": 82,
+        "voxels": 288,
+        "structures": [
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 278
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 10
+          }
+        ]
+      },
+      {
+        "index": 83,
+        "voxels": 260,
+        "structures": [
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 252
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 8
+          }
+        ]
+      },
+      {
+        "index": 84,
+        "voxels": 228,
+        "structures": [
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 219
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 9
+          }
+        ]
+      },
+      {
+        "index": 85,
+        "voxels": 195,
+        "structures": [
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 186
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 9
+          }
+        ]
+      },
+      {
+        "index": 86,
+        "voxels": 153,
+        "structures": [
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 146
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 7
+          }
+        ]
+      },
+      {
+        "index": 87,
+        "voxels": 114,
+        "structures": [
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 107
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 7
+          }
+        ]
+      },
+      {
+        "index": 88,
+        "voxels": 69,
+        "structures": [
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 63
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 6
+          }
+        ]
+      },
+      {
+        "index": 89,
+        "voxels": 28,
+        "structures": [
+          {
+            "id": "pa",
+            "name": "肺动脉干",
+            "voxels": 24
+          },
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 4
+          }
+        ]
+      },
+      {
+        "index": 90,
+        "voxels": 4,
+        "structures": [
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 4
+          }
+        ]
+      },
+      {
+        "index": 91,
+        "voxels": 3,
+        "structures": [
+          {
+            "id": "pv",
+            "name": "肺静脉",
+            "voxels": 3
+          }
+        ]
+      },
+      {
+        "index": 92,
+        "voxels": 0,
+        "structures": []
+      },
+      {
+        "index": 93,
+        "voxels": 0,
+        "structures": []
+      },
+      {
+        "index": 94,
+        "voxels": 0,
+        "structures": []
+      },
+      {
+        "index": 95,
+        "voxels": 0,
+        "structures": []
+      }
+    ]
+  }
+}

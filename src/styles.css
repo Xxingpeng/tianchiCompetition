@@ -1,0 +1,2310 @@
+:root {
+  --ink: #f1f5f9;
+  --ink-muted: #9aa8b6;
+  --line: rgb(255 255 255 / 14%);
+  --bg: #05070b;
+  --bg-soft: rgb(255 255 255 / 6%);
+  --panel: rgb(11 15 21 / 82%);
+  --panel-solid: #0c1118;
+  --accent: #63d7ff;
+  --warm: #e6c699;
+  --danger: #ff5c73;
+  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* 视口单位 + 中段显式色 + 末端归零：终止线永远落在屏幕外，宽屏也不会露出椭圆边界。
+     直接写 transparent 会在 sRGB 里插值到透明黑，先变暗再断崖，表现为一圈可见的光碟边。 */
+  background:
+    radial-gradient(
+      120vw 92vh at 50% 44%,
+      rgb(96 18 34 / 28%),
+      rgb(58 14 26 / 12%) 55%,
+      rgb(11 11 16 / 0%) 92%
+    ),
+    radial-gradient(
+      96vw 72vh at 86% 6%,
+      rgb(9 50 66 / 22%),
+      rgb(9 40 52 / 6%) 60%,
+      rgb(9 40 52 / 0%) 95%
+    ),
+    var(--bg);
+  color: var(--ink);
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+button,
+input,
+textarea {
+  color: inherit;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--ink);
+  color: #ffffff;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  left: 1.25rem;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.site-header {
+  padding: 1.5rem 0 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
+}
+
+main {
+  flex: 1;
+  padding: 1.25rem 0;
+}
+
+/* 左列放检索与结构列表，右列放整颗心脏与详情；窄屏退回单列。 */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(13rem, 20rem) minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem 1.5rem;
+}
+
+.side,
+.stage {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+@media (max-width: 48rem) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.swatch {
+  grid-row: 1 / span 3;
+  align-self: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 1px solid var(--ink-muted);
+  border-radius: 2px;
+}
+
+.heart-help,
+.slice-note,
+.heart-status {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.info-card,
+.tri-view,
+.ct-viewer,
+.heart-viewer {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  padding: 1rem 1.1rem;
+  background: var(--bg);
+}
+
+.info-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+}
+
+.info-card dl {
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) 1fr;
+  gap: 0.3rem 0.9rem;
+  margin: 0;
+}
+
+.info-card dt {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.info-card dd {
+  margin: 0;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.tri-view h3,
+.ct-viewer h3,
+.heart-viewer h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.highlight-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.slices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.slices figure {
+  margin: 0;
+}
+
+.slice-stack {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #101418;
+  border-radius: 0.4rem;
+  overflow: hidden;
+}
+
+.slice-stack img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 底图解码完成前先显示扫光骨架，再淡入，避免展开三视图时出现纯黑块。 */
+.slice-stack .slice-base {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.slice-stack .slice-base[data-loaded="true"] {
+  opacity: 1;
+}
+
+.slice-stack .slice-overlay {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.slice-stack .slice-base[data-loaded="true"] ~ .slice-overlay {
+  opacity: 1;
+}
+
+.slice-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgb(255 255 255 / 5%) 24%,
+    rgb(255 255 255 / 12%) 42%,
+    rgb(255 255 255 / 5%) 60%
+  );
+  background-size: 220% 100%;
+  animation: skeleton-sweep 1.1s linear infinite;
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 130% 0;
+  }
+
+  to {
+    background-position: -130% 0;
+  }
+}
+
+.slices figcaption {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.ct-note {
+  margin: 0.2rem 0 0.9rem;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+.ct-windows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ct-window {
+  display: grid;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: var(--bg-soft);
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ct-window span {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+}
+
+.ct-window[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: #e6eff8;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.ct-layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem 1.25rem;
+}
+
+.ct-visual,
+.ct-controls {
+  min-width: 0;
+}
+
+.ct-stack {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  max-width: 22rem;
+  background: #101418;
+  border-radius: 0.4rem;
+  overflow: hidden;
+}
+
+.ct-stack img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+/* 换层/换窗时先给一层扫光骨架，图像解码完成后淡入，不出现纯黑空档。 */
+.ct-stack .ct-base {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.ct-stack .ct-base[data-loaded="true"] {
+  opacity: 1;
+}
+
+/* 底图还在载入时不先亮出彩色高亮层，否则会出现“无底片的浮层”。 */
+.ct-stack .ct-overlay {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.ct-stack .ct-base[data-loaded="true"] ~ .ct-overlay {
+  opacity: 1;
+}
+
+.ct-skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    100deg,
+    rgb(255 255 255 / 5%) 24%,
+    rgb(255 255 255 / 12%) 42%,
+    rgb(255 255 255 / 5%) 60%
+  );
+  background-size: 220% 100%;
+  animation: skeleton-sweep 1.1s linear infinite;
+}
+
+.ct-loading {
+  position: absolute;
+  left: 50%;
+  bottom: 0.5rem;
+  translate: -50% 0;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 62%);
+  color: #c6d1dc;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.ct-orientation {
+  margin: 0.35rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+}
+
+.ct-controls {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ct-slider-label {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.ct-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ct-slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.ct-step {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: var(--bg-soft);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ct-step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ct-layer {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ct-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.ct-jump {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ct-jump:disabled {
+  color: var(--ink-muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+.ct-selected {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.ct-list-title {
+  margin: 0.2rem 0 0;
+  font-size: 0.92rem;
+}
+
+.ct-structures {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ct-structure {
+  display: grid;
+  grid-template-columns: 0.875rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: var(--bg-soft);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ct-structure .swatch {
+  grid-row: auto;
+}
+
+.ct-structure[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.ct-voxels {
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+}
+
+.ct-empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 48rem) {
+  .ct-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ct-stack {
+    max-width: 100%;
+  }
+}
+
+.heart-host {
+  display: grid;
+  place-items: center;
+  background: #101418;
+  border-radius: 0.4rem;
+  min-height: 18rem;
+}
+
+.heart-host canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* WebGL 不可用时的静态兜底：最大结构的冠状位切面，填住原本的空黑区。 */
+.heart-fallback {
+  width: min(19rem, 100%);
+  margin: 0.35rem auto 0;
+}
+
+.heart-fallback-stack {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 0.55rem;
+  overflow: hidden;
+  background: #101418;
+}
+
+.heart-fallback-stack img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.heart-fallback figcaption {
+  margin-top: 0.45rem;
+  color: var(--ink-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.heart-help {
+  margin-bottom: 0.6rem;
+}
+
+.heart-status {
+  margin-top: 0.4rem;
+}
+
+.heart-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.heart-buttons button {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: var(--bg-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+.site-footer {
+  padding: 1rem 0 2rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.notices {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+}
+
+code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.85em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------- 心脏学习助手（固定在右下角，不挤压三视图与心脏列宽） ---------- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.assistant {
+  position: fixed;
+  right: 1.25rem;
+  /* 落到底栏右侧，和底栏同高平齐。 */
+  bottom: 0.45rem;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+/* 入场招呼：暖白纸卡，气泡尾巴指向下面的小心。 */
+.assistant-tip {
+  align-self: flex-end;
+  position: relative;
+  max-width: 15rem;
+  margin-right: 0.9rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgb(230 198 153 / 42%);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f4e9d6 0%, #e6d1b0 100%);
+  color: #2b1c10;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", SimSun, STSong, serif;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  letter-spacing: 0.03em;
+  box-shadow: 0 16px 38px rgb(0 0 0 / 48%);
+  animation: assistant-tip-in 320ms ease both;
+}
+
+.assistant-tip-text {
+  margin: 0;
+  padding-right: 1rem;
+}
+
+.assistant-tip-close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #6b5740;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.72;
+}
+
+.assistant-tip-close:hover,
+.assistant-tip-close:focus-visible {
+  opacity: 1;
+  background: rgb(70 50 30 / 10%);
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(140 43 54 / 32%);
+}
+
+.assistant-tip::after {
+  content: "";
+  position: absolute;
+  right: 1.6rem;
+  bottom: -0.42rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  background: #e6d1b0;
+  border-right: 1px solid rgb(230 198 153 / 42%);
+  border-bottom: 1px solid rgb(230 198 153 / 42%);
+  transform: rotate(45deg);
+}
+
+@keyframes assistant-tip-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 小心本体：坐在右下角，整张图就是按钮。 */
+.assistant-launcher {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: grab;
+  /* 按住玩偶拖动时不要触发页面滚动。 */
+  touch-action: none;
+  filter: drop-shadow(0 14px 22px rgb(0 0 0 / 50%));
+  transition: translate 620ms cubic-bezier(0.33, 1.15, 0.64, 1);
+}
+
+/* 久置后朝最近的一侧缩到视口外，只留一小截；点击或拖动时还原。 */
+.assistant-launcher.is-peeking {
+  translate: var(--assistant-peek-x, 0px) var(--assistant-peek, 0px);
+}
+
+.assistant-launcher:active {
+  cursor: grabbing;
+}
+
+.assistant-launcher-body {
+  display: block;
+  transform-origin: 50% 100%;
+  transition:
+    translate 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    rotate 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    scale 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.assistant-launcher img {
+  display: block;
+  width: clamp(4.6rem, 5.4vw, 6.1rem);
+  height: auto;
+  transform-origin: 50% 100%;
+  /* 833ms 约合 72 次/分，和 3D 心脏的 lub-dub 同节律；12 秒来一次小跳。 */
+  animation:
+    xiaoxin-beat 833ms ease-in-out infinite,
+    xiaoxin-hop 12s cubic-bezier(0.3, 0, 0.4, 1) infinite;
+}
+
+.assistant-launcher:hover .assistant-launcher-body {
+  translate: 0 -3px;
+  rotate: -2deg;
+  scale: 1.015;
+}
+
+.assistant-launcher:active .assistant-launcher-body {
+  translate: 0 1px;
+  rotate: 0deg;
+  scale: 1.06 0.92;
+  transition-duration: 90ms;
+}
+
+.assistant-launcher.is-dragging .assistant-launcher-body {
+  translate: 0 -2px;
+  rotate: var(--assistant-lean, 0deg);
+  scale: 1.05 0.94;
+  transition-duration: 90ms;
+}
+
+.assistant-launcher.is-nodding img {
+  animation:
+    xiaoxin-beat 833ms ease-in-out infinite,
+    xiaoxin-hop 12s cubic-bezier(0.3, 0, 0.4, 1) infinite,
+    xiaoxin-nod 560ms ease-in-out;
+}
+
+/* 3D 心跳暂停时，小心也安静下来；悬停与按压反馈保留。 */
+html[data-heart-pulse="off"] .assistant-launcher img {
+  animation: none;
+}
+
+@keyframes xiaoxin-beat {
+  0%,
+  12% {
+    scale: 1;
+  }
+
+  16% {
+    scale: 1.035 1.018;
+  }
+
+  22%,
+  36% {
+    scale: 1;
+  }
+
+  40% {
+    scale: 1.018 1.009;
+  }
+
+  48%,
+  100% {
+    scale: 1;
+  }
+}
+
+@keyframes xiaoxin-hop {
+  0%,
+  84%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+
+  88% {
+    translate: 0 -7px;
+    rotate: -3deg;
+  }
+
+  92% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+
+  95% {
+    translate: 0 -2px;
+    rotate: 1deg;
+  }
+
+  98% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+}
+
+@keyframes xiaoxin-nod {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+
+  25% {
+    rotate: -7deg;
+  }
+
+  55% {
+    rotate: 5deg;
+  }
+
+  80% {
+    rotate: -2deg;
+  }
+}
+
+.assistant-launcher:hover {
+  filter: drop-shadow(0 18px 26px rgb(0 0 0 / 55%)) drop-shadow(0 0 16px rgb(230 198 153 / 26%));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-launcher img,
+  .assistant-launcher-body {
+    animation: none;
+    transition: none;
+  }
+
+  .assistant-launcher:hover .assistant-launcher-body,
+  .assistant-launcher:active .assistant-launcher-body,
+  .assistant-launcher.is-dragging .assistant-launcher-body {
+    translate: none;
+    rotate: none;
+    scale: none;
+  }
+}
+
+.assistant-panel {
+  --assistant-width: 30rem;
+  position: relative;
+  width: min(var(--assistant-width), calc(100vw - 2rem));
+  /* 底部换成坐姿玩偶后，给玩偶身高和间距让出空间。 */
+  height: min(var(--assistant-height, 34rem), calc(100dvh - 13.5rem));
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 18px 50px rgb(17 33 51 / 25%);
+  overflow: hidden;
+}
+
+.assistant-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0.7rem;
+  z-index: 2;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.assistant-resizer::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 3px;
+  height: 2.5rem;
+  border-radius: 999px;
+  background: var(--line);
+  transform: translateY(-50%);
+  transition: background 0.15s ease;
+}
+
+.assistant-resizer:hover::after,
+.assistant-resizer:focus-visible::after {
+  background: var(--accent);
+}
+
+/* 上缘横条：拖上变高、拖下变矮。 */
+.assistant-resizer-top {
+  top: 0;
+  right: 0;
+  bottom: auto;
+  left: 0;
+  width: auto;
+  height: 0.65rem;
+  cursor: ns-resize;
+}
+
+.assistant-resizer-top::after {
+  top: 2px;
+  left: 50%;
+  width: 2.5rem;
+  height: 3px;
+  transform: translateX(-50%);
+}
+
+.assistant-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 1rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+
+.assistant-avatar {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.assistant-identity {
+  min-width: 0;
+}
+
+.assistant-head h2 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.assistant-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.assistant-log {
+  flex: 1;
+  overflow: auto;
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+}
+
+.assistant-bubble {
+  margin: 0;
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.assistant-bubble p {
+  margin: 0;
+}
+
+.assistant-bubble.user {
+  background: #e6eff8;
+  justify-self: end;
+  max-width: 85%;
+  white-space: pre-wrap;
+}
+
+.assistant-bubble.bot {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+}
+
+.assistant-text {
+  white-space: pre-wrap;
+}
+
+.assistant-text.failed {
+  color: #8a1f1f;
+}
+
+.assistant-text.streaming::after {
+  content: "▍";
+  margin-left: 0.1rem;
+  color: var(--accent);
+  animation: assistant-caret 1s steps(2, start) infinite;
+}
+
+@keyframes assistant-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-text.streaming::after {
+    animation: none;
+  }
+}
+
+.assistant-thinking {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.assistant-badge {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #e6eff8;
+  color: var(--accent);
+  font-size: 0.72rem;
+}
+
+.assistant-sources {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+}
+
+.assistant-sources li {
+  display: grid;
+  gap: 0.05rem;
+  animation: assistant-source-in 240ms ease-out;
+}
+
+@keyframes assistant-source-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.2rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-sources li {
+    animation: none;
+  }
+}
+
+.assistant-sources a {
+  color: var(--accent);
+}
+
+.assistant-source-meta,
+.assistant-snippet {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}
+
+.assistant-nosource {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.assistant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0 0.85rem 0.5rem;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.assistant-form {
+  border-top: 1px solid var(--line);
+  padding: 0.6rem 0.85rem 0.4rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.assistant-form textarea {
+  resize: vertical;
+  max-height: 7rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.88rem;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.assistant-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.assistant-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.assistant-send {
+  padding: 0.35rem 0.9rem;
+  border-radius: 0.45rem;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.assistant-send:disabled {
+  background: var(--bg-soft);
+  color: var(--ink-muted);
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+.assistant-foot {
+  margin: 0;
+  padding: 0.25rem 0.85rem 0.6rem;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 30rem) {
+  .assistant {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 3.4rem;
+    align-items: stretch;
+  }
+
+  .assistant-panel {
+    width: 100%;
+    height: min(32rem, calc(100dvh - 13.5rem));
+  }
+
+  .assistant-resizer {
+    display: none;
+  }
+
+  .assistant-launcher {
+    align-self: flex-end;
+  }
+
+  .assistant-tip {
+    max-width: 13rem;
+    font-size: 0.8rem;
+  }
+}
+/* ---------- 沉浸式场景：黑底心脏 + 悬浮检索 / 说明 / CT 抽屉 ---------- */
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+.scene-main {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.scene-main > [role="status"],
+.scene-main > [role="alert"] {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(38rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--panel);
+}
+
+.scene-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  /* 左栏是浮层，不占布局宽度；舞台收窄时需要显式预留，否则心脏左缘会藏到目录下面。 */
+  --dock-gutter: 1.5rem;
+  --dock-width: 20rem;
+}
+
+.scene-heart {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  /* 单列显式轨道 + 最小 0：留白收窄时网格会跟着缩，而不是让画布溢出到信息卡底下。 */
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  /* 左右对称留白：心脏在整页正中，不被左栏虚位推偏。 */
+  padding: 2.5rem 1.5rem;
+  transition: padding 260ms ease;
+}
+
+/* 舞台光池：一大一小两层极淡暖光，半径大于半个视口，收尾落在屏幕外。 */
+.scene-heart::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(
+      92vw 78vh at 50% 50%,
+      rgb(255 236 208 / 6.5%),
+      rgb(255 230 198 / 3%) 52%,
+      rgb(255 226 190 / 0%) 98%
+    ),
+    radial-gradient(34vw 18vh at 50% 76%, rgb(255 226 190 / 7%), rgb(255 226 190 / 0%) 96%);
+  pointer-events: none;
+}
+
+/* 体素网格：只在光池范围里淡淡透出，靠遮罩收边，不是满屏坐标纸。 */
+.scene-heart::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(
+    36rem 26rem at 50% 58%,
+    rgb(0 0 0 / 82%),
+    rgb(0 0 0 / 38%) 55%,
+    rgb(0 0 0 / 0%) 100%
+  );
+  pointer-events: none;
+}
+
+.scene-shell.has-detail .scene-heart {
+  padding-right: clamp(22rem, 30vw, 27rem);
+  /* 详情卡打开后画面变窄、取景中心左移，左栏浮层会盖住心脏左侧；给目录让出等宽留白。 */
+  padding-left: calc(var(--dock-gutter) + var(--dock-width) + 1.5rem);
+}
+
+/* 目录被隐藏（看 CT 抽屉 / 小心打开）时不再预留左侧留白，避免心脏被推向右侧。 */
+.scene-shell.has-detail.ct-open .scene-heart,
+.scene-shell.has-detail.assistant-open .scene-heart {
+  padding-left: var(--dock-gutter);
+}
+
+.scene-heart .heart-viewer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.scene-heart .heart-viewer > h2,
+.scene-heart .heart-help {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.scene-heart .heart-host {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.scene-heart .heart-host canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+}
+
+.scene-heart .heart-status {
+  position: fixed;
+  left: 50%;
+  bottom: 6.1rem;
+  z-index: 11;
+  transform: translateX(-50%);
+  max-width: min(42rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.2rem 0.7rem;
+  border-radius: 4px;
+  background: rgb(5 7 11 / 55%);
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* 首屏提示只出现一次：点过结构后状态区留空，不再挂着操作说明。 */
+.scene-heart .heart-status:empty {
+  display: none;
+}
+
+.scene-heart .heart-buttons {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 3rem;
+  z-index: 12;
+  display: flex;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.2rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgb(8 11 15 / 70%);
+  backdrop-filter: blur(10px);
+}
+
+/* 右下角被坐姿小心占住后：工具条退到小心左侧；宽度不够时干脆收起，避免压住主按钮。 */
+@media (min-width: 70rem) {
+  .scene-heart .heart-buttons {
+    right: calc(1.5rem + clamp(4.6rem, 5.4vw, 6.1rem) + 0.75rem);
+  }
+}
+
+@media (max-width: 69.999rem) {
+  .scene-heart .heart-buttons {
+    display: none;
+  }
+}
+
+.scene-heart .heart-buttons button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.scene-heart .heart-buttons button:hover {
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.scene-heart .heart-buttons button[aria-pressed="true"] {
+  color: var(--warm);
+}
+
+.site-header {
+  position: fixed;
+  top: 1.15rem;
+  left: 1.5rem;
+  z-index: 10;
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: none;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 650;
+  letter-spacing: 0.28em;
+}
+
+.site-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  margin: 0;
+  padding: 0.5rem 8.75rem 0.5rem 1.5rem;
+  border-top: 1px solid var(--line);
+  background: rgb(5 7 11 / 76%);
+  backdrop-filter: blur(14px);
+  color: var(--ink-muted);
+  font-size: 0.64rem;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.site-footer .notices {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem 1.1rem;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+}
+
+.site-footer .notices li {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.site-footer .notices li:first-child {
+  color: #c6d1dc;
+  flex: 0 1 auto;
+}
+
+.site-footer code {
+  font-size: 0.95em;
+}
+
+/* ---------- 索引直接切进黑色帷幕：透明底，名字用各自的解剖色 ---------- */
+/* 没有卡片外形、没有底色，只剩一行编号搜索、细线和九行彩色结构名。 */
+.scene-dock {
+  position: fixed;
+  top: 50%;
+  bottom: auto;
+  left: var(--dock-gutter);
+  z-index: 24;
+  width: var(--dock-width);
+  max-height: calc(100vh - 7.5rem);
+  overflow: auto;
+  padding: 0;
+  transform: translateY(-50%);
+  background: none;
+  border: 0;
+  box-shadow: none;
+  color: #ece6d8;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 22%) transparent;
+}
+
+.placard-search {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 0.58rem;
+  /* 只有最上面这条细线，输入框本身没有边框和底色。 */
+  border: 0;
+  border-bottom: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 0;
+  background: none;
+  color: #ece6d8;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  letter-spacing: 0.14em;
+  appearance: none;
+}
+
+.placard-search::placeholder {
+  color: #8b97a4;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", SimSun, STSong, serif;
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
+}
+
+.placard-search:focus-visible {
+  border-bottom-color: transparent;
+  box-shadow: 0 1px 0 var(--warm);
+  outline: none;
+}
+
+.placard-search::-webkit-search-cancel-button,
+.placard-search::-webkit-search-decoration {
+  display: none;
+}
+
+.placard-index {
+  margin: 0;
+  padding: 0.15rem 0 0;
+  list-style: none;
+}
+
+.placard-row {
+  display: grid;
+  grid-template-columns: 1.35rem auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.42rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.placard-index li + li .placard-row {
+  border-top: 1px solid rgb(255 255 255 / 13%);
+}
+
+.placard-row:hover .placard-cn {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+.placard-row:focus-visible {
+  outline: 2px solid var(--warm);
+  outline-offset: 2px;
+}
+
+.placard-no {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid var(--row-color, #6a5c49);
+  /* 未选中只描一圈结构色；选中填实、数字反黑——编号和色标都还在，只是「落墨」了。 */
+  background: transparent;
+  color: color-mix(in srgb, var(--row-color, #c9c2b4) 70%, #ffffff);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  line-height: 1;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.placard-row[aria-pressed="true"] .placard-no {
+  background: var(--row-color, #6a5c49);
+  color: #07090d;
+}
+
+.placard-cn {
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", SimSun, STSong, serif;
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  /* 结构名直接取解剖色；混一点白只为在近黑帷幕上保持可读，色相不变。 */
+  color: color-mix(in srgb, var(--row-color, #ece6d8) 72%, #ffffff);
+}
+
+/* 印刷品的选中态只动两处：名字变粗、编号由空心变实心。 */
+.placard-row[aria-pressed="true"] .placard-cn {
+  font-weight: 700;
+}
+
+.placard-latin {
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", "Songti SC", serif;
+  font-size: 0.74rem;
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--ink-muted);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placard-note,
+.placard-source {
+  margin: 0.7rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.55;
+  color: #8b97a4;
+}
+
+/* 藏品来源：和正文同一档字号，只降一级灰度。 */
+.placard-source {
+  margin-top: 0.8rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgb(255 255 255 / 14%);
+  font-size: 0.74rem;
+}
+
+.scene-actions {
+  position: fixed;
+  left: 50%;
+  bottom: 3rem;
+  z-index: 22;
+  display: flex;
+  gap: 0.55rem;
+  transform: translateX(-50%);
+}
+
+/* 按钮只留两级：实底暗红主按钮 + 描边次按钮，直角小圆角，不加渐变和辉光。 */
+.ct-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  padding: 0.55rem 1.15rem;
+  border: 1px solid #a83945;
+  border-radius: 4px;
+  background: #8c2b36;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.ct-cta:hover {
+  background: #9d3340;
+  border-color: #bf4b57;
+}
+
+.ct-cta:disabled {
+  background: rgb(255 255 255 / 8%);
+  border-color: var(--line);
+  color: var(--ink-muted);
+  cursor: not-allowed;
+}
+
+.ct-cta-sub {
+  color: rgb(255 255 255 / 68%);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 400;
+}
+
+.ct-cta:disabled .ct-cta-sub {
+  color: var(--ink-muted);
+}
+
+/* 次按钮：透明底描边，悬停只提亮边框，不和主按钮抢注意力。 */
+.circulation-cta {
+  border-color: rgb(255 255 255 / 22%);
+  background: transparent;
+  color: var(--ink);
+}
+
+.circulation-cta:hover {
+  border-color: rgb(255 255 255 / 40%);
+  background: rgb(255 255 255 / 6%);
+}
+
+.circulation-cta .ct-cta-sub {
+  color: var(--ink-muted);
+}
+
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-panel {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 24;
+  display: grid;
+  gap: 0.8rem;
+  width: min(24rem, calc(100vw - 2.5rem));
+  max-height: calc(100dvh - 8.5rem);
+  padding: 0.95rem;
+  overflow: auto;
+  background: transparent;
+  animation: detail-in 220ms ease both;
+}
+
+@keyframes detail-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+}
+
+.detail-close {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgb(255 255 255 / 5%);
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.detail-close:hover {
+  border-color: var(--warm);
+  color: var(--warm);
+}
+
+.detail-panel .info-card,
+.detail-panel .tri-view {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.detail-panel .info-card h3 {
+  margin-bottom: 0.55rem;
+  font-size: 1.25rem;
+}
+
+.detail-panel .info-card dl {
+  grid-template-columns: 4.9rem minmax(0, 1fr);
+  gap: 0.28rem 0.7rem;
+  font-size: 0.84rem;
+}
+
+.detail-panel .info-card dd {
+  overflow-wrap: anywhere;
+}
+
+.detail-panel .info-card dt {
+  color: var(--ink-muted);
+  font-size: 0.74rem;
+}
+
+.detail-actions .ct-cta {
+  width: 100%;
+  justify-content: space-between;
+  padding: 0.62rem 1rem;
+  font-size: 0.9rem;
+}
+
+.tri-disclosure {
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+}
+
+.tri-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tri-toggle span {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+}
+
+.tri-disclosure .tri-view {
+  margin-top: 0.7rem;
+}
+
+.detail-panel .tri-view h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.92rem;
+}
+
+.detail-panel .tri-view .legend,
+.detail-panel .tri-view .slice-note {
+  font-size: 0.72rem;
+}
+
+/* 三张图的层说明与下方注释贴得太近，单独拉开半行。 */
+.detail-panel .tri-view .slice-note {
+  margin-top: 0.55rem;
+}
+
+.detail-panel .tri-view .slices {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.detail-panel .tri-view .slices figcaption {
+  font-size: 0.65rem;
+  line-height: 1.35;
+}
+
+.ct-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  /* 抽屉只有 94vw，左侧缝隙不能透出目录文字：底色压深并加模糊。 */
+  background: rgb(0 0 0 / 68%);
+  backdrop-filter: blur(6px);
+  animation: fade-in 180ms ease both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.ct-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: min(72rem, 94vw);
+  border-left: 1px solid var(--line);
+  background: linear-gradient(145deg, rgb(14 19 26 / 97%), rgb(5 8 12 / 98%));
+  box-shadow: -30px 0 90px rgb(0 0 0 / 55%);
+  animation: drawer-in 240ms ease both;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(36px);
+    opacity: 0;
+  }
+}
+
+.ct-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.ct-drawer-head h2 {
+  margin: 0.1rem 0 0;
+  font-size: 1.08rem;
+}
+
+.ct-close {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.ct-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ct-drawer-body {
+  flex: 1;
+  min-height: 0;
+  padding: 1.1rem 1.25rem 1.5rem;
+  overflow: auto;
+}
+
+.ct-drawer .ct-viewer {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.ct-drawer .ct-layout {
+  grid-template-columns: minmax(18rem, 32rem) minmax(0, 1fr);
+}
+
+.ct-drawer .ct-stack {
+  max-width: 32rem;
+}
+
+.ct-drawer .ct-viewer h3 {
+  font-size: 1rem;
+}
+
+.ct-window {
+  border-color: var(--line);
+  background: rgb(255 255 255 / 5%);
+  color: var(--ink);
+}
+
+.ct-window span {
+  color: var(--ink-muted);
+}
+
+.ct-window:hover {
+  border-color: var(--accent);
+}
+
+.ct-window[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: rgb(99 215 255 / 12%);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.ct-step {
+  border-color: var(--line);
+  background: rgb(255 255 255 / 6%);
+  color: var(--ink);
+}
+
+.ct-step:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.ct-structure {
+  border-color: var(--line);
+  background: rgb(255 255 255 / 4%);
+  color: var(--ink);
+}
+
+.ct-structure:hover {
+  border-color: var(--accent);
+}
+
+.ct-structure[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: rgb(99 215 255 / 10%);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.ct-note,
+.ct-orientation,
+.ct-selected,
+.ct-empty,
+.ct-voxels {
+  color: var(--ink-muted);
+}
+
+.ct-layer {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ct-slider {
+  accent-color: var(--accent);
+}
+
+.assistant {
+  z-index: 35;
+}
+
+.assistant-panel {
+  background: rgb(9 13 19 / 96%);
+  border-color: var(--line);
+  box-shadow: 0 22px 70px rgb(0 0 0 / 58%);
+  backdrop-filter: blur(24px);
+}
+
+.assistant-head {
+  background: rgb(255 255 255 / 4%);
+}
+
+.assistant-bubble.user {
+  background: rgb(99 215 255 / 14%);
+}
+
+.assistant-badge {
+  background: rgb(99 215 255 / 12%);
+  color: var(--accent);
+}
+
+.assistant-text.failed {
+  color: #ff9aa7;
+}
+
+.assistant-retry {
+  margin-top: 0.45rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.assistant-retry:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.assistant-retry:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.chip {
+  border-color: var(--line);
+  background: rgb(255 255 255 / 4%);
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.assistant-form textarea {
+  border-color: var(--line);
+  background: rgb(255 255 255 / 5%);
+  color: var(--ink);
+}
+
+.assistant-send {
+  border-color: transparent;
+  background: var(--accent);
+  color: #04121a;
+  font-weight: 650;
+}
+
+.assistant-send:disabled {
+  background: rgb(255 255 255 / 6%);
+  color: var(--ink-muted);
+  border-color: var(--line);
+}
+
+/* ---------- 悬浮面板互斥：同一时间只让一层浮在场景上 ---------- */
+/* CT 抽屉与信息卡/结构目录互斥：抽屉已占满右侧，底层再露出半截只会重影、误触。 */
+.scene-shell.ct-open .scene-dock,
+.scene-shell.ct-open .detail-panel,
+/* 小心与结构目录互斥；宽屏时信息卡左移让位，窄屏时直接收起。 */
+.scene-shell.assistant-open .scene-dock,
+.scene-shell.assistant-hide .detail-panel {
+  visibility: hidden;
+}
+
+.scene-shell.assistant-shift .detail-panel {
+  right: calc(var(--assistant-live-width, 30rem) + 2.4rem);
+  transition: right 200ms ease;
+}
+
+/* 信息卡左移后，3D 心脏的可视区也跟着收窄，避免取景中心被挤到小心面板背后。 */
+.scene-shell.assistant-shift .scene-heart {
+  padding-right: calc(clamp(22rem, 30vw, 27rem) + var(--assistant-live-width, 30rem) + 2.4rem);
+}
+
+@media (max-width: 64rem) {
+  .site-header {
+    top: 0.9rem;
+    left: 0.9rem;
+  }
+
+  /* 窄屏也直接铺在帷幕上：索引排成三栏，透明底，高度用滚动兜住。 */
+  .scene-dock {
+    top: 3.5rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: auto;
+    width: auto;
+    max-height: 32vh;
+    padding: 0;
+    transform: none;
+  }
+
+  .placard-search {
+    padding-bottom: 0.4rem;
+    font-size: 0.82rem;
+  }
+
+  /* 手机上九条索引排成三栏三行；一行只有约 100px，斜体名会被切碎，
+     所以拉丁名只留给读屏，视觉上看编号 + 中文，完整英文名在详情卡里。 */
+  .placard-index {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 1rem;
+  }
+
+  .placard-row {
+    grid-template-columns: 1.15rem minmax(0, 1fr);
+    gap: 0 0.4rem;
+    padding: 0.34rem 0;
+  }
+
+  .placard-no {
+    width: 1.15rem;
+    height: 1.15rem;
+    font-size: 0.55rem;
+  }
+
+  .placard-cn {
+    overflow: hidden;
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .placard-latin {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .placard-index li:nth-child(-n + 3) .placard-row {
+    border-top: 0;
+  }
+
+  .placard-note,
+  .placard-source {
+    margin-top: 0.5rem;
+    font-size: 0.62rem;
+  }
+
+  .scene-heart {
+    padding: calc(4.3rem + 28vh) 0.75rem 9rem;
+  }
+
+  .scene-heart .heart-host {
+    width: min(900px, 36vh, 90vw);
+  }
+
+  .scene-shell.has-detail .scene-heart {
+    padding: calc(4.3rem + 28vh) 0.75rem 52vh;
+  }
+
+  .scene-shell.has-detail .scene-heart .heart-host {
+    width: min(900px, 30vh, 82vw);
+  }
+
+  .scene-heart .heart-buttons {
+    display: none;
+  }
+
+  .scene-heart .heart-status {
+    bottom: 6.3rem;
+    max-width: calc(100vw - 2rem);
+    font-size: 0.68rem;
+  }
+
+  .scene-actions {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 2.9rem;
+  }
+
+  .scene-actions .ct-cta {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.82rem;
+  }
+
+  .scene-actions .ct-cta-sub {
+    display: none;
+  }
+
+  .detail-panel {
+    top: auto;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 4.3rem;
+    width: auto;
+    max-height: 54vh;
+  }
+
+  /* 透明抽屉直接压在舞台上：选中结构时不再叠加同义的“已高亮…”胶囊，避免透字。 */
+  .scene-shell.has-detail .heart-status {
+    display: none;
+  }
+
+  .detail-panel .info-card dl {
+    grid-template-columns: 4.4rem minmax(0, 1fr);
+  }
+
+  .detail-panel .tri-view .slices {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ct-drawer {
+    width: 100vw;
+    border-left: 0;
+  }
+
+  .ct-drawer-body {
+    padding: 0.85rem;
+  }
+
+  .ct-drawer .ct-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ct-drawer .ct-stack {
+    max-width: 100%;
+  }
+
+  .site-footer {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.35rem 7.4rem 0.35rem 0.75rem;
+    font-size: 0.56rem;
+    line-height: 1.35;
+  }
+
+  .site-footer .notices {
+    flex-wrap: nowrap;
+    gap: 0.9rem;
+  }
+
+  .site-footer .notices li {
+    flex: 0 1 auto;
+  }
+
+  .assistant {
+    right: 0.75rem;
+    bottom: 0.4rem;
+  }
+
+  .assistant-launcher img {
+    width: 4.3rem;
+  }
+}

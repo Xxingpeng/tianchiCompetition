@@ -4,20 +4,30 @@
 
 把"解剖结构名称—切面位置—三维形态"三件事放在同一个页面里，供医学学习者建立空间对应。
 
-**演示地址**：待发布后填写（Qoder Sites 公开 URL，无需登录）
+打开页面先是**占满屏幕的黑色主舞台和一颗心脏**——9 个部件网格来自同一份标注体素、共用世界毫米坐标，放进同一场景自动拼合；心脏以固定直立机位初始化（与演示截图一致，复位也回到这里），并按约 72 次/分的节律轻微搏动，可一键暂停；把鼠标放到部件上显示名称、单击即选中该结构。舞台左侧是一列直接切进黑色帷幕的透明索引：顶部一条无边框搜索框（提示语「如：左心室 / left ventricle / LV」，输入编号 1–9 或中英文名即选中对应结构），下面按冻结标签 1–9 列出编号、中文名与斜体英文名，结构名用各自的解剖色；点选条目或搜索即可切换结构，选中只表现为名字加粗、编号方块由空心变实心，3D 心脏会把该部件转到正面并打上追光。目录折叠开关仍按展示需要保持下线。点选结构后右侧浮出**无边框的结构说明**（底色与页面一致，不加卡片外框），三视图示意切面收在其中、默认展开（可收起）；窄屏（≤64rem）改为底部透明抽屉。主舞台下方还有**看 CT** 按钮，打开**伪 CT 轴位阅片侧滑面板**：96 层 × 纵隔窗/肺窗，可切窗、拖层、逐层前后翻、跳到当前结构的最佳层、开关结构高亮，并列出本层可见结构与体素数，心脏保留在背景里。
+
+首页底部（未选结构时）或结构说明里的**看血液循环**会打开一个全屏演示：舞台中央是**可旋转缩放的 3D 心脏**（含大血管与心腔，19 个部件来自 BodyParts3D），两侧是肺与组织示意体，蓝色粒子流是含氧较低的血、鲜红粒子流是含氧高的血，沿「全身 → 上下腔静脉 → 右心 → 肺动脉 → 肺内换气 → 肺静脉 → 左心 → 主动脉 → 全身」的肺循环 + 体循环路径流动，在肺内由蓝转红、在组织处由红转蓝。演示按“全身回流 → 右心泵血 → 肺内换气 → 左心泵血 → 送达全身”五个阶段自动循环，可以点阶段跳转、暂停、重播、切换倍速，Esc 关闭；这是一段**示意动画**，不包含任何真实病例影像。
+
+点右上角「打开心脏」或拖动**剖面刀**滑杆，前壁会从胸前向后切开，露出四腔、房室瓣与半月瓣，能看到蓝色血流从腔静脉进入右心房、经三尖瓣到右心室，以及从肺静脉进入左心房、经二尖瓣到左心室的过程；「左心 / 右心」按钮把镜头拉到对应一侧，标签聚焦到该侧的结构。心房与心室按同一个 6.4 秒心动周期（充盈 → 心房收缩 → 瓣膜关闭 → 射血 → 舒张）缩放搏动，瓣膜按相位开合，血流粒子的流量随瓣门变化，能看出心脏怎样收缩把血泵进大血管。可以暂停、重播、切换倍速，鼠标拖拽旋转、滚轮缩放；心脏网格为示意几何，未经患者影像验证。
+
+右下角坐着体素风的心脏玩偶**小心**——进站时它会顶着气泡说「让我们一起保护我们的心脏，无聊可以点点我」，几秒后气泡自动消失（右上角的 × 也能提前关掉）；点一下玩偶就会弹出**小心**对话面板，面板上缘可以上下拖动调整高度（聚焦后也可用 ↑/↓ 键），按住玩偶还能把它拖到页面任意角落，松手后记住位置（刷新后仍在新位置）；如果很久没被理睬，它会按当前位置到上、下、左、右四边的距离选最近的一侧缩到屏幕外，只留一小截等你点，点击后先恢复坐姿再把对话面板推出来；平时它跟着心脏的节律轻轻起伏、时不时小跳一下，悬停会抬头、点它会点头回应，回答心脏解剖与 CT 基础知识，并结合当前选中的结构、三视图取层来解释；如果问题明确在问“这一层”，它会拿到当前打开的伪 CT 的层号、窗、可见结构与体素数再作答（面板收起后不再携带层上下文）。它只基于 32 条带许可的国内教材与指南资料检索作答，界面常显来源与许可（全部来源链接均为国内可访问站点）；越界、症状、用药类问题不会进模型，直接给出范围说明或就医提示。
+
+**演示地址**：https://anatomy-sketch-ip6pfjkttvk.qoder.zone （Qoder Sites 公开 URL，无需登录；含小心、伪 CT 与久置探头的版本已于 2026-11-27 上线）
 
 ## 请注意本作品的边界
 
 - 页面中的切面与高亮是**示意模型的渲染结果**，不是真实病例影像，也不是任何分割模型的推理输出。
-- 内容仅用于学习展示，**不含诊断、治疗或用药建议**。
-- 三维几何主要来自 [BodyParts3D](http://www.openanatomy.jp/)：`BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International`。完整来源与许可判定见 [NOTICE.md](NOTICE.md)。
+- 伪 CT 轴位图由本站教学标注体素按近似 HU 合成，**不是真实病例 CT、不是临床测量**；站点不接受 CT 影像上传，不能用于读片或诊断。
+- 内容仅用于学习展示，**不含诊断、治疗或用药建议**；助手不接受影像上传，不能用于读片或病情判断。
+- 三维几何主要来自 [BodyParts3D](http://www.openanatomy.jp/)：`BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International`。助手资料的来源与许可见 [NOTICE.md](NOTICE.md) §2a。
 
 ## 目录
 
 ```text
 src/                 前端源码（React + TypeScript + Vite + Three.js）
-public/assets/       发布用演示资产：structures.json / 切面图 / GLB 网格
-tools/asset_pipeline 资产生成脚本（Python：网格→统一体素→三视图→GLB）
+functions/           Qoder Sites Functions（Deno）：/chat 流式问答 + /health；助手纯逻辑在 functions/app
+public/assets/       发布用演示资产：structures.json / 切面图 / GLB 网格 / 伪 CT
+tools/asset_pipeline 资产生成脚本（Python：网格→统一体素→三视图→GLB→伪 CT）
 assets_raw/          第三方原始解剖资产（约 3.6 GB，被 .gitignore 排除，需自行下载）
 standards/           项目上下文、需求 PRD、进度与坑（AI 协作活记忆）
 .github/workflows/   CI（本仓库只有 CI，发布走 Qoder Sites）
@@ -32,10 +42,14 @@ npm run check      # 格式 + lint + 类型 + 测试
 npm run build      # 产出 dist/
 ```
 
+需要 Node.js ≥ 22.13（`package.json` 的 `engines` 已锁）。测试环境用 jsdom 29：jsdom 30+ 的 engines 下限是 22.22.2，在 22.13–22.21 上会让 vitest 起 worker 时崩在 undici 的 zstd 分支上，因此刻意不跟到最新版。
+
+本地跑 Function 需要 Deno 与一个本地 `.env`（复制 `.env.example` 后填 `DASHSCOPE_API_KEY`）；`.env` 已被 gitignore。启动示例：`deno run --env-file=.env --allow-net --allow-env functions/index.ts`（8000），另开 `npm run dev` 后 Vite 会把 `/functions/v1/app` 代理过去。线上站点的模型密钥存为 Qoder Sites 的应用 Secret，由平台注入 Function，**不需要**在本地或仓库里保存任何线上密钥。Function 的机检门禁是 `deno check --no-lock --node-modules-dir=none functions/index.ts`。
+
 准备资产输入（仅重建演示资产时需要）：把 BodyParts3D Release 4.0 的 OBJ 文件按 `assets_raw/README.md` 的清单放入目录，再运行 `tools/asset_pipeline` 的生成脚本。
 
 ## 开发约定
 
 新会话或新工具接手本项目，先按顺序读 `standards/README.md`、`standards/00-project-context.md`、`standards/01-requirements.md`、`standards/PROGRESS.md`，再按 `standards/06-ai-collab-protocol.md` 的六步流程与确认门推进。
 
-几条不可违反的边界：原始病例影像、模型权重、第三方原始数据包一律不入库；密钥只进 GitHub Secrets；`main` 只能通过 PR 合并且 CI 必须全绿；PR 由人审核、由人合并。
+几条不可违反的边界：原始病例影像、模型权重、第三方原始数据包一律不入库；密钥只在平台 Secrets / Function 环境里，`.env` 不进 Git、模型密钥不写进任何文档或前端；`main` 只能通过 PR 合并且 CI 必须全绿；PR 由人审核、由人合并。

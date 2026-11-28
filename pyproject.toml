@@ -1,0 +1,37 @@
+# 仓库根的 Python 配置只服务一件事：tools/ 下的示意资产管线（见 standards/00 §4）。
+# 前端是 Node/Vite 工程，不经过本文件。
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+# BP3D 原始包、conda 产物、缓存目录一律不参与检查
+extend-exclude = ["assets_raw", "node_modules", "dist", "public"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle 错误
+  "F",   # pyflakes
+  "W",   # pycodestyle 警告
+  "I",   # isort：import 分组顺序由工具强制
+  "UP",  # pyupgrade：锁定 3.11 写法
+  "B",   # bugbear：真实缺陷（循环变量捕获、比较链等）
+  "C4",  # comprehension：可简化的推导式
+  "SIM", # 可简化控制流
+  "RUF", # ruff 自有规则
+]
+# 本项目注释、页面文案、报错信息全部是中文，全角标点（，；：（）是正常书写而非混淆风险，
+# 否则每条中文 docstring 都会红灯。
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+# 测试里 assert 与"未用返回值"是断言风格，不是缺陷
+"**/tests/*" = ["B011", "RUF059", "SIM105"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+# 让 `pytest tools/asset_pipeline/tests` 在仓库根直接可跑，无需手工设 PYTHONPATH
+pythonpath = ["."]
+testpaths = ["tools/asset_pipeline/tests"]
+addopts = "-q --cov=tools.asset_pipeline --cov-fail-under=80"

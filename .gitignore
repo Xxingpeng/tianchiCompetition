@@ -4,9 +4,14 @@ dist/
 dist-ssr/
 build/
 .vite/
+coverage/
 *.tsbuildinfo
 .eslintcache
 .stylelintcache
+
+# ---------- Qoder Sites 本机绑定记录 ----------
+# 发布草稿描述符含 siteRef 不透明引用，与本机/账号绑定、换机不可复用，不入库
+*.qoder.site
 
 # ---------- Python ----------
 __pycache__/
@@ -40,6 +45,7 @@ secrets/
 # ---------- 原始第三方解剖资产（约 3.6 GB 解压产物，只留在本地） ----------
 assets_raw/**
 !assets_raw/README.md
+!assets_raw/bp3d_manifest.json
 
 # ---------- 医疗影像与模型权重（隐私 + 体积，绝不入库） ----------
 *.nii
@@ -71,6 +77,7 @@ wandb/
 *.log
 scratch/
 tmp/
+deno.lock
 
 # ---------- 说明：以下演示资产【必须】入库，故不被上面规则排除 ----------
 # public/assets/structures.json

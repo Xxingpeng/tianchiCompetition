@@ -2,7 +2,7 @@
 
 > **作用**:这是项目的"身份档案"。AI 接管项目时先读这里,了解项目目标、技术栈、目录、部署取值。
 > **更新时机**:架构、技术栈、目录结构、端口、部署目录、重要约束变化时更新。
-> **最后更新**:2026-11-24 · by Qoder（依据当日对研究仓库、本机环境与赛题官方页面的核对结果填写）
+> **最后更新**:2026-11-27 · by Qoder（血液循环演示改为 Three.js 3D 心脏 + 剖面刀开腔，替换此前被否决的平面 SVG 方案；左栏改为透明帷幕内嵌式展签，结构名取各自解剖色；顶部加回无边框结构搜索（提示语沿用旧搜索「如：左心室 / left ventricle / LV」，支持编号与中英文名），索引/搜索选中会把部件转到正面追光）
 
 ---
 
@@ -12,14 +12,19 @@
 - **一句话目标**:让医学学习者在同一个页面里,把"解剖结构名称—切面位置—三维形态"三件事对上。
 - **使用者/受益者**:医学、影像、护理等专业学生;学习基础断层解剖的学习者;需要快速展示结构空间关系的教育者。
 - **核心功能**:
-  - 结构名称/同义词搜索与结构目录选择
+  - 帷幕内嵌式展签索引（左栏透明底直接铺在黑色舞台上,顶部无边框结构搜索（提示语「如：左心室 / left ventricle / LV」,输入编号或中英文名即切换,不弹候选列表）,编号 + 中文名 + 斜体英文名,结构名取各自的解剖色,点选或搜索即切换;从索引/搜索选中时 3D 把部件转到正面并追光;目录折叠开关已按用户要求删除）
   - 解剖信息卡（显示名、英文名、简短学习说明、一条上级关系）
   - 轴位/冠状位/矢状位三视图示意切面 + 目标结构高亮 overlay + 文字图例
-  - 目标结构的轻量 3D 网格查看（旋转、缩放）
+  - 整颗心脏 3D（9 个部件同场景,悬停报名称、点选结构;体素风不透明黏土材质,未选中压暗,选中件以同色幽灵透出被遮挡部分;7° 右前斜机位,约 72 次/分轻微双搏动,可暂停并尊重减动效偏好）
+  - 血液循环动态演示（全屏覆盖层：Three.js 3D 心脏,19 个部件含大血管与心腔,深蓝舞台;蓝/红粒子流沿肺循环与体循环路径流动,肺内蓝→红、组织处红→蓝;5 阶段时间轴自动循环,阶段跳转、暂停、重播、倍速、Esc）
+  - 剖面刀开腔（滑杆或「打开心脏」按胸前向后切开前壁,局部裁剪平面露出四腔与瓣膜;「左心/右心」机位聚焦对应一侧并过滤标签;心房/心室按 6.4 s 心动周期缩放搏动,房室瓣与半月瓣按相位开合,粒子流量随瓣门变化）
+  - 深蓝发光舞台（`.circulation` 覆盖层深蓝渐变 + 网格 + 暗角,心影高光,血流粒子光晕;全部为 WebGL 实时渲染,但心脏网格为示意几何）
+  - 小心 · 心脏学习助手：右下角坐姿体素玩偶入口（进站气泡约 7 秒后消失、右上角 × 可提前关掉;点击打开面板,可拖动换位并记住位置;面板左缘调宽、上缘调高,均支持键盘方向键并记忆;久置约 45 秒朝最近的一侧（上/下/左/右）缩到屏幕外只留一小截,点击先恢复坐姿再开面板;待机跟心跳节律起伏、偶尔小跳,悬停/按压/拖动有反馈,3D 心跳暂停时安静下来）,问答覆盖解剖 + CT 概念 + 本站切面讲解,意图分流、检索来源常显、不提供医疗建议
   - 数据来源、许可与"仅用于学习展示"用途提示
 - **输入/数据**:自制的静态示意资产——`structures.json` + WebP/PNG 切面 + GLB 网格。来源为 BodyParts3D（CC BY 4.0）派生几何 + 自制左心耳。
+  - 助手知识库是 32 条改写资料（人卫《系统解剖学》《生理学》《诊断学》《医学影像学》《内科学》与国内指南,版权保留、仅事实引用 / 本站自述）,全部来源链接均为国内可访问站点,见 `NOTICE.md` §2a。
   - **不含任何真实病例影像,不含研究模型的推理输出。**
-  - 衍生资产**进 Git**（体积小、必须随站点发布）;BP3D 原始解压产物约 3.6 GB **不进 Git**。
+  - 衍生资产**进 Git**（实测合计约 3.9 MB、必须随站点发布）;BP3D 原始包与解压产物（OBJ 包 142.9 MB / 解压 479.6 MB）**不进 Git**,`assets_raw/` 整体排除、只反向放行 `README.md` 与 `bp3d_manifest.json`。
   - 详细许可依据与残留风险见项目书 §6 与本文件 §5。
 
 ## 2. 技术栈
@@ -32,11 +37,11 @@
 | 3D 渲染 | Three.js（原生,加载 GLB） | 只有一层 3D 抽象;不同时引入 R3F/Drei |
 | 切片叠加 | Canvas 2D / 图像层合成 | 切面与 overlay 由离线资产生成,前端只合成不计算 |
 | 样式 | CSS Modules | 组件内聚,不额外引框架;若后续需要再换 Tailwind |
-| 测试 | vitest（前端）+ pytest（`tools/` 资产脚本） | 与两类代码语言匹配 |
-| 格式/静态检查 | ESLint + Prettier（前端）、ruff（Python）、`tsc --noEmit` | 对应两类代码的可机检门禁 |
-| 打包/运行 | `vite build` 静态产物,无容器、无自建服务 | 站点是纯静态,不需要 Docker |
+| 测试 | vitest（前端 + 助手纯逻辑）+ pytest（`tools/` 资产脚本） | 与两类代码语言匹配 |
+| 格式/静态检查 | ESLint + Prettier（前端）、ruff（Python）、`tsc --noEmit`、`deno check`（Function 入口） | 对应三类代码的可机检门禁;`functions/index.ts` 只由 Deno 检查 |
+| 打包/运行 | `vite build` 静态产物 + **Qoder Sites Functions（Deno）** 提供同源 `/functions/v1/app/chat` | 静态托管放不了密钥;Function 调 DashScope OpenAI 兼容接口,`DASHSCOPE_API_KEY` 由平台以应用 Secret 注入、只在服务端读取 |
 | CI | GitHub Actions（PR 触发） | 见 §5 偏离说明:**只做 CI** |
-| CD | **Qoder Sites**（由 Qoder 的 sites 工具链发布,非 Actions runner） | 赛题硬性要求评委入口必须是 Sites 公开地址 |
+| CD | **Qoder Sites**（由 Qoder 的 sites 工具链发布,非 Actions runner） | 赛题硬性要求评委入口必须是 Sites 公开地址;发布含助手版本时 `prepare_site` 必须带 `functionDirectory: "functions"` |
 
 ## 3. 目录地图
 
@@ -47,9 +52,15 @@ tianchiCompetition/
 ├── package.json / tsconfig.json / vite.config.ts
 ├── src/                       # 前端源码
 │   ├── main.tsx / App.tsx
-│   ├── components/            # SearchBox / StructureCard / TriView / MeshViewer / Notices
-│   ├── data/                  # 读取 structures.json 的加载与检索逻辑（纯函数,便于测试）
+│   ├── components/            # InfoCard / TriView / HeartModel（懒加载）/ AssistantPanel / CtViewer / CirculationDemo（覆盖层与按钮）/ HeartScene（Three.js 3D 心脏,懒加载）;展签索引直接在 App.tsx
+│   ├── data/                  # structures.json 加载与校验、助手 SSE 客户端、心动周期与开腔/循环路径（chambers.ts）、3D 场景清单与配色（heartScene.ts）（纯函数,便于测试）
+│   ├── circulation.css        # 血液循环演示覆盖层样式（深蓝网格舞台、工具栏、图例、CSS2D 标签、窄屏布局,z-index 60 在助手之上）
 │   └── types/
+├── functions/                 # Qoder Sites Functions（Deno,仅站点托管时运行）
+│   ├── index.ts               # /chat SSE + /health;限流、并发、超时、降级
+│   ├── app/                   # 意图/检索/提示词/回合/focus/llm 配置（由 vitest 覆盖）
+│   ├── knowledge/             # 32 条资料（TS 模块,来源全部为国内可访问站点）
+│   └── sse.mjs                # SSE 读写工具（Function 与浏览器共用约定）
 ├── public/
 │   ├── assets/slices/         # 示意切面与 overlay（WebP/PNG）— 进 Git
 │   ├── assets/meshes/         # GLB 网格 — 进 Git
@@ -58,7 +69,8 @@ tianchiCompetition/
 ├── assets_raw/                # BP3D 下载与解压产物 — 被 .gitignore 排除
 ├── tests/                     # vitest 用例;tools 的 pytest 放 tools/asset_pipeline/tests
 ├── .github/workflows/ci.yml   # 仅 CI
-├── NOTICE.md                  # 资产来源、生成步骤、许可与署名原文
+├── .env.example               # 本地联调模板（DASHSCOPE_*）;真实 .env 被 gitignore
+├── NOTICE.md                  # 资产与助手资料来源、生成步骤、许可与署名原文
 └── README.md
 ```
 
@@ -101,7 +113,7 @@ tianchiCompetition/
 | `<HEALTHCHECK>` | 改为**公开 URL 可达性检查**:未登录状态下 `GET /` 返回 200 且 `structures.json`、GLB、切面图均加载成功 | 替代 `curl localhost/health` |
 | `<SSH_USER>` | 不适用 | 见上 |
 | `<SSH_HOST>` | 不适用 | 见上 |
-| 部署地址 | 待填写:`[Qoder Sites 公开访问 URL]` | 发布后填入,并同时填进项目书 §1 |
+| 部署地址 | **https://anatomy-sketch-ip6pfjkttvk.qoder.zone**（2026-11-26 发布 M4c 产物,公开访问、无需登录） | 已填进项目书 §1 |
 
 ## 7. 对通用规范的两处偏离（已确认,2026-11-24）
 
